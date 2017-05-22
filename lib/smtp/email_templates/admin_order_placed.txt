@@ -1,0 +1,12 @@
+Dear Admin,
+
+
+A scan order has been successfully placed! Details are below.
+
+
+[RECEIPT_REPLACE]
+
+
+Regards,
+
+The Web Sight Robot

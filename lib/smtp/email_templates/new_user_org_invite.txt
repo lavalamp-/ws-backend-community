@@ -1,0 +1,20 @@
+Greetings!
+
+You have been invited to view the data that we've gathered about [ORG_NAME] on Web Sight!
+
+To get started, you'll first need to set up your account through the following link:
+
+[DOMAIN_REPLACE]greeting/setup-account/[ACTIVATION_TOKEN]/[USER_UUID]
+
+Once your account has been set up, you can view the data we've collected via the following link:
+
+[DOMAIN_REPLACE]topography/[ORG_UUID]
+
+Managing [ORG_NAME] can be done through the organization management page at the following link:
+
+[DOMAIN_REPLACE]organizations/[ORG_UUID]
+
+We look forward to serving you!
+
+Regards,
+The Web Sight Team

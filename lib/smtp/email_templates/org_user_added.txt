@@ -1,0 +1,15 @@
+Dear [ADMIN_NAME],
+
+A user was recently added to an organization that you are an administrator of ([ORG_NAME]). The user's information is below:
+
+[INVITED_NAME] ([INVITED_EMAIL])
+
+If this was in error, please remove the user from the organization via the link below:
+
+[DOMAIN_REPLACE]organizations/[ORG_UUID]
+
+As always, thank you for using Web Sight!
+
+Regards,
+
+The Web Sight Team

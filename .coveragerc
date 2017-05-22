@@ -1,0 +1,8 @@
+[run]
+branch = True
+omit =
+    lib/bootstrap.py
+    lib/config.py
+    files/*
+    tests/*
+    wsbackend/*

@@ -1,0 +1,18 @@
+Hey Web Sight Admin,
+
+
+We had a new user sign up! Details are below:
+
+
+[USER_EMAIL_REPLACE] ([USER_NAME_REPLACE])
+
+
+If this looks good, let's go ahead and approve their account!
+
+
+[DOMAIN_REPLACE]admin/manage-users
+
+
+Regards,
+
+The Web Sight Robot

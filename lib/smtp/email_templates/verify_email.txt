@@ -1,0 +1,16 @@
+Dear [NAME_REPLACE],
+
+
+We have recieved an account registered to this email address.
+Please click the link below to verify this email:
+
+
+[DOMAIN_REPLACE]greeting/verify-email/[TOKEN_REPLACE]/[USER_UUID_REPLACE]
+
+
+If you did not register this email, ignore this message. It will
+expire in 4 hours.
+
+
+Regards,
+The Websight.io Team

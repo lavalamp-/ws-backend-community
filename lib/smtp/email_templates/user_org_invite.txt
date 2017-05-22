@@ -1,0 +1,14 @@
+Hey [USER_NAME],
+
+You have been added to the [ORG_NAME] organization! You may now view the data that we have gathered on this organization through the following link:
+
+[DOMAIN_REPLACE]topography/[ORG_UUID]
+
+The organization can also be managed using the following link:
+
+[DOMAIN_REPLACE]organizations/[ORG_UUID]
+
+As always, thank you for using Web Sight!
+
+Regards,
+The Web Sight Team

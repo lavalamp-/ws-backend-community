@@ -1,0 +1,193 @@
+#Internal Ranges
+127.0.0.0/8, Local Loopback Range
+10.0.0.0/8, Internal Network Ranges
+172.16.0.0/12, Internal Network Ranges
+192.168.0.0/16, Internal Network Ranges
+#Blacklist Ranges, from http://www.hackingarticles.in/do-not-scan-these-ip-address/
+6.0.0.0/8, Army Information Systems Center
+7.0.0.0/8, Defense Information Systems Agency, VA
+11.0.0.0/8, DoD Intel Information Systems, Defense Intelligence Agency, Washington DC
+21.0.0.0/8, US Defense Information Systems Agency
+22.0.0.0/8, Defense Information Systems Agency
+24.198.0.0/16, Unknown
+25.0.0.0/8, Royal Signals and Radar Establishment, UK
+26.0.0.0/8, Defense Information Systems Agency
+29.0.0.0/8, Defense Information Systems Agency
+30.0.0.0/8, Defense Information Systems Agency
+49.0.0.0/8, Joint Tactical Command
+50.0.0.0/8, Joint Tactical Command
+55.0.0.0/8, Army National Guard Bureau
+55.0.0.0/8, Army National Guard Bureau
+62.0.0.1-62.30.255.255, Unknown
+64.70.0.0/16, Unknown
+64.224.0.0/16, Unknown
+64.225.0.0/16, Unknown
+64.226.0.0/16, Unknown
+128.37.0.0/16, Army Yuma Proving Ground
+128.38.0.0/16, Naval Surface Warfare Center
+128.43.0.0/16, Defence Research Establishment-Ottawa
+128.47.0.0/16, Army Communications Electronics Command
+128.49.0.0/16, Naval Ocean Systems Center
+128.50.0.0/16, Department of Defense
+128.51.0.0/16, Department of Defense
+128.56.0.0/16, U.S. Naval Academy
+128.60.0.0/16, Naval Research Laboratory
+128.63.0.0/16, Army Ballistics Research Laboratory
+128.80.0.0/16, Army Communications Electronics Command
+128.98.0.0/16, Defence Evaluation and Research Agency
+128.102.0.0/16, NASA Ames Research Center
+128.149.0.0/16, NASA Headquarters
+128.154.0.0/16, NASA Wallops Flight Facility
+128.155.0.0/16, NASA Langley Research Center
+128.156.0.0/16, NASA Lewis Network Control Center
+128.157.0.0/16, NASA Johnson Space Center
+128.158.0.0/16, NASA Ames Research Center
+128.159.0.0/16, NASA Ames Research Center
+128.160.0.0/16, Naval Research Laboratory
+128.161.0.0/16, NASA Ames Research Center
+128.183.0.0/16, NASA Goddard Space Flight Center
+128.190.0.0/16, Army Belvoir Reasearch and Development Center
+128.202.0.0/16, 50th Space Wing
+128.216.0.0/16, MacDill Air Force Base
+128.217.0.0/16, NASA Kennedy Space Center
+128.236.0.0/16, U.S. Air Force Academy
+129.23.0.0/16, Strategic Defense Initiative Organization
+129.29.0.0/16, United States Military Academy
+129.50.0.0/16, NASA Marshall Space Flight Center
+129.51.0.0/16, Patrick Air Force Base
+129.52.0.0/16, Wright-Patterson Air Force Base
+129.53.0.0/16, 66SPTG-SCB
+129.54.0.0/16, Vandenberg Air Force Base, CA
+129.92.0.0/16, Air Force Institute of Technology
+129.99.0.0/16, NASA Ames Research Center
+129.131.0.0/16, Naval Weapons Center
+129.139.0.0/16, Army Armament Research Development and Engineering Center
+129.141.0.0/16, 85 MISSION SUPPORT SQUADRON/SCSN
+129.163.0.0/16, NASA/Johnson Space Center
+129.164.0.0/16, NASA IVV
+129.165.0.0/16, NASA Goddard Space Flight Center
+129.166.0.0/16, NASA – John F. Kennedy Space Center
+129.167.0.0/16, NASA Marshall Space Flight Center
+129.168.0.0/16, NASA Lewis Research Center
+129.190.0.0/16, Naval Underwater Systems Center
+129.198.0.0/16, Air Force Flight Test Center
+129.209.0.0/16, Army Ballistics Research Laboratory
+129.229.0.0/16, U.S. Army Corps of Engineers
+129.251.0.0/16, United States Air Force Academy
+130.40.0.0/16, NASA Johnson Space Center
+130.90.0.0/16, Mather Air Force Base
+130.109.0.0/16, Naval Coastal Systems Center
+130.114.0.0/16, Army Aberdeen Proving Ground Installation Support Activity
+130.124.0.0/16, Honeywell Defense Systems Group
+130.165.0.0/16, U.S.Army Corps of Engineers
+130.167.0.0/16, NASA Headquarters
+131.3.0.0/16, Mather Air Force Base
+131.6.0.0/16, Langley Air Force Base
+131.10.0.0/16, Barksdale Air Force Base
+131.17.0.0/16, Sheppard Air Force Base
+131.21.0.0/16, Hahn Air Base
+131.22.0.0/16, Keesler Air Force Base
+131.24.0.0/16, 6 Communications Squadron
+131.25.0.0/16, Patrick Air Force Base
+131.27.0.0/16, 75 ABW
+131.30.0.0/16, 62 CS/SCSNT
+131.32.0.0/16, 37 Communications Squadron
+131.35.0.0/16, Fairchild Air Force Base
+131.36.0.0/16, Yokota Air Base
+131.37.0.0/16, Elmendorf Air Force Base
+131.38.0.0/16, Hickam Air Force Base
+131.39.0.0/16, 354CS/SCSN
+131.40.0.0/16, Bergstrom Air Force Base
+131.44.0.0/16, Randolph Air Force Base
+131.46.0.0/16, 20 Communications Squadron
+131.47.0.0/16, Andersen Air Force Base
+131.50.0.0/16, Davis-Monthan Air Force Base
+131.52.0.0/16, 56 Communications Squadron /SCBB
+131.54.0.0/16, Air Force Concentrator Network
+131.56.0.0/16, Upper Heyford Air Force Base
+131.58.0.0/16, Alconbury Royal Air Force Base
+131.59.0.0/16, 7 Communications Squadron
+131.61.0.0/16, McConnell Air Force Base
+131.62.0.0/16, Norton Air Force Base
+131.71.0.0/16, NAVAL AVIATION DEPOT CHERRY PO
+131.74.0.0/16, Defense MegaCenter Columbus
+131.84.0.0/16, Defense Technical Information Center
+131.92.0.0/16, Army Information Systems Command – Aberdeen (EA)
+131.105.0.0/16, McClellan Air Force Base
+131.110.0.0/16, NASA/Michoud Assembly Facility
+131.120.0.0/16, Naval Postgraduate School
+131.121.0.0/16, United States Naval Academy
+131.122.0.0/16, United States Naval Academy
+131.176.0.0/16, European Space Operations Center
+131.182.0.0/16, NASA Headquarters
+131.250.0.0/16, Office of the Chief of Naval Research
+132.3.0.0/16, Williams Air Force Base
+132.5.0.0/16, 49th Fighter Wing
+132.6.0.0/16, Ankara Air Station
+132.7.0.0/16, SSG/SINO
+132.9.0.0/16, 28th Bomb Wing
+132.10.0.0/16, 319 Comm Sq
+132.11.0.0/16, Hellenikon Air Base
+132.12.0.0/16, Myrtle Beach Air Force Base
+132.13.0.0/16, Bentwaters Royal Air Force Base
+132.14.0.0/16, Air Force Concentrator Network
+132.15.0.0/16, Kadena Air Base
+132.16.0.0/16, Kunsan Air Base
+132.17.0.0/16, Lindsey Air Station
+132.18.0.0/16, McGuire Air Force Base
+132.19.0.0/16, 100CS (NET-MILDENHALL)
+132.20.0.0/16, 35th Communications Squadron
+132.21.0.0/16, Plattsburgh Air Force Base
+132.22.0.0/16, 23Communications Sq
+132.24.0.0/16, Dover Air Force Base
+132.25.0.0/16, 786 CS/SCBM
+132.27.0.0/16, 39CS/SCBBN
+132.28.0.0/16, 14TH COMMUNICATION SQUADRON
+132.30.0.0/16, Lajes Air Force Base
+132.31.0.0/16, Loring Air Force Base
+132.33.0.0/16, 60CS/SCSNM
+132.34.0.0/16, Cannon Air Force Base
+132.35.0.0/16, Altus Air Force Base
+132.37.0.0/16, 75 ABW
+132.38.0.0/16, Goodfellow AFB
+132.39.0.0/16, K.I. Sawyer Air Force Base
+132.40.0.0/16, 347 COMMUNICATION SQUADRON
+132.42.0.0/16, Spangdahlem Air Force Base
+132.43.0.0/16, Zweibruchen Air Force Base
+132.45.0.0/16, Chanute Air Force Base
+132.46.0.0/16, Columbus Air Force Base
+132.48.0.0/16, Laughlin Air Force Base
+132.49.0.0/16, 366CS/SCSN
+132.50.0.0/16, Reese Air Force Base
+132.52.0.0/16, Vance Air Force Base
+132.54.0.0/16, Langley AFB
+132.55.0.0/16, Torrejon Air Force Base
+132.56.0.0/16, 9 CS/SC
+132.57.0.0/16, Castle Air Force Base
+132.58.0.0/16, Nellis Air Force Base
+132.59.0.0/16, 24Comm SquadronSCSNA
+132.60.0.0/16, 42ND COMMUNICATION SQUADRON
+132.61.0.0/16, SSG/SIN
+132.62.0.0/16, 377 COMMUNICATION SQUADRON
+132.79.0.0/16, Army National Guard Bureau
+132.80.0.0/16, NGB-AIS-OS
+132.80.0.0/16,5 National Guard Bureau
+132.82.0.0/16, Army National Guard Bureau
+132.86.0.0/16, National Guard Bureau
+132.87.0.0/16, National Guard Bureau
+132.94.0.0/16, Army National Guard Bureau
+132.95.0.0/16, National Guard Bureau
+132.95.0.0/16, DOD Network Information Center
+132.104.0.0/16, Army National Guard Bureau
+132.105.0.0/16, Army National Guard Bureau
+132.109.0.0/16, National Guard Bureau
+132.110.0.0/16, Army National Guard Bureau
+132.114.0.0/16, Army National Guard
+132.117.0.0/16, Army National Guard Bureau
+132.118.0.0-132.132.0.0, Army National Guard Bureau
+132.122.0.0/16, South Carolina Army National Guard, USPFO
+132.133.0.0/16, National Guard Bureau
+132.134.0.0-132.143.255.255, National Guard Bureau
+132.159.0.0/16, Army Information Systems Command
+132.193.0.0/16, Army Research Office
+132.250.0.0/16, Naval Research Laboratory

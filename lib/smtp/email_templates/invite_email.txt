@@ -1,0 +1,16 @@
+Welcome,
+
+
+We have recieved a request to invite this email address.
+Please click the link below to setup your account with Websight.io:
+
+
+[DOMAIN_REPLACE]greeting/setup-account/[TOKEN_REPLACE]/[USER_UUID_REPLACE]
+
+
+If you did not register this email, ignore this message. It will
+expire in 4 hours.
+
+
+Regards,
+The Websight.io Team
