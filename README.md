@@ -89,8 +89,8 @@ The contents of the Web Sight back-end project are laid out as follows. Some are
 To get started with the Web Sight back-end, first clone the repository and `cd` into the cloned directory:
 
 ```
-git clone <repo>
-cd <repo name>
+git clone https://github.com/lavalamp-/ws-backend-community.git
+cd ws-backend-community
 ```
 
 Once in the cloned directory, you may want to [create and activate a virtual environment](http://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/) (if using venv is your sort of deal). Virtual environment or no, the next step is to install the Python dependencies using [pip](https://pypi.python.org/pypi/pip):
@@ -104,7 +104,7 @@ With the Python dependencies installed, we now must install all of the other thi
 * [PostgreSQL](https://www.postgresql.org/download/)
 * [Elasticsearch 5.*](https://www.elastic.co/guide/en/elasticsearch/reference/current/_installation.html)
 * [Redis](https://redis.io/topics/quickstart)
-* [RabbitMQ](https://www.rabbitmq.com/download.html) (you will probably want to install RabbitMQ with the (management console enabled)[https://www.rabbitmq.com/management.html])
+* [RabbitMQ](https://www.rabbitmq.com/download.html) (you will probably want to install RabbitMQ with the [management console enabled](https://www.rabbitmq.com/management.html))
 * [PhantomJS](http://phantomjs.org/download.html)
 
 Once all of these dependencies have been installed, you will want to:
@@ -322,7 +322,7 @@ I will hopefully have a contributing guide up alongside the aforementioned docum
 
 I'm a big fan of Metasploit's approach to asking questions - "Don't ask to ask, just ask." I will happily answer your questions to the best of my ability permitting I am not super swamped with other things. Questions can be asked via any of the following (in descending order of preference):
 
-* GitHub - [open issue](https://www.google.com)
+* GitHub - [open issue](https://github.com/lavalamp-/ws-backend-community/issues)
 * IRC - #thedeepestweb on [Freenode](https://freenode.net/), username is lavalamp
 * Twitter - [@_lavalamp](https://twitter.com/@_lavalamp)
 * Email - chris AT websight DOT io
