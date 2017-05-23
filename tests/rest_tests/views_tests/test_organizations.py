@@ -538,7 +538,7 @@ class TestOrdersByOrganizationView(
         if token_uuid == "POPULATE":
             token_uuid = str(payment_token.uuid)
         if include_token_uuid:
-            to_send["payment_token"] = str(token_uuid)
+            to_send["payment_token"] = str(token_uuid) if token_uuid is not None else token_uuid
         self._url_parameters = str(organization.uuid)
         return self.post(query_string=query_string, data=to_send)
 

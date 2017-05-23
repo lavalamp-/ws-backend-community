@@ -106,6 +106,8 @@ With the Python dependencies installed, we now must install all of the other thi
 * [Redis](https://redis.io/topics/quickstart)
 * [RabbitMQ](https://www.rabbitmq.com/download.html) (you will probably want to install RabbitMQ with the [management console enabled](https://www.rabbitmq.com/management.html))
 * [PhantomJS](http://phantomjs.org/download.html)
+* [Nmap](https://nmap.org/book/install.html)
+* [Zmap](https://github.com/zmap/zmap)
 
 Once all of these dependencies have been installed, you will want to:
 
@@ -228,7 +230,7 @@ The example `settings.py` file contains blocks surrounded by square brackets (`[
 With the third-party integrations set up and the `tasknode.cfg` and `settings.py` files fully-configured, we can now bootstrap the database. Run the following commands from the root Web Sight back-end directory:
 
 ```
-python manage.py makemigrations
+python manage.py makemigrations rest
 python manage.py migrate
 ```
 
@@ -241,13 +243,13 @@ python manage.py createsuperuser
 We now must activate the user so that we can authenticate with the account. Replace the <email> string below with the email address of the user that you created:
 
 ```
-python manage.py shell -c "from rest.models import WsUser; user = WsUser.objects.get(email='<email>'); user.is_active = True; user.is_enterprise_user = True; user.save()"
+python manage.py shell -c "from rest.models import WsUser; user = WsUser.objects.get(email='<email>'); user.is_active = True; user.is_enterprise_user = True; user.email_verified = True; user.save()"
 ```
 
 We now must complete some final housekeeping for bootstrapping some of the configuration values stored within the database as well as the default Elasticsearch index:
 
 ```
-python -c "from wselasticsearch import update_model_mappings; from lib.bootstrap import bootstrap_order_tiers, bootstrap_zmap_configs, bootstrap_nmap_configs; update_model_mappings(); bootstrap_order_tiers(); bootstrap_zmap_configs(); bootstrap_nmap_configs();"
+python -c "from wselasticsearch import update_model_mappings, create_user_info_index; from lib.bootstrap import bootstrap_order_tiers, bootstrap_zmap_configs, bootstrap_nmap_configs; update_model_mappings(); create_user_info_index(); bootstrap_order_tiers(); bootstrap_zmap_configs(); bootstrap_nmap_configs();"
 ```
 
 And with that, we have now set up all of Web Sight's back-end dependencies and have bootstrapped the various data stores used by Web Sight with default configuration values. We can now move on to testing that the deployment is configured correctly.
