@@ -9,6 +9,7 @@ import logging
 from .smtp.smtp import SmtpEmailHelper
 from .sqlalchemy import get_sa_session, ZmapConfig, WsUser, NmapConfig
 from .config import ConfigManager
+from .filesystem import PathHelper
 
 config = ConfigManager.instance()
 logger = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ class DeployChecker(object):
         print("Chris Account:\t\t%s\t%s" % (self.chris_user_present, self.chris_user_verified))
         print("SMTP:\t\t\t%s\t%s" % (self.mail_server_connectable, self.mail_server_available))
         print("Indices:\t\t%s" % (self.user_index_present,))
+        print("PhantomJS:\t\t%s" % (self.phantomjs_present,))
 
     # Protected Methods
 
@@ -92,6 +94,15 @@ class DeployChecker(object):
             .count()
         session.close()
         return results_count > 0
+
+    def __check_for_command_line_tool(self, tool_name):
+        """
+        Check to see if the given command line tool is currently available on the tested
+        machine.
+        :return: True if the given command line tool is currently available on the tested machine,
+        False otherwise.
+        """
+        return PathHelper.is_executable_in_path(tool_name)
 
     def __check_for_database_availability(self):
         """
@@ -396,6 +407,14 @@ class DeployChecker(object):
             else:
                 self._nmap_configs_present = self.__check_for_nmap_configs()
         return self._nmap_configs_present
+
+    @property
+    def phantomjs_present(self):
+        """
+        Get whether or not PhantomJS is present on this machine.
+        :return: Whether or not PhantomJS is present on this machine.
+        """
+        return self.__check_for_command_line_tool("phantomjs")
 
     @property
     def rabbitmq_available(self):
