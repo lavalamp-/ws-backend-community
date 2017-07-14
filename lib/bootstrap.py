@@ -48,7 +48,8 @@ def bootstrap_elasticsearch():
     Bootstrap Elasticsearch to contain the proper document typings.
     :return: None
     """
-    from wselasticsearch.bootstrap import create_user_info_index
+    from wselasticsearch.bootstrap import create_user_info_index, update_model_mappings
+    update_model_mappings()
     create_user_info_index()
 
 
