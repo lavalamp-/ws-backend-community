@@ -53,6 +53,7 @@ At a high level, the Web Sight back-end relies upon the following technologies:
 * [Zmap](https://zmap.io/) - Scanning a single port across a large number of hosts
 * [PhantomJS](http://phantomjs.org/) - Taking screenshots of web applications
 * [AWS S3](https://aws.amazon.com/s3/) - File storage
+* [PostgreSQL](https://www.postgresql.org/) - Web Sight makes use of PostgreSQL for storage of all database-related data
 
 ## Directory Layout
 

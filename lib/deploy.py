@@ -61,8 +61,8 @@ class DeployChecker(object):
         print("RabbitMQ:\t\t%s\t%s" % (self.rabbitmq_connectable, self.rabbitmq_available))
         print("Elasticsearch:\t\t%s\t%s" % (self.elasticsearch_connectable, self.elasticsearch_connectable))
         print("S3:\t\t\t%s\t%s" % (self.s3_connectable, self.s3_available))
-        print("Zmap:\t\t\t%s" % (self.zmap_configs_present,))
-        print("Nmap:\t\t\t%s" % (self.nmap_configs_present,))
+        print("Zmap:\t\t\t%s\t%s" % (self.zmap_configs_present, self.zmap_present))
+        print("Nmap:\t\t\t%s\t%s" % (self.nmap_configs_present, self.nmap_present))
         print("Chris Account:\t\t%s\t%s" % (self.chris_user_present, self.chris_user_verified))
         print("SMTP:\t\t\t%s\t%s" % (self.mail_server_connectable, self.mail_server_available))
         print("Indices:\t\t%s" % (self.user_index_present,))
@@ -409,6 +409,14 @@ class DeployChecker(object):
         return self._nmap_configs_present
 
     @property
+    def nmap_present(self):
+        """
+        Get whether or not the nmap application is present on this machine.
+        :return: whether or not the nmap application is present on this machine.
+        """
+        return self.__check_for_command_line_tool("nmap")
+
+    @property
     def phantomjs_present(self):
         """
         Get whether or not PhantomJS is present on this machine.
@@ -512,5 +520,13 @@ class DeployChecker(object):
             else:
                 self._zmap_configs_present = self.__check_for_zmap_configs()
         return self._zmap_configs_present
+
+    @property
+    def zmap_present(self):
+        """
+        Get whether or not the Zmap application is present on this machine.
+        :return: whether or not the Zmap application is present on this machine.
+        """
+        return self.__check_for_command_line_tool("zmap")
 
     # Representation and Comparison
