@@ -11,6 +11,27 @@ logger = logging.getLogger(__name__)
 config = ConfigManager.instance()
 
 
+def bootstrap_all_database_models():
+    """
+    Ensure that all of the necessary database objects are present in the Web Sight
+    database.
+    :return: None
+    """
+    bootstrap_nmap_configs()
+    bootstrap_zmap_configs()
+    bootstrap_order_tiers()
+
+
+def bootstrap_data_stores():
+    """
+    Perform all of the necessary bootstrapping to set up all database and Elasticsearch
+    content.
+    :return: None
+    """
+    bootstrap_all_database_models()
+    bootstrap_elasticsearch()
+
+
 def bootstrap_django_models():
     """
     Perform the bootstrapping necessary to use Aldjemy outside of Django.
@@ -20,6 +41,15 @@ def bootstrap_django_models():
     import django
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", config.django_settings_module)
     django.setup()
+
+
+def bootstrap_elasticsearch():
+    """
+    Bootstrap Elasticsearch to contain the proper document typings.
+    :return: None
+    """
+    from wselasticsearch.bootstrap import create_user_info_index
+    create_user_info_index()
 
 
 def bootstrap_order_tiers():
