@@ -39,8 +39,6 @@ class DeployChecker(object):
         self._s3_connectable = None
         self._zmap_configs_present = None
         self._nmap_configs_present = None
-        self._chris_user_present = None
-        self._chris_user_verified = None
         self._mail_server_available = None
         self._mail_server_connectable = None
         self._user_index_present = None
@@ -63,7 +61,6 @@ class DeployChecker(object):
         print("S3:\t\t\t%s\t%s" % (self.s3_connectable, self.s3_available))
         print("Zmap:\t\t\t%s\t%s" % (self.zmap_configs_present, self.zmap_present))
         print("Nmap:\t\t\t%s\t%s" % (self.nmap_configs_present, self.nmap_present))
-        print("Chris Account:\t\t%s\t%s" % (self.chris_user_present, self.chris_user_verified))
         print("SMTP:\t\t\t%s\t%s" % (self.mail_server_connectable, self.mail_server_available))
         print("Indices:\t\t%s" % (self.user_index_present,))
         print("PhantomJS:\t\t%s" % (self.phantomjs_present,))
@@ -71,29 +68,6 @@ class DeployChecker(object):
     # Protected Methods
 
     # Private Methods
-
-    def __check_for_chris_user_presence(self):
-        """
-        Check to see if there is a user account in the configured database for Chris.
-        :return: True if there is a user account in the configured database for Chris, False otherwise.
-        """
-        session = get_sa_session()
-        results_count = session.query(WsUser).filter(WsUser.email == "chris@websight.io").count()
-        session.close()
-        return results_count > 0
-
-    def __check_for_chris_user_verified(self):
-        """
-        Check to see if Chris's user account is currently verified.
-        :return: True if Chris's user account is currently verified, False otherwise.
-        """
-        session = get_sa_session()
-        results_count = session.query(WsUser)\
-            .filter(WsUser.email == "chris@websight.io")\
-            .filter(WsUser.email_verified == True)\
-            .count()
-        session.close()
-        return results_count > 0
 
     def __check_for_command_line_tool(self, tool_name):
         """
@@ -270,32 +244,6 @@ class DeployChecker(object):
     # Properties
 
     @property
-    def chris_user_present(self):
-        """
-        Get whether or not Chris's user account exists within the database.
-        :return: whether or not Chris's user account exists within the database.
-        """
-        if self._chris_user_present is None:
-            if not self.database_available:
-                self._chris_user_present = False
-            else:
-                self._chris_user_present = self.__check_for_chris_user_presence()
-        return self._chris_user_present
-
-    @property
-    def chris_user_verified(self):
-        """
-        Get whether or not Chris's user account is verified and active in the database.
-        :return: whether or not Chris's user account is verified and active in the data base.
-        """
-        if self._chris_user_verified is None:
-            if not self.chris_user_present:
-                self._chris_user_verified = False
-            else:
-                self._chris_user_verified = self.__check_for_chris_user_verified()
-        return self._chris_user_verified
-
-    @property
     def database_available(self):
         """
         Get whether or not the configured database is currently accessible.
@@ -351,8 +299,6 @@ class DeployChecker(object):
                and self.database_available \
                and self.rabbitmq_connectable \
                and self.rabbitmq_available \
-               and self.chris_user_present \
-               and self.chris_user_verified \
                and self.elasticsearch_connectable \
                and self.elasticsearch_available \
                and self.s3_connectable \
