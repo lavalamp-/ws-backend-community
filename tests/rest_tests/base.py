@@ -5,7 +5,7 @@ from django.test import TestCase, Client
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from rest.models import WsUser, Organization, Network, DomainName, PaymentToken, Order
+from rest.models import WsUser, Organization, Network, DomainName, Order
 from ..data import WsTestData
 from .mixin import ParameterizedRouteMixin, PaginatedTestCaseMixin
 
@@ -36,13 +36,6 @@ class WsDjangoTestCase(TestCase):
         :return: The most recently created network.
         """
         return self.get_last_created(Network)
-
-    def get_last_created_payment_token(self):
-        """
-        Get the most recently created PaymentToken.
-        :return: The most recently created PaymentToken.
-        """
-        return self.get_last_created(PaymentToken)
 
     def get_last_created_order(self):
         """
@@ -98,8 +91,6 @@ class WsDjangoTestCase(TestCase):
         """
         if object_class == Order:
             return self.get_order_for_user(user=user)
-        elif object_class == PaymentToken:
-            return self.get_payment_token_for_user(user=user)
         elif object_class == Organization:
             return self.get_organization_for_user(user=user)
         else:
@@ -125,15 +116,6 @@ class WsDjangoTestCase(TestCase):
         """
         user = self.get_user(user=user)
         return user.organizations[0]
-
-    def get_payment_token_for_user(self, user="user_1"):
-        """
-        Get the payment token to use for testing purposes for the given user.
-        :param user: The user to retrieve that payment token for.
-        :return: The payment token associated with the given user.
-        """
-        user = self.get_user(user=user)
-        return user.payment_tokens.first()
 
     def get_user(self, user="user_1"):
         """

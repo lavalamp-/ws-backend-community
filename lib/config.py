@@ -750,15 +750,6 @@ class ConfigManager(object):
         return os.path.join(self.files_base_directory, file_name)
 
     @property
-    def files_order_tiers_path(self):
-        """
-        Get the local file path to where the order tiers file resides.
-        :return: the local file path to where the order tiers file resides.
-        """
-        file_name = self.__get_string("Files", "files_order_tiers")
-        return os.path.join(self.files_base_directory, file_name)
-
-    @property
     def files_user_agents_path(self):
         """
         Get the local file path to where the user agents CSV file resides.
@@ -993,22 +984,6 @@ class ConfigManager(object):
         from .conversion import ConversionHelper
         level_string = self.__get_string("Logging", "log_task_level")
         return ConversionHelper.string_to_log_level(level_string)
-
-    @property
-    def payments_stripe_publishable_key(self):
-        """
-        Get the Stripe publishable key to use for processing transactions.
-        :return: the Stripe publishable key to use for processing transactions.
-        """
-        return self.__get_string("Payments", "payments_stripe_publishable_key")
-
-    @property
-    def payments_stripe_secret_key(self):
-        """
-        Get the Stripe secret key to use for processing transactions.
-        :return: the Stripe secret key to use for processing transactions.
-        """
-        return self.__get_string("Payments", "payments_stripe_secret_key")
 
     @property
     def recaptcha_login_attempt_threshold(self):

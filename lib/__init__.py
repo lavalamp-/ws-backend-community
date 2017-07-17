@@ -28,7 +28,6 @@ from .bootstrap import (
     bootstrap_data_stores,
     bootstrap_django_models,
     bootstrap_nmap_configs,
-    bootstrap_order_tiers,
     bootstrap_zmap_configs,
 )
 
@@ -144,10 +143,6 @@ from .wsredis import (
 
 from .wsregex import (
     RegexLib,
-)
-
-from .wsstripe import (
-    WsStripeHelper,
 )
 
 from .wsupgrade import (

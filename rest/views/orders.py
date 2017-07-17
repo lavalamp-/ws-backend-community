@@ -59,8 +59,6 @@ def place_order(request, pk=None):
     if not request.user.is_superuser:
         if not order.organization.can_user_scan(request.user):
             raise PermissionDenied("You do not have sufficient privileges to start scans for that organization.")
-    if order.has_been_charged:
-        raise OperationNotAllowed("That order has already been placed.")
     order_placed = order.place_order()
     if not order_placed:
         raise OperationFailed("An issue was encountered when attempting to place your order. Please try again.")

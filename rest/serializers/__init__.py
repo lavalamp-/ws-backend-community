@@ -31,10 +31,6 @@ from .organizations import (
     OrganizationDomainNameUploadRangeSerializer
 )
 
-from .payments import (
-    PaymentTokenSerializer,
-)
-
 from .services import (
     NetworkServiceSummarySerializer,
 )

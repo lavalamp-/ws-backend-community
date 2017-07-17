@@ -5,7 +5,6 @@ from uuid import uuid4
 from mock import MagicMock
 from django.utils import timezone
 
-from lib import WsStripeHelper
 from ..mixin import ListTestCaseMixin, ParameterizedRouteMixin, ExporterTestCaseMixin, RetrieveTestCaseMixin, \
     PresentableTestCaseMixin, ExporterCustomFieldsMixin, CustomFieldsMixin
 from ..base import WsDjangoViewTestCase
@@ -193,21 +192,6 @@ class TestPlaceOrder(
         response = self.send(user="user_1")
         order.organization.scan_group.users.add(scan_user)
         self.assert_request_not_authorized(response)
-
-    def test_order_already_charged_fails(self):
-        """
-        Tests that submitting a request with the UUID of an order that has already been charged fails.
-        :return: None
-        """
-        order = self.get_order_for_user(user="user_1")
-        order.has_been_charged = True
-        order.charged_at = timezone.now()
-        order.save()
-        response = self.send(user="user_1")
-        order.has_been_charged = False
-        order.charged_at = None
-        order.save()
-        self.assert_request_fails(response)
 
     def test_calls_place_order(self):
         """

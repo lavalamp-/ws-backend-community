@@ -2,18 +2,16 @@
 from __future__ import absolute_import
 
 import json
-import random
-from mock import MagicMock
 from django.test.runner import DiscoverRunner
 from django.utils import timezone
 import time
 from netaddr import IPNetwork
 from lib import ConfigManager
 
-from lib import WsFaker, RandomHelper, WsStripeHelper, FilesystemHelper, WsIntrospectionHelper
+from lib import WsFaker, RandomHelper, FilesystemHelper, WsIntrospectionHelper
 from wselasticsearch.helper import ElasticsearchHelper
 from .data import WsTestData
-from rest.models import WsUser, Organization, Order, OrderTier
+from rest.models import WsUser, Organization, Order
 from wselasticsearch import bootstrap_index_model_mappings
 from wselasticsearch.query import BulkElasticsearchQuery
 from wselasticsearch.models import SslSupportReportModel, WebServiceReportModel, HttpTransactionModel, \
@@ -240,7 +238,6 @@ class WebSightDiscoverRunner(DiscoverRunner):
         Populate the database with all of the necessary objects used for unit testing.
         :return: None
         """
-        self.__populate_order_tiers()
         for user_string, user_kwargs in WsTestData.USERS.iteritems():
             self.__populate_user(user_string=user_string, user_kwargs=user_kwargs)
 
@@ -470,28 +467,13 @@ class WebSightDiscoverRunner(DiscoverRunner):
         :return: The newly-created orders.
         """
         new_orders = []
-        token = user.payment_tokens.first()
         for i in range(count):
-            new_order = Order.objects.create_from_token_user_and_organization(
-                payment_token=token,
+            new_order = Order.objects.create_from_user_and_organization(
                 organization=organization,
                 user=user,
             )
             new_orders.append(new_order)
         return new_orders
-
-    def __populate_order_tiers(self):
-        """
-        Populate the database with order tiers.
-        :return: The newly-created order tiers.
-        """
-        file_contents = FilesystemHelper.get_file_contents(config.files_order_tiers_path)
-        contents = json.loads(file_contents)
-        tiers = []
-        for entry in contents:
-            new_tier = OrderTier.objects.create(**entry)
-            tiers.append(new_tier)
-        return tiers
 
     def __populate_organization_for_user(self, user=None, user_string=None):
         """
@@ -511,22 +493,6 @@ class WebSightDiscoverRunner(DiscoverRunner):
         self.__populate_orders_for_organization(organization=org, user=user, user_string=user_string)
         return org
 
-    def __populate_payment_tokens_for_user(self, user=None, user_string=None, count=5):
-        """
-        Create payment tokens for the given user.
-        :param user: The user to create payment tokens for.
-        :param user_string: A string depicting the user that payment tokens are being created for.
-        :param count: The number of payment tokens to create.
-        :return: The newly-created payment tokens.
-        """
-        new_tokens = []
-        WsStripeHelper.create_stripe_user_from_token = MagicMock()
-        for i in range(count):
-            token_type = random.sample(["stripe"], 1)[0]
-            new_token = user.payment_tokens.create(**WsFaker.get_payment_token_kwargs())
-            new_tokens.append(new_token)
-        return new_tokens
-
     def __populate_user(self, user_string=None, user_kwargs=None):
         """
         Create a user using the given key-word arguments and populate the user with all of the necessary
@@ -536,7 +502,6 @@ class WebSightDiscoverRunner(DiscoverRunner):
         :return: The user that was created.
         """
         new_user = WsUser.objects.create_user(**user_kwargs)
-        self.__populate_payment_tokens_for_user(user=new_user, user_string=user_string)
         self.__populate_organization_for_user(user=new_user, user_string=user_string)
         return new_user
 

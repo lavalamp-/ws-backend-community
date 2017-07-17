@@ -49,7 +49,6 @@ class RegexLib(object):
         "^([\\\\\w\-!@\$%\^\*\(\)_`~+\[\]{}|;'\",<>]+=([\\\\\w\-!@\$%\^\*\(\)_`~+\[\]{}|;'\",<>]*)?(&[\\\\\w\-!@\$%\^\*\(\)_`~+\[\]{}|;'\",<>]+=([\\\\\w\-!@\$%\^\*\(\)_`~+\[\]{}|;'\",<>]*)?)*)$",
         flags=re.IGNORECASE,
     )
-    stripe_payment_token_regex = re.compile("^tok_[0-9A-Za-z]{24}$")
     url_port_regex = re.compile(".+:([1-9]([0-9]{1,10})?)$", flags=re.IGNORECASE)
     url_protocol_regex = re.compile("^([A-Z0-9-_]+?):", flags=re.IGNORECASE)
     url_scheme_regex = re.compile("^([A-Z0-9]{1,25})://", flags=re.IGNORECASE)

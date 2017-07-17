@@ -679,26 +679,6 @@ class WsFaker(object):
             return WsFaker.get_file_path()
 
     @staticmethod
-    def get_payment_token_kwargs():
-        """
-        Get a dictionary containing keyword arguments to pass to payment token create method.
-        :return: A dictionary containing keyword arguments to pass to payment token create method.
-        """
-        token_type = random.sample(["stripe"], 1)[0]
-        if token_type == "stripe":
-            token_value = WsFaker.get_stripe_token()
-        return {
-            "name": WsFaker.get_word(),
-            "token_type": token_type,
-            "token_value": token_value,
-            "card_type": WsFaker.get_card_type(),
-            "expiration_month": WsFaker.get_month_int(),
-            "expiration_year": WsFaker.get_expiration_year(),
-            "card_last_four": WsFaker.get_card_last_four(),
-            "can_be_charged": True,
-        }
-
-    @staticmethod
     def get_port(minimum=1, maximum=65535):
         """
         Get a valid port integer between the specified minimum and maximum.

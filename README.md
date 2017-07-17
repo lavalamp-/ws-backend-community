@@ -127,7 +127,6 @@ Web Sight makes use of multiple third-party services to provide various parts of
 
 * [Amazon Web Services](https://aws.amazon.com/) (**req'd**) - Usage of S3 (**req'd**) and usage of Amazon Elasticsearch (optional)
 * [Farsight DNSDB](https://www.dnsdb.info/) (optional) - Greatly boosts domain name enumeration
-* [Stripe](https://stripe.com/docs/api) (**req'd**) - Currently used for payment processing and the API currently requires at least dev credentials for orders to be placed (this will be phased out soon)
 * SMTP Mail Server (**req'd**) - Sending emails, can be any SMTP service
 * [reCAPTCHA](https://www.google.com/recaptcha/intro/invisible.html) (**req'd**) - Protects against automated attacks, will be phased out soon
 
@@ -174,11 +173,6 @@ es_password - The password to connect to Elasticsearch with
 es_host - The hostname or IP address where your Elasticsearch server is running
 es_port - The port where your Elasticsearch server is running
 es_use_aws - Whether or not to use AWS Elasticsearch (if you set this value to True, then the credentials in the [AWS] section will be used to connect to AWS and the other connection values within [Elasticsearch] will be ignored.
-
-[Payments]
-
-payments_stripe_publishable_key - Your Stripe API publishable key
-payments_stripe_secret_key - Your Stripe API secret key
 
 [Recaptcha]
 

@@ -50,11 +50,6 @@ from .organizations import (
     upload_networks_file,
 )
 
-from .payments import (
-    PaymentTokenDetailView,
-    PaymentTokenListView,
-)
-
 from .scans import (
     invoke_scan,
 )

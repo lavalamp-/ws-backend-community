@@ -5,7 +5,6 @@ import rest.models
 from .base import from_django_model
 
 
-OrderTier = from_django_model(rest.models.OrderTier)
 Order = from_django_model(rest.models.Order)
 OrderDomainName = from_django_model(rest.models.OrderDomainName)
 OrderNetwork = from_django_model(rest.models.OrderNetwork)

@@ -517,8 +517,6 @@ class TestOrdersByOrganizationView(
             user="user_1",
             query_string=None,
             login=True,
-            include_token_uuid=True,
-            token_uuid="POPULATE",
     ):
         """
         Send an HTTP request to the configured API endpoint to create a new order for the organization
@@ -526,19 +524,12 @@ class TestOrdersByOrganizationView(
         :param user: A string depicting the user to submit the request as.
         :param query_string: The query string to include in the URL.
         :param login: Whether or not to log the requesting user in before sending the request.
-        :param include_token_uuid: Whether or not to include the payment token UUID in the request.
-        :param token_uuid: The payment token UUID to include in the request.
         :return: The HTTP response.
         """
         if login:
             self.login(user=user)
         to_send = {}
         organization = self.get_organization_for_user(user=user)
-        payment_token = self.get_payment_token_for_user(user=user)
-        if token_uuid == "POPULATE":
-            token_uuid = str(payment_token.uuid)
-        if include_token_uuid:
-            to_send["payment_token"] = str(token_uuid) if token_uuid is not None else token_uuid
         self._url_parameters = str(organization.uuid)
         return self.post(query_string=query_string, data=to_send)
 
@@ -555,49 +546,6 @@ class TestOrdersByOrganizationView(
         org.scan_group.users.add(user)
         self.assertEquals(response.status_code, 403)
 
-    def test_create_no_token_uuid_fails(self):
-        """
-        Tests to ensure that a create request fails when no token UUID is provided.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(include_token_uuid=False))
-
-    def test_create_empty_token_uuid_fails(self):
-        """
-        Tests to ensure that a create request fails when an empty token UUID is provided.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(token_uuid=None))
-
-    def test_create_unknown_token_uuid_fails(self):
-        """
-        Tests to ensure that a create request fails when the token UUID is not known.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(token_uuid=str(uuid4())))
-
-    def test_create_not_owned_token_uuid_fails(self):
-        """
-        Tests to ensure that a create request fails when the payment token is not owned by the requesting
-        user.
-        :return: None
-        """
-        token = self.get_payment_token_for_user(user="user_2")
-        self.assert_request_fails(self.send_create_request(token_uuid=token.uuid, user="user_1"))
-
-    def test_create_not_chargeable_token_fails(self):
-        """
-        Tests to ensure that a create request fails when the payment token is not marked as being chargeable.
-        :return: None
-        """
-        token = self.get_payment_token_for_user(user="user_1")
-        token.can_be_charged = False
-        token.save()
-        response = self.send_create_request(token_uuid=token.uuid, user="user_1")
-        token.can_be_charged = True
-        token.save()
-        self.assert_request_fails(response)
-
     def test_create_assigns_correct_organization(self):
         """
         Tests to ensure that a create request assigns the correct organization to the order.
@@ -608,16 +556,6 @@ class TestOrdersByOrganizationView(
         order = self.get_last_created_order()
         self.assertEqual(order.organization, organization)
 
-    def test_create_assigns_correct_token(self):
-        """
-        Tests to ensure that a create request assigns the correcy payment token to the order.
-        :return: None
-        """
-        token = self.get_payment_token_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.payment_token, token)
-
     def test_create_assigns_correct_user_email(self):
         """
         Tests to ensure that a create request assigns the correct user email to the order.
@@ -627,26 +565,6 @@ class TestOrdersByOrganizationView(
         self.send_create_request(user="user_1")
         order = self.get_last_created_order()
         self.assertEqual(order.user_email, user.email)
-
-    def test_create_assigns_correct_order_tier_name(self):
-        """
-        Tests to ensure that a create request assigns the correct order_tier_name.
-        :return: None
-        """
-        organization = self.get_organization_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.order_tier_name, organization.current_order_tier_name)
-
-    def test_create_assigns_correct_order_tier_price(self):
-        """
-        Tests to ensure that a create request assigns the correct order_tier_price.
-        :return: None
-        """
-        organization = self.get_organization_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.order_tier_price, organization.current_order_price)
 
     def test_create_assigns_correct_scoped_domains_count(self):
         """
@@ -678,45 +596,6 @@ class TestOrdersByOrganizationView(
         order = self.get_last_created_order()
         self.assertEqual(order.scoped_endpoints_size, organization.monitored_networks_size)
 
-    def test_create_assigns_correct_payment_token_type(self):
-        """
-        Tests to ensure that a create request assigns the correct payment_token_type.
-        :return: None
-        """
-        token = self.get_payment_token_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.payment_token_type, token.token_type)
-
-    def test_create_assigns_correct_payment_token_value(self):
-        """
-        Tests to ensure that a create request assigns the correct payment_token_value.
-        :return: None
-        """
-        token = self.get_payment_token_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.payment_token_value, token.token_value)
-
-    def test_create_assigns_correct_order_cost(self):
-        """
-        Tests to ensure that a create request assigns the correct order_cost.
-        :return: None
-        """
-        organization = self.get_organization_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.order_cost, organization.current_order_price)
-
-    def test_create_assigns_correct_has_been_charged(self):
-        """
-        Tests to ensure that a create request assigns the correct has_been_charged.
-        :return: None
-        """
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertFalse(order.has_been_charged)
-
     def test_create_does_not_assign_started_at(self):
         """
         Tests to ensure that a create request does not assign started_at.
@@ -734,33 +613,6 @@ class TestOrdersByOrganizationView(
         self.send_create_request(user="user_1")
         order = self.get_last_created_order()
         self.assertIsNone(order.completed_at)
-
-    def test_create_does_not_assign_charge_amount(self):
-        """
-        Tests to ensure that a create request does not assign charge_amount.
-        :return: None
-        """
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertIsNone(order.charge_amount)
-
-    def test_create_does_not_assign_transaction_id(self):
-        """
-        Tests to ensure that a create request does not assign transaction_id.
-        :return: None
-        """
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertFalse(order.transaction_id)
-
-    def test_create_does_not_assign_charged_at(self):
-        """
-        Tests to ensure that a create request does not assign charged_at.
-        :return: None
-        """
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertIsNone(order.charged_at)
 
     def test_create_adds_correct_networks(self):
         """
@@ -783,36 +635,6 @@ class TestOrdersByOrganizationView(
         self.send_create_request(user="user_1")
         order = self.get_last_created_order()
         self.assertEqual(domains_count, order.domain_names.count())
-
-    def test_create_assigns_correct_payment_last_four(self):
-        """
-        Tests to ensure that a create request assigns the correct payment_last_four.
-        :return: None
-        """
-        token = self.get_payment_token_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.payment_last_four, token.card_last_four)
-
-    def test_create_assigns_correct_payment_exp_month(self):
-        """
-        Tests to ensure that a create request assigns the correct payment_exp_month.
-        :return: None
-        """
-        token = self.get_payment_token_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.payment_exp_month, token.expiration_month)
-
-    def test_create_assigns_correct_payment_exp_year(self):
-        """
-        Tests to ensure that a create request assigns the correct exp_year.
-        :return: None
-        """
-        token = self.get_payment_token_for_user(user="user_1")
-        self.send_create_request(user="user_1")
-        order = self.get_last_created_order()
-        self.assertEqual(order.payment_exp_year, token.expiration_year)
 
     def test_create_no_monitored_endpoints_fails(self):
         """
@@ -856,74 +678,6 @@ class TestOrdersByOrganizationView(
         user.is_enterprise_user = False
         user.save()
         self.assert_creation_succeeds(response)
-
-    def test_create_enterprise_user_no_payment_token_succeeds(self):
-        """
-        Tests to ensure that a create request by an enterprise user that omit the payment token
-        succeeds.
-        :return: None
-        """
-        user = self.get_user(user="user_1")
-        user.is_enterprise_user = True
-        user.save()
-        response = self.send_create_request(include_token_uuid=False)
-        user.is_enterprise_user = False
-        user.save()
-        self.assert_creation_succeeds(response)
-
-    def test_create_enterprise_user_empty_payment_token_succeeds(self):
-        """
-        Tests to ensure that a create request by an enterprise user that omit the payment token
-        succeeds.
-        :return: None
-        """
-        user = self.get_user(user="user_1")
-        user.is_enterprise_user = True
-        user.save()
-        response = self.send_create_request(token_uuid=None)
-        user.is_enterprise_user = False
-        user.save()
-        self.assert_creation_succeeds(response)
-
-    def test_create_enterprise_user_no_payment_token_creates(self):
-        """
-        Tests to ensure that a create request by an enterprise user creates an Order.
-        :return: None
-        """
-        user = self.get_user(user="user_1")
-        user.is_enterprise_user = True
-        user.save()
-        first_count = rest.models.Order.objects.count()
-        self.send_create_request(include_token_uuid=False)
-        second_count = rest.models.Order.objects.count()
-        user.is_enterprise_user = False
-        user.save()
-        self.assertEqual(first_count + 1, second_count)
-
-    def test_create_regular_user_not_enterprise_order(self):
-        """
-        Tests to ensure that a create request by a regular user creates an Order that is marked as a
-        non-enterprise order.
-        :return: None
-        """
-        self.send_create_request()
-        order = self.get_last_created_order()
-        self.assertFalse(order.is_enterprise_order)
-
-    def test_create_enterprise_user_enterprise_order(self):
-        """
-        Tests to ensure that a create request by an enterprise user creates an Order that is marked as
-        an enterprise order.
-        :return: None
-        """
-        user = self.get_user(user="user_1")
-        user.is_enterprise_user = True
-        user.save()
-        self.send_create_request(user="user_1")
-        user.is_enterprise_user = False
-        user.save()
-        order = self.get_last_created_order()
-        self.assertTrue(order.is_enterprise_order)
 
     @property
     def custom_fields_field(self):

@@ -25,10 +25,8 @@ from .flags import (
 
 from .orders import (
     Order,
-    OrderDiscount,
     OrderDomainName,
     OrderNetwork,
-    OrderTier,
 )
 
 from .organizations import (
@@ -46,9 +44,7 @@ from .networks import (
 )
 
 from .payments import (
-    PaymentToken,
     Receipt,
-    StripeCustomer,
 )
 
 from .services import (

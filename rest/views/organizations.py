@@ -13,7 +13,7 @@ from rest.responses import DomainsUploadResponse
 from rest.responses import NetworksUploadResponse
 from tasknode.tasks import initialize_organization, handle_organization_deletion, process_dns_text_file, \
     send_emails_for_org_user_invite
-from rest.models import Organization, Network, OrganizationConfig, WsAuthGroup, WsUser, DomainName, ScanPort, PaymentToken
+from rest.models import Organization, Network, OrganizationConfig, WsAuthGroup, WsUser, DomainName, ScanPort
 from rest.serializers import OrganizationSerializer, OrganizationNetworkUploadRangeSerializer, \
     OrganizationDomainNameUploadRangeSerializer, NetworkSerializer, DomainNameSerializer
 from wselasticsearch.models import UserUploadModel
@@ -229,8 +229,6 @@ class OrdersByOrganizationView(BaseOrganizationListCreateChildAPIView):
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
     filter_class = rest.filters.OrderFilter
 
-    _payment_token = None
-
     def _get_parent_mapping(self):
         return {
             "organization": self.parent_object,
@@ -247,37 +245,10 @@ class OrdersByOrganizationView(BaseOrganizationListCreateChildAPIView):
                 "You must choose at least one network or domain name to monitor on an organization before creating a "
                 "new order."
             )
-        if not self.request.user.is_enterprise_user:
-            token_check = self.payment_token
         return super(OrdersByOrganizationView, self).create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        if self.request.user.is_enterprise_user:
-            serializer.save(organization=self.parent_object)
-        else:
-            serializer.save(organization=self.parent_object, payment_token=self.payment_token)
-
-    @property
-    def payment_token(self):
-        """
-        Get the payment token associated with the request.
-        :return: the payment token associated with the request.
-        """
-        if self._payment_token is None:
-            if "payment_token" not in self.request.data:
-                raise ValidationError("You must provide a payment token ID.")
-            try:
-                token = PaymentToken.objects.get(pk=self.request.data["payment_token"])
-                if token.user != self.request.user:
-                    raise ValidationError("That payment method was not found.")
-                elif not token.can_be_charged:
-                    raise ValidationError("That payment method cannot be charged.")
-                self._payment_token = token
-            except ObjectDoesNotExist:
-                raise ValidationError("No payment token found with that ID.")
-            except ValueError:
-                raise ValidationError("Invalid ID value for payment token.")
-        return self._payment_token
+        serializer.save(organization=self.parent_object)
 
     @property
     def relationship_key(self):

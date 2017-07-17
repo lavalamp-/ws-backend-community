@@ -19,7 +19,6 @@ def bootstrap_all_database_models():
     """
     bootstrap_nmap_configs()
     bootstrap_zmap_configs()
-    bootstrap_order_tiers()
 
 
 def bootstrap_data_stores():
@@ -51,22 +50,6 @@ def bootstrap_elasticsearch():
     from wselasticsearch.bootstrap import create_user_info_index, update_model_mappings
     update_model_mappings()
     create_user_info_index()
-
-
-def bootstrap_order_tiers():
-    """
-    Ensure that all of the default OrderTier objects are currently in the database.
-    :return: None
-    """
-    from .sqlalchemy import get_sa_session, OrderTier
-    session = get_sa_session()
-    session.query(OrderTier).delete()
-    file_contents = FilesystemHelper.get_file_contents(config.files_order_tiers_path)
-    contents = json.loads(file_contents)
-    for entry in contents:
-        new_tier = OrderTier.new(**entry)
-        session.add(new_tier)
-    session.commit()
 
 
 def bootstrap_zmap_configs():

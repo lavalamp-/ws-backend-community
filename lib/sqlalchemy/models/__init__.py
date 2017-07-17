@@ -23,7 +23,6 @@ from .orders import (
     Order,
     OrderDomainName,
     OrderNetwork,
-    OrderTier,
 )
 
 from .organizations import (

@@ -1,6 +1,0 @@
-[{"number": 1, "name": "micro", "max_domains": 10, "max_endpoints": 10, "price": 0},
-{"number": 2, "name": "small", "max_domains": 20, "max_endpoints": 20, "price": 500},
-{"number": 3, "name": "medium", "max_domains": 50, "max_endpoints": 100, "price": 1000},
-{"number": 4, "name": "large", "max_domains": 100, "max_endpoints": 256, "price": 2000},
-{"number": 5, "name": "xl", "max_domains": 200, "max_endpoints": 1024, "price": 5000},
-{"number": 6, "name": "enterprise", "max_domains": 99999, "max_endpoints": 99999, "price": 0}]

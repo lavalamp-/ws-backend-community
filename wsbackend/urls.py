@@ -59,11 +59,6 @@ urlpatterns = [
     url(r'^orders/(?P<pk>[-\w]+)/?$', views.OrderDetailView.as_view(), name="order-detail"),
     url(r'^orders/?$', views.OrderListView.as_view(), name="order-list"),
 
-    # Payment Token URLs
-
-    url(r'^payment-tokens/(?P<pk>[-\w]+)/?$', views.PaymentTokenDetailView.as_view(), name="paymenttoken-detail"),
-    url(r'^payment-tokens/?$', views.PaymentTokenListView.as_view(), name="paymenttoken-list"),
-
     # Web Service URLs
 
     url(r'^web-services/(?P<pk>[-\w]+)/resources/analytics/?$', views.WebServiceResourceAnalyticsAPIView.as_view(), name="webserviceresource-analytics"),

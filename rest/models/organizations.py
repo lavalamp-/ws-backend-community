@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from django.conf import settings
 from django.db import models
 from django.db.models import Count, Sum, F
 from django.utils import timezone
@@ -10,7 +9,6 @@ from datetime import timedelta
 from rest_framework.exceptions import ValidationError
 
 from .base import BaseWsModel
-from .orders import OrderTier
 from lib import ConfigManager, FilesystemHelper
 
 config = ConfigManager.instance()
@@ -80,8 +78,6 @@ class Organization(BaseWsModel):
     """
     This is a class for representing an organization that is being scanned.
     """
-
-    _current_order_tier = None
 
     # Management
 
@@ -278,42 +274,6 @@ class Organization(BaseWsModel):
         to_return.extend(self.write_group.users.all())
         to_return.extend(self.scan_group.users.all())
         return list(set(to_return))
-
-    @property
-    def current_order_price(self):
-        """
-        Get the price of the tier that this order is currently in.
-        :return: the price of the tier that this order is currently in.
-        """
-        return self.current_order_tier.price
-
-    @property
-    def current_order_tier(self):
-        """
-        Get the order tier that the contents of this organization currently qualify as.
-        :return: the order tier that the contents of this organization currently qualify as.
-        """
-        if self._current_order_tier is None:
-            domains_count = self.monitored_domains_count
-            endpoints_count = self.monitored_networks_size
-            order_tiers = OrderTier.objects.order_by("number").all()
-            current_order_tier = None
-            for order_tier in order_tiers:
-                if domains_count <= order_tier.max_domains and endpoints_count <= order_tier.max_endpoints:
-                    current_order_tier = order_tier
-                    break
-            if current_order_tier is None:
-                current_order_tier = order_tier
-            self._current_order_tier = current_order_tier
-        return self._current_order_tier
-
-    @property
-    def current_order_tier_name(self):
-        """
-        Get the name of this order's current order tier.
-        :return: the name of this order's current order tier.
-        """
-        return self.current_order_tier.name
 
     @property
     def domains_count(self):

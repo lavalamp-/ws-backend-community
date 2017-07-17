@@ -16,7 +16,3 @@ from .orders import (
 from .organizations import (
     OrganizationFilter,
 )
-
-from .payments import (
-    PaymentTokenFilter,
-)

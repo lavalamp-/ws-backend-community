@@ -45,8 +45,6 @@ class OrganizationSerializer(WsBaseModelSerializer):
             "networks_size",
             "domains_count",
             "monitored_domains_count",
-            "current_order_tier_name",
-            "current_order_price",
         )
         read_only_fields = (
             "created",
@@ -63,8 +61,6 @@ class OrganizationSerializer(WsBaseModelSerializer):
             "networks_size",
             "domains_count",
             "monitored_domains_count",
-            "current_order_tier_name",
-            "current_order_price",
         )
 
 
