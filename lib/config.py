@@ -1060,26 +1060,6 @@ class ConfigManager(object):
         return self.__get_int("Rest", "rest_min_network_mask_length")
 
     @property
-    def scan_credit_period(self):
-        """
-        Get the amount of time in seconds that dictate the credit period wherein users
-        can use scanning credits.
-        :return: the amount of time in seconds that dictate the credit period wherein
-        users can use scanning credits.
-        """
-        return self.__get_int("Scanning", "scan_credit_period")
-
-    @property
-    def scan_credits_per_period(self):
-        """
-        Get the number of scans that a user can invoke for a single organization in
-        the scan credits period.
-        :return: the number of scans that a user can invoke for a single organization
-        in the scan credits period.
-        """
-        return self.__get_int("Scanning", "scan_credits_per_period")
-
-    @property
     def selenium_screenshot_delay(self):
         """
         Get the amount of time in seconds that Selenium should wait between requesting a

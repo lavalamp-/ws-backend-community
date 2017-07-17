@@ -253,14 +253,6 @@ class Organization(BaseWsModel):
         return self.auth_groups.filter(name="org_admin").get()
 
     @property
-    def available_scan_credits_count(self):
-        """
-        Get the number of scan credits that are currently available to use to scan this organization.
-        :return: the number of scan credits that are currently available to use to scan this organization.
-        """
-        return max(0, config.scan_credits_per_period - self.time_period_invocations.count())
-
-    @property
     def auth_users(self):
         """
         Get a list containing all of the users found in any of the authorization groups associated
@@ -403,20 +395,6 @@ class Organization(BaseWsModel):
         return self.networks.values("ip_addresses__network_services__uuid").count()
 
     @property
-    def next_credit_available_time(self):
-        """
-        Get the time at which the next scanning credit associated with this organization
-        will be available.
-        :return: the time at which the next scanning credit associated with this organization
-        will be available.
-        """
-        if self.available_scan_credits_count > 0:
-            return timezone.now()
-        else:
-            time_diff = timedelta(seconds=config.scan_credit_period)
-            return self.last_scan_invocation.created + time_diff
-
-    @property
     def read_group(self):
         """
         Get the WsAuthGroup associated with this Organization that contains users that have read permissions.
@@ -440,17 +418,6 @@ class Organization(BaseWsModel):
         :return: the WsAuthGroup associated with this Organization that contains users that have scan permissions.
         """
         return self.auth_groups.filter(name="org_scan").get()
-
-    @property
-    def time_period_invocations(self):
-        """
-        Get a list of the ScanInvocations owned by this organization that were created within the
-        configured scan credit time period.
-        :return: a list of the ScanInvocations owned by this organization that were created within
-        the configured scan credit time period.
-        """
-        start_time = timezone.now() - timedelta(seconds=config.scan_credit_period)
-        return self.scan_invocations.filter(created__range=(start_time, timezone.now()))
 
     @property
     def unmonitored_network_service_count(self):

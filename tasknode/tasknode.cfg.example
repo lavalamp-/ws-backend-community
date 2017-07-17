@@ -153,11 +153,6 @@ rest_max_network_mask_length = 32
 rest_domains_file_cutoff = 200
 rest_domain = [[REPLACE]]
 
-[Scanning]
-
-scan_credits_per_period = 1
-scan_credit_period = 86400
-
 [Selenium]
 
 selenium_screenshot_delay = 2

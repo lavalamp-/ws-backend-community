@@ -28,12 +28,6 @@ def invoke_scan(request, pk=None):
         raise ValidationError(
             "There are zero endpoints within the monitored networks associated with that organization."
         )
-    elif organization.available_scan_credits_count == 0:
-        raise PermissionDenied(
-            "There are currently no available scan credits for that organization. The next credit "
-            "will be available at %s."
-            % (organization.next_credit_available_time,)
-        )
     invocation = ScanInvocation.objects.create()
     organization.scan_invocations.add(invocation)
     organization.save()
