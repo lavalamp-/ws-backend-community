@@ -19,7 +19,7 @@ class TestOrganizationWebServiceReportListAPIView(
     This is a test case for testing the OrganizationWebServiceReportList APIView.
     """
 
-    _api_route = "/organizations/%s/web-services/"
+    _api_route = "/organizations/%s/es/web-services/"
     _url_parameters = None
 
     def __send_get_reports_request(self, user="user_1", query_string=None):
@@ -65,7 +65,7 @@ class TestOrganizationWebServiceReportAnalyticsAPIView(
     This is a test case for testing the OrganizationWebServiceReportAnalyticsAPIView.
     """
 
-    _api_route = "/organizations/%s/web-services/analytics/"
+    _api_route = "/organizations/%s/es/web-services/analytics/"
     _url_parameters = None
 
     def __send_get_analytics_request(self, user="user_1", query_string=None):
@@ -102,7 +102,7 @@ class TestWebServiceResourceListAPIView(
     This is a test case for testing the WebServiceResourceListAPIView.
     """
 
-    _api_route = "/web-services/%s/resources/"
+    _api_route = "/web-services/%s/es/resources/"
     _url_parameters = None
 
     def __send_get_resources_request(self, user="user_1", query_string=None):
@@ -148,7 +148,7 @@ class TestWebServiceResourceAnalyticsAPIView(
     This is a test case for testing the WebServiceResourceAnalyticsAPIView.
     """
 
-    _api_route = "/web-services/%s/resources/analytics/"
+    _api_route = "/web-services/%s/es/resources/analytics/"
     _url_parameters = None
 
     def __send_get_analytics_request(self, user="user_1", query_string=None):

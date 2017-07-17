@@ -19,7 +19,7 @@ class TestOrganizationSslSupportReportListAPIView(
     This is a test case for testing the OrganizationSslSupportReportList APIView.
     """
 
-    _api_route = "/organizations/%s/ssl-support/"
+    _api_route = "/organizations/%s/es/ssl-support/"
     _url_parameters = None
 
     def __send_get_reports_request(self, user="user_1", query_string=None):
@@ -65,7 +65,7 @@ class TestOrganizationSslSupportReportAnalyticsAPIView(
     This is a test case for testing the OrganizationSslSupportReportAnalyticsAPIView.
     """
 
-    _api_route = "/organizations/%s/ssl-support/analytics/"
+    _api_route = "/organizations/%s/es/ssl-support/analytics/"
     _url_parameters = None
 
     def __send_get_analytics_request(self, user="user_1", query_string=None):

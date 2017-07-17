@@ -15,6 +15,14 @@ class WsDjangoTestCase(TestCase):
     This is a base class for all test cases used to testing the Web Sight Django API.
     """
 
+    def get_domain_name_for_user(self, user="user_1"):
+        """
+        Get the domain name to use for testing purposes for the given user.
+        :param user: The user to retrieve the domain name for.
+        :return: The domain name associated with the given user.
+        """
+        return self.get_organization_for_user(user=user).domain_names.first()
+
     def get_last_created(self, model_class):
         """
         Get the most recently-created instance of the given model class from the database.
