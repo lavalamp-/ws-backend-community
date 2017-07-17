@@ -19,15 +19,8 @@ from .esmixin import (
 )
 
 from .views import (
-    OrganizationWebScreenshotsListAPIView,
     OrganizationWebServiceReportAnalyticsAPIView,
     OrganizationWebServiceReportListAPIView,
-    OrganizationWebTechReportAnalyticsAPIView,
-    OrganizationWebTechReportListAPIView,
-    OrganizationWebTransactionAnalyticsAPIView,
-    OrganizationWebTransactionListAPIView,
-    WebServiceHttpTransactionAnalyticsAPIView,
-    WebServiceHttpTransactionListAPIView,
     WebServiceReportDetailAPIView,
     WebServiceResourceAnalyticsAPIView,
     WebServiceResourceListAPIView,

@@ -9,63 +9,6 @@ from .dbmixin import WebServiceDbMixin
 from ..organizations import OrganizationDbMixin
 
 
-class OrganizationWebTechReportAnalyticsAPIView(
-    LatestWebTechnologiesReportEsMixin,
-    OrganizationDbMixin,
-    BaseElasticsearchAnalyticsAPIView,
-):
-    """
-    This is an APIView class for retrieving analytics data about all of the web technology reports
-    associated with the most recent web service scans for an organization.
-    """
-
-
-class OrganizationWebTechReportListAPIView(
-    LatestWebTechnologiesReportEsMixin,
-    OrganizationDbMixin,
-    BaseElasticsearchManyMappedAPIView,
-):
-    """
-    This is an APIView class for retrieving all of the web technology reports for an organization.
-    """
-
-
-class OrganizationWebTransactionAnalyticsAPIView(
-    LatestHttpTransactionEsMixin,
-    OrganizationDbMixin,
-    BaseElasticsearchAnalyticsAPIView,
-):
-    """
-    This is an APIView class for retrieving analytical data about all of the HTTP transactions associated
-    with the most recent web service scans for an organization.
-    """
-
-    def _get_content_length_interval(self):
-        return 40000
-
-
-class OrganizationWebTransactionListAPIView(
-    LatestHttpTransactionEsMixin,
-    OrganizationDbMixin,
-    BaseElasticsearchManyMappedAPIView,
-):
-    """
-    This is an APIView class for retrieving all of the HTTP transactions associated with the most recent
-    web service scans for the given organization.
-    """
-
-
-class OrganizationWebScreenshotsListAPIView(
-    LatestHttpScreenshotEsMixin,
-    OrganizationDbMixin,
-    BaseElasticsearchManyMappedAPIView,
-):
-    """
-    This is an APIView class for retrieving all of the HTTP screenshots associated with the most recent
-    web service scans for the given organization.
-    """
-
-
 class OrganizationWebServiceReportListAPIView(
     LatestWebServiceReportEsMixin,
     OrganizationDbMixin,
@@ -97,31 +40,6 @@ class WebServiceReportDetailAPIView(
     This is an APIView class for retrieving a single WebServiceReport document pertaining to the most recent
     scan for a given web service.
     """
-
-
-class WebServiceHttpTransactionListAPIView(
-    LatestHttpTransactionEsMixin,
-    WebServiceDbMixin,
-    BaseElasticsearchManyMappedAPIView,
-):
-    """
-    This is an APIView class for retrieving all of the HTTP transactions associated with the most recent scan
-    for a given web service.
-    """
-
-
-class WebServiceHttpTransactionAnalyticsAPIView(
-    LatestHttpTransactionEsMixin,
-    WebServiceDbMixin,
-    BaseElasticsearchAnalyticsAPIView,
-):
-    """
-    This is an APIView class for retrieving analytical data about the HTTP transactions associated with the
-    most recent scan for a given web service.
-    """
-
-    def _get_content_length_interval(self):
-        return 40000
 
 
 class WebServiceScreenshotListAPIView(

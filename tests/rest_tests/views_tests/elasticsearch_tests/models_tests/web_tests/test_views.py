@@ -89,6 +89,102 @@ class TestOrganizationWebServiceReportAnalyticsAPIView(
         return self.__send_get_analytics_request
 
 
+class TestWebServiceReportDetailAPIView(
+    DefaultViewTestCaseMixin,
+    CustomFieldsMixin,
+    PresentableTestCaseMixin,
+    ParameterizedRouteMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for testing the WebServiceReportDetailAPIView view.
+    """
+
+    _api_route = "/web-services/%s/"
+    _url_parameters = None
+
+    def __send_get_report_request(self, user="user_1", query_string=None):
+        """
+        Send an HTTP request to the configured API endpoint and return the response.
+        :param user: A string depicting the user that the request should be issued on behalf of.
+        :param query_string: The query string to submit alongside the request.
+        :return: The HTTP response.
+        """
+        self.login(user=user)
+        web_service = self.get_web_service_for_user(user=user)
+        self._url_parameters = str(web_service.uuid)
+        return self.get(query_string=query_string)
+
+    @property
+    def custom_fields_field(self):
+        return "transactions_count"
+
+    @property
+    def custom_fields_method(self):
+        return self.__send_get_report_request
+
+    @property
+    def presentation_method(self):
+        return self.__send_get_report_request
+
+    @property
+    def response_has_many(self):
+        return False
+
+    @property
+    def send_method(self):
+        return self.__send_get_report_request
+
+
+class TestWebServiceScreenshotListAPIView(
+    DefaultViewTestCaseMixin,
+    PresentableTestCaseMixin,
+    ExporterCustomFieldsMixin,
+    ParameterizedRouteMixin,
+    PaginatedTestCaseMixin,
+    ExporterTestCaseMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for testing the WebServiceScreenshotListAPIView view.
+    """
+
+    _api_route = "/web-services/%s/es/http-screenshots/"
+    _url_parameters = None
+
+    def __send_get_screenshots_request(self, user="user_1", query_string=None):
+        """
+        Send an HTTP request to the configured API endpoint and return the response.
+        :param user: A string depicting the user that the request should be issued on behalf of.
+        :param query_string: The query string to submit to the endpoint.
+        :return: The HTTP response.
+        """
+        self.login(user=user)
+        web_service = self.get_web_service_for_user(user=user)
+        self._url_parameters = str(web_service.uuid)
+        return self.get(query_string=query_string)
+
+    @property
+    def custom_fields_field(self):
+        return "is_latest_scan"
+
+    @property
+    def custom_fields_method(self):
+        return self.__send_get_screenshots_request
+
+    @property
+    def presentation_method(self):
+        return self.__send_get_screenshots_request
+
+    @property
+    def response_has_many(self):
+        return True
+
+    @property
+    def send_method(self):
+        return self.__send_get_screenshots_request
+
+
 class TestWebServiceResourceListAPIView(
     DefaultViewTestCaseMixin,
     PresentableTestCaseMixin,
