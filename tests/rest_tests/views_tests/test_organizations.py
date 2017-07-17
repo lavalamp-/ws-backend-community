@@ -666,19 +666,6 @@ class TestOrdersByOrganizationView(
             domain.save()
         self.assert_request_fails(response)
 
-    def test_create_enterprise_user_success(self):
-        """
-        Tests to ensure that a create request by an enterprise user succeeds.
-        :return: None
-        """
-        user = self.get_user(user="user_1")
-        user.is_enterprise_user = True
-        user.save()
-        response = self.send_create_request()
-        user.is_enterprise_user = False
-        user.save()
-        self.assert_creation_succeeds(response)
-
     @property
     def custom_fields_field(self):
         return "uuid"

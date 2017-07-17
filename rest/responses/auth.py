@@ -20,7 +20,6 @@ class WsAuthResponse(WsBaseResponse):
         self.data['is_admin'] = False
         self.data['is_authenticated'] = False
         self.data["user_uuid"] = None
-        self.data["is_enterprise_user"] = False
 
         if token:
             self.data['token'] = token.key
@@ -30,7 +29,6 @@ class WsAuthResponse(WsBaseResponse):
             self.data['is_authenticated'] = bool(ws_user.is_authenticated)
             if not isinstance(ws_user, AnonymousUser):
                 self.data["user_uuid"] = ws_user.uuid
-                self.data["is_enterprise_user"] = ws_user.is_enterprise_user
 
         self.data['groups'] = []
 

@@ -238,7 +238,7 @@ python manage.py createsuperuser
 We now must activate the user so that we can authenticate with the account. Replace the <email> string below with the email address of the user that you created:
 
 ```
-python manage.py shell -c "from rest.models import WsUser; user = WsUser.objects.get(email='<email>'); user.is_active = True; user.is_enterprise_user = True; user.email_verified = True; user.save()"
+python manage.py shell -c "from rest.models import WsUser; user = WsUser.objects.get(email='<email>'); user.is_active = True; user.email_verified = True; user.save()"
 ```
 
 We now must complete some final housekeeping for bootstrapping some of the configuration values stored within the database as well as the default Elasticsearch index:

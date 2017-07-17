@@ -32,7 +32,6 @@ class WsUser(AbstractUser, BaseWsModel):
 
     forgot_password_code = models.UUIDField(default=uuid.uuid4, null=True)
     forgot_password_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
-    is_enterprise_user = models.BooleanField(default=False, null=False)
 
     @staticmethod
     def validate_password_complexity(password):
