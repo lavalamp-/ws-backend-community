@@ -54,6 +54,10 @@ from .scans import (
     invoke_scan,
 )
 
+from .swagger import (
+    SwaggerSchemaView,
+)
+
 from .users import (
     ForgotPasswordView,
     selected_organization,

@@ -1,15 +1,17 @@
-from rest_framework import status, parsers, renderers
-from rest_framework.views import APIView
+from rest_framework import status, parsers
 from rest.serializers.account import ChangePasswordSerialzer
 from rest_framework.response import Response
 from django.contrib.auth import logout
 
+from .base import BaseWsGenericAPIView
 
-class AccountChangePasswordView(APIView):
-    throttle_classes = ()
-    permission_classes = ()
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
-    renderer_classes = (renderers.JSONRenderer,)
+
+class AccountChangePasswordView(BaseWsGenericAPIView):
+    """
+    post:
+    Change the password of the authenticated account.
+    """
+
     serializer_class = ChangePasswordSerialzer
 
     def post(self, request, *args, **kwargs):

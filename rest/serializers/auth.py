@@ -7,6 +7,7 @@ from lib import DjangoUtils
 from rest_framework.fields import empty
 from rest_framework import serializers
 from rest.lib.exception import WsRestNonFieldException, WsRestFieldException
+from rest_framework import serializers
 
 from django.contrib.auth import get_user_model, authenticate
 from lib.config import ConfigManager
@@ -20,9 +21,14 @@ class WsAuthTokenSerializer(AuthTokenSerializer):
      This searializer will login the user, and handle the various failure cases
     """
 
-    def __init__(self, request, data=empty, **kwargs):
-        self.request = request
-        super(WsAuthTokenSerializer, self).__init__(self, data, **kwargs)
+    username = serializers.EmailField(
+        required=True,
+        help_text="The email address of the user to authenticate as.",
+    )
+    password = serializers.CharField(
+        required=True,
+        help_text="The password to authenticate with.",
+    )
 
     def validate(self, attrs):
         username = attrs.get('username')
@@ -45,8 +51,8 @@ class WsAuthTokenSerializer(AuthTokenSerializer):
 
             else:
                 exception = WsRestNonFieldException('Unable to log in with provided credentials.')
-                ip_address = DjangoUtils.get_client_ip(self.request)
-                user_agent = DjangoUtils.get_user_agent(self.request)
+                ip_address = None
+                user_agent = None
                 login_attempt = LoginAttemptModel(ip_address, user_agent, timezone.now())
                 login_attempt.save(config.es_default_index)
 

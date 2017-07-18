@@ -11,6 +11,8 @@ from rest_framework.permissions import AllowAny
 from rest.serializers import WsAuthTokenSerializer
 from rest.responses import  WsAuthResponse
 
+from .base import BaseWsGenericAPIView
+
 
 class WsTokenAuthentication(authentication.TokenAuthentication):
     """
@@ -43,18 +45,17 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class WsObtainAuthToken(APIView):
+class WsObtainAuthToken(BaseWsGenericAPIView):
     """
-     This view is used to log in users, and create a new auth token for that user
+    post:
+    Authenticate to Web Sight.
     """
-    throttle_classes = ()
-    permission_classes = ()
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
-    renderer_classes = (renderers.JSONRenderer,)
+
     serializer_class = WsAuthTokenSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(request, data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
@@ -64,8 +65,8 @@ class WsObtainAuthToken(APIView):
 
 class WsCheckAuthTokenStatus(APIView):
     """
-     This view is called to check the status of an api token,
-        WsTokenAuthentication will test if that token is currently valid
+    get:
+    Get the authorization levels associated with an HTTP request's credentials.
     """
 
     permission_classes = [

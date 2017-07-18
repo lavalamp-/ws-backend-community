@@ -46,7 +46,17 @@ class DomainNameQuerysetMixin(object):
 
 class DomainNameDetailView(DomainNameQuerysetMixin, WsRetrieveUpdateDestroyAPIView):
     """
-    API endpoint for retrieving or manipulating data about a single domain name.
+    get:
+    Get a specific domain name.
+
+    put:
+    Update a specific domain name.
+
+    patch:
+    Update a specific domain name.
+
+    delete:
+    Delete a specific domain name.
     """
 
 

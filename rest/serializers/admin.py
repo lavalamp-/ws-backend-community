@@ -16,6 +16,7 @@ from tasknode.tasks import send_emails_for_user_signup
 config = ConfigManager.instance()
 UserModel = get_user_model()
 
+
 class AdminManageUsersSerializer(serializers.Serializer):
     """
      This will get all non admin users, and return the list to the view for serilization
@@ -33,8 +34,14 @@ class AdminManageUsersEnableDisableSerializer(serializers.Serializer):
      This enable or disable a user in the system
     """
 
-    user_uuid = serializers.UUIDField(required=True)
-    enabled = serializers.BooleanField(required=True)
+    user_uuid = serializers.UUIDField(
+        required=True,
+        help_text="A user's UUID."
+    )
+    enabled = serializers.BooleanField(
+        required=True,
+        help_text="Whether the account should be enabled or disabled."
+    )
 
     def validate(self, attrs):
         user_uuid = attrs['user_uuid']
@@ -55,7 +62,10 @@ class AdminManageUsersDeleteUserSerializer(serializers.Serializer):
      This will delete a user from the system
     """
 
-    user_uuid = serializers.UUIDField(required=True)
+    user_uuid = serializers.UUIDField(
+        required=True,
+        help_text="A user's UUID."
+    )
 
     def validate(self, attrs):
         user_uuid = attrs['user_uuid']
@@ -76,7 +86,10 @@ class AdminManageUsersResendVerificationEmailSerializer(serializers.Serializer):
      This will resend a user's verification email
     """
 
-    user_uuid = serializers.UUIDField(required=True)
+    user_uuid = serializers.UUIDField(
+        required=True,
+        help_text="A user's UUID."
+    )
 
     def validate(self, attrs):
         user_uuid = attrs['user_uuid']

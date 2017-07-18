@@ -11,36 +11,32 @@ from rest_framework.permissions import IsAdminUser
 from rest.serializers import AdminManageUsersSerializer, AdminManageUsersEnableDisableSerializer, AdminManageUsersDeleteUserSerializer, AdminManageUsersResendVerificationEmailSerializer
 from rest.responses import WsAdminManageUsersResponse
 
-class AdminManageUsersView(APIView):
+from rest.models import WsUser
+from .base import WsListAPIView, BaseWsAPIView, BaseWsGenericAPIView
+
+
+class AdminManageUsersView(WsListAPIView):
     """
-     This view is used get all users for the manage users admin page
+    get:
+    Get a list of all of the registered users.
     """
-    throttle_classes = ()
     permission_classes = [
         IsAdminUser
     ]
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
-    renderer_classes = (renderers.JSONRenderer,)
     serializer_class = AdminManageUsersSerializer
 
-    def get(self, request, *args, **kwargs):
-        serializer = self.serializer_class(request, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        users = serializer.validated_data['users']
-        response = WsAdminManageUsersResponse(users)
-        return Response(response.data)
+    def get_queryset(self):
+        return WsUser.objects.all()
 
 
-class AdminManageUsersEnableDisableView(APIView):
+class AdminManageUsersEnableDisableView(BaseWsGenericAPIView):
     """
-     This view is used to enable or disable a user in the system
+    post:
+    Enable or disable the specified user.
     """
-    throttle_classes = ()
     permission_classes = [
         IsAdminUser
     ]
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
-    renderer_classes = (renderers.JSONRenderer,)
     serializer_class = AdminManageUsersEnableDisableSerializer
 
     def post(self, request, *args, **kwargs):
@@ -49,16 +45,15 @@ class AdminManageUsersEnableDisableView(APIView):
         return Response({})
 
 
-class AdminManageUsersDeleteUserView(APIView):
+class AdminManageUsersDeleteUserView(BaseWsGenericAPIView):
     """
-     This view is used to delete a user in the system
+    post:
+    Delete the specified user.
     """
-    throttle_classes = ()
     permission_classes = [
         IsAdminUser
     ]
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
-    renderer_classes = (renderers.JSONRenderer,)
+
     serializer_class = AdminManageUsersDeleteUserSerializer
 
     def post(self, request, *args, **kwargs):
@@ -67,16 +62,14 @@ class AdminManageUsersDeleteUserView(APIView):
         return Response({})
 
 
-class AdminManageUsersResendVerificationEmailView(APIView):
+class AdminManageUsersResendVerificationEmailView(BaseWsGenericAPIView):
     """
-     This view is used to re-send a email verification email for a user in the system
+    post:
+    Re-send the verification email to the specified user.
     """
-    throttle_classes = ()
     permission_classes = [
         IsAdminUser
     ]
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
-    renderer_classes = (renderers.JSONRenderer,)
     serializer_class = AdminManageUsersResendVerificationEmailSerializer
 
     def post(self, request, *args, **kwargs):

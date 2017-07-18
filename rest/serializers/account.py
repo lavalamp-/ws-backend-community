@@ -7,8 +7,14 @@ UserModel = get_user_model()
 
 class ChangePasswordSerialzer(serializers.Serializer):
 
-    current_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+    current_password = serializers.CharField(
+        required=True,
+        help_text="The authenticated user's current password.",
+    )
+    new_password = serializers.CharField(
+        required=True,
+        help_text="The new password to set for the requesting user."
+    )
 
     def validate(self, attrs):
 

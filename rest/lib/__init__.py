@@ -13,3 +13,7 @@ from .pagination import (
     PaginationSerializer,
     WebSightPagination,
 )
+
+from .schema import (
+    WebSightSchemaGenerator,
+)

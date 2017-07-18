@@ -234,9 +234,6 @@ class OrdersByOrganizationView(BaseOrganizationListCreateChildAPIView):
             "organization": self.parent_object,
         }
 
-    def get_queryset(self):
-        return self.parent_object.orders.all()
-
     def create(self, request, *args, **kwargs):
         if not self.request.user.is_superuser:
             self._verify_scan_permissions()
@@ -343,7 +340,6 @@ class BaseOrganizationAPIView(BaseWsAPIView):
         :return: None
         """
         super(BaseOrganizationAPIView, self).check_permissions(request)
-        self.__check_object_exists()
 
     def initial(self, request, *args, **kwargs):
         """
@@ -359,13 +355,6 @@ class BaseOrganizationAPIView(BaseWsAPIView):
     # Protected Methods
 
     # Private Methods
-
-    def __check_object_exists(self):
-        """
-        Check to make sure that the requested organization exists.
-        :return: None
-        """
-        test = self.organization
 
     # Properties
 

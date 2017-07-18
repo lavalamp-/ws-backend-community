@@ -17,11 +17,12 @@ from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework import routers
 from rest_framework.schemas import get_schema_view
+from rest_framework_swagger.views import get_swagger_view
 
 from rest import views
-# from rest_framework.authtoken import views as authtoken_views
 
 schema_view = get_schema_view(title="Web Sight REST API")
+swagger_view = get_swagger_view(title="Web Sight REST API")
 
 handler404 = views.custom404
 
@@ -84,7 +85,7 @@ urlpatterns = [
     url(r'^setup-account/?$', views.SetupAccountView.as_view()),
     url(r'^users/?$', views.UserCreateView.as_view()),
 
-    url('^schema/?$', schema_view),
+    url('^docs/?$', views.SwaggerSchemaView.as_view(), name="swagger-detail"),
 
     # Admin URLs
 
@@ -151,5 +152,5 @@ urlpatterns = [
     # url('^schema/$', schema_view),
 
 
-    # url(r'^sa/', include(admin.site.urls)),
+    url(r'^sa/', include(admin.site.urls)),
 ]

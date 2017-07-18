@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 
 import django.core.exceptions
-from rest_framework import viewsets, generics, serializers
+from rest_framework import viewsets, generics, serializers, parsers
+from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 
 from .mixin import ListChildMixin, ListCreateChildMixin, OwnershipFilterMixin, BaseAPIViewMixin, ListMixin, \
@@ -13,6 +14,12 @@ class BaseWsAPIView(BaseAPIViewMixin, APIView):
     """
     A base APIView class for all Web Sight APIView classes that do not follow the standard
     implementations of list, create, delete, etc.
+    """
+
+
+class BaseWsGenericAPIView(BaseAPIViewMixin, GenericAPIView):
+    """
+    A base GenericAPIView class for all Web Sight GenericAPIView classes.
     """
 
 

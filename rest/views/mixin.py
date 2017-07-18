@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 
 import uuid
-
+import inspect
 from django.http import Http404
 from rest_framework import generics
 import django.core.exceptions
@@ -253,7 +253,10 @@ class ListChildMixin(BaseAPIViewMixin):
         Get the data meant to be returned by this API view.
         :return: The data meant to be returned by this API view.
         """
-        return getattr(self.parent_object, self.child_attribute).all()
+        if self.__in_get_schema_call():
+            return self.__get_schema_call_queryset()
+        else:
+            return getattr(self.parent_object, self.child_attribute).all()
 
     def list(self, request, *args, **kwargs):
         if self.has_presentation_argument:
@@ -299,6 +302,26 @@ class ListChildMixin(BaseAPIViewMixin):
         """
         parent_class = self.parent_class
         return get_object_or_404(parent_class, pk=pk)
+
+    def __get_schema_call_queryset(self):
+        """
+        Get a queryset containing instances of the child class without querying based on a
+        parent object. This method should only be invoked in calls to get_schema_fields, as this is
+        a work-around to the error that is thrown when accessing parent_object from within the
+        get_schema_fields call.
+        :return: A queryset containing instances of the child class.
+        """
+        rel = getattr(self.parent_class, self.child_attribute)
+        return rel.rel.related_model.objects.all()
+
+    def __in_get_schema_call(self):
+        """
+        Check to see whether or not this method is currently being called from within a call
+        to the get_schema_fields method.
+        :return: True if this method is currently being called from within a call to the
+        get_schema_fields, False otherwise.
+        """
+        return any([x[3] == "get_schema_fields" for x in inspect.stack()])
 
     def __validate_export_value(self):
         """
