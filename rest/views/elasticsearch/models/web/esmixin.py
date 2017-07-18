@@ -347,31 +347,22 @@ class HttpScreenshotEsMixin(WebScanFiltersMixin):
 
     def _get_object_from_result(self, es_result):
         to_return = super(HttpScreenshotEsMixin, self)._get_object_from_result(es_result)
-        s3_helper = S3Helper.instance()
-        s3_key = to_return.pop("s3_key")
-        s3_bucket = to_return.pop("s3_bucket")
-        to_return["image_url"] = s3_helper.get_signed_url_for_key(
-            key=s3_key,
-            bucket=s3_bucket,
-        )
+        s3_key = s3_bucket = None
+        if "s3_key" in to_return:
+            s3_key = to_return.pop("s3_key")
+        if "s3_bucket" in to_return:
+            s3_bucket = to_return.pop("s3_bucket")
+        if s3_key and s3_bucket:
+            s3_helper = S3Helper.instance()
+            to_return["image_url"] = s3_helper.get_signed_url_for_key(
+                key=s3_key,
+                bucket=s3_bucket,
+            )
         return to_return
 
     # Private Methods
 
     # Properties
-
-    @property
-    def queried_fields(self):
-        return [
-            "url",
-            "s3_key",
-            "s3_bucket",
-            "web_service_uuid",
-        ]
-
-    @property
-    def sortable_fields(self):
-        return ["url"]
 
     # Representation and Comparison
 

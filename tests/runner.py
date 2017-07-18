@@ -15,7 +15,7 @@ from rest.models import WsUser, Organization, Order
 from wselasticsearch import bootstrap_index_model_mappings
 from wselasticsearch.query import BulkElasticsearchQuery
 from wselasticsearch.models import SslSupportReportModel, WebServiceReportModel, HttpTransactionModel, \
-    DomainNameReportModel
+    DomainNameReportModel, HttpScreenshotModel
 
 config = ConfigManager.instance()
 
@@ -101,6 +101,33 @@ class WebSightDiscoverRunner(DiscoverRunner):
         self.bulk_query.add_model_for_indexing(
             model=dummy_report,
             index=domain_name_scan.domain_name.organization.uuid,
+        )
+
+    def __add_http_screenshots_to_web_service_scan(
+            self,
+            web_service_scan=None,
+            user_string=None,
+            is_latest_scan=False,
+            count=10,
+    ):
+        """
+        Add HTTP screenshot Elasticsearch documents to the given web service scan.
+        :param web_service_scan: The web service scan to add HTTP screenshots to.
+        :param user_string: A string depicting the user that is being populated.
+        :param is_latest_scan: Whether or not the HTTP screenshots should be marked as being a part
+        of the latest web service scan.
+        :param count: The number of HTTP screenshots to add to the web service scan.
+        :return: None
+        """
+        models = []
+        for i in range(count):
+            dummy_model = HttpScreenshotModel.create_dummy()
+            dummy_model = HttpScreenshotModel.from_database_model(web_service_scan, to_populate=dummy_model)
+            dummy_model.is_latest_scan = is_latest_scan
+            models.append(dummy_model)
+        self.bulk_query.add_models_for_indexing(
+            models=models,
+            index=web_service_scan.web_service.network_service.ip_address.network.organization.uuid,
         )
 
     def __add_http_transactions_to_web_service_scan(
@@ -350,6 +377,11 @@ class WebSightDiscoverRunner(DiscoverRunner):
             is_latest_scan=is_latest_scan,
         )
         self.__add_web_resources_to_web_service_scan(
+            web_service_scan=web_service_scan,
+            user_string=user_string,
+            is_latest_scan=is_latest_scan,
+        )
+        self.__add_http_screenshots_to_web_service_scan(
             web_service_scan=web_service_scan,
             user_string=user_string,
             is_latest_scan=is_latest_scan,
