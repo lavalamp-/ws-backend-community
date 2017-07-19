@@ -51,3 +51,9 @@ class BaseElasticsearchRelatedAPIView(BaseElasticsearchRelatedAPIViewMixin, APIV
     This is a base class for all Elasticsearch APIView classes that query Elasticsearch models that
     are related to another Elasticsearch model.
     """
+
+    def get(self, *args, **kwargs):
+        """
+        Get a single instance of a report for the requested data type related to the referenced parent instance.
+        """
+        return super(BaseElasticsearchRelatedAPIViewMixin, self).get(*args, **kwargs)
