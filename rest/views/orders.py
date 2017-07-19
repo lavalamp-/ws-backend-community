@@ -30,7 +30,7 @@ class OrderQuerysetMixin(object):
 
 class OrderListView(OrderQuerysetMixin, WsListAPIView):
     """
-    This is an APIView for listing Order objects.
+    Get all orders.
     """
 
     serializer_class = rest.serializers.OrderSerializer
@@ -40,7 +40,8 @@ class OrderListView(OrderQuerysetMixin, WsListAPIView):
 
 class OrderDetailView(OrderQuerysetMixin, WsRetrieveAPIView):
     """
-    This is an APIView for retrieving single Order objects.
+    get:
+    Get a specific order.
     """
 
     serializer_class = rest.serializers.OrderSerializer
@@ -49,16 +50,14 @@ class OrderDetailView(OrderQuerysetMixin, WsRetrieveAPIView):
 @api_view(["PUT"])
 def place_order(request, pk=None):
     """
-    This is a function-based view that kicks off a Web Sight scan based off of the contents of an
-    order.
-    :param request: The request that resulted in this method being invoked.
-    :param pk: The primary key of the order to place.
-    :return: A Django response.
+    Place a specific order.
     """
     order = get_object_or_404(rest.models.Order, pk=pk)
     if not request.user.is_superuser:
         if not order.organization.can_user_scan(request.user):
             raise PermissionDenied("You do not have sufficient privileges to start scans for that organization.")
+    elif order.has_been_placed:
+        raise PermissionDenied("That order has already been placed.")
     order_placed = order.place_order()
     if not order_placed:
         raise OperationFailed("An issue was encountered when attempting to place your order. Please try again.")

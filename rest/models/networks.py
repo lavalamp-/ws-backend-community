@@ -14,10 +14,13 @@ class Network(BaseWsModel):
 
     # Columns
 
-    address = models.CharField(max_length=64)
-    mask_length = models.IntegerField()
-    name = models.CharField(max_length=32)
-    scanning_enabled = models.BooleanField(default=True)
+    address = models.CharField(max_length=64, help_text="The network's base IP address.")
+    mask_length = models.IntegerField(help_text="The CIDR mask length.")
+    name = models.CharField(max_length=32, help_text="A name to associate with the network.")
+    scanning_enabled = models.BooleanField(
+        default=True,
+        help_text="Whether or not to include this network in scans.",
+    )
     endpoint_count = models.IntegerField(default=0)
     cidr_range = models.CharField(max_length=64)
     added_by = models.CharField(max_length=10, default="user", null=False)
@@ -31,6 +34,7 @@ class Network(BaseWsModel):
         related_name="networks",
         null=True,
         on_delete=models.CASCADE,
+        help_text="The organization that owns the network.",
     )
 
     # Class Meta

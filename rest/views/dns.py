@@ -62,5 +62,6 @@ class DomainNameDetailView(DomainNameQuerysetMixin, WsRetrieveUpdateDestroyAPIVi
 
 class DomainNameListView(DomainNameQuerysetMixin, WsListAPIView):
     """
-    API endpoint for retrieving all domain names.
+    get:
+    Get all domain names.
     """

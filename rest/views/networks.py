@@ -46,7 +46,17 @@ class NetworkQuerysetMixin(object):
 
 class NetworkDetailView(NetworkQuerysetMixin, WsRetrieveUpdateDestroyAPIView):
     """
-    API endpoint for retrieving or manipulating data about a single network.
+    get:
+    Get a specific network.
+
+    delete:
+    Delete a specific network.
+
+    patch:
+    Update a specific network.
+
+    put:
+    Update a specific network.
     """
 
     def perform_destroy(self, instance):
@@ -59,5 +69,6 @@ class NetworkDetailView(NetworkQuerysetMixin, WsRetrieveUpdateDestroyAPIView):
 
 class NetworkListView(NetworkQuerysetMixin, WsListAPIView):
     """
-    API endpoint for retrieving all networks.
+    get:
+    Get all networks.
     """

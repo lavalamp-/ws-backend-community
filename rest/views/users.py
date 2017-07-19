@@ -17,7 +17,7 @@ from rest.serializers.users import VerifyEmailSerializer, ForgotPasswordSerializ
     VerifyForgotPasswordSerializer, SetupAccountSerializer
 from wselasticsearch.models import UserOrganizationSelectModel
 from wselasticsearch.query import UserOrganizationSelectQuery
-from .base import WsCreateAPIView
+from .base import WsCreateAPIView, BaseWsGenericAPIView
 from rest.models import Organization
 from lib import ConfigManager
 
@@ -27,7 +27,7 @@ config = ConfigManager.instance()
 
 class UserCreateView(WsCreateAPIView):
     """
-    API endpoint for creating new users.
+    Create a new user account.
     """
 
     permission_classes = [permissions.AllowAny]
@@ -35,9 +35,9 @@ class UserCreateView(WsCreateAPIView):
     serializer_class = UserSerializer
 
 
-class VerifyEmailView(APIView):
+class VerifyEmailView(BaseWsGenericAPIView):
     """
-    API endpoint that allows a user to verify their email
+    Verify an email address.
     """
     permission_classes = [
         AllowAny
@@ -52,9 +52,10 @@ class VerifyEmailView(APIView):
         return Response(data={}, status=status.HTTP_200_OK)
 
 
-class SetupAccountView(APIView):
+class SetupAccountView(BaseWsGenericAPIView):
     """
-    API endpoint that allows a user to verify their email
+    post:
+    Set up an account (typically performed in relation to an email invite).
     """
     permission_classes = [
         AllowAny
@@ -69,10 +70,11 @@ class SetupAccountView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class ForgotPasswordView(APIView):
+class ForgotPasswordView(BaseWsGenericAPIView):
     """
-    API endpoint that allows a user to recover their forgotten password
+    Submit a forgot password request.
     """
+
     permission_classes = [
         AllowAny
     ]
@@ -86,10 +88,9 @@ class ForgotPasswordView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class VerifyForgotPasswordView(APIView):
+class VerifyForgotPasswordView(BaseWsGenericAPIView):
     """
-    API endpoint that allows a user to actually change thier password,
-        consuming thier one-time token they they were emailed
+    Fulfill a change password request as a result of a forgot password request.
     """
     permission_classes = [
         AllowAny
@@ -102,44 +103,3 @@ class VerifyForgotPasswordView(APIView):
         serializer.is_valid(raise_exception=True)
 
         return Response(status=status.HTTP_200_OK)
-
-
-@api_view(["GET", "POST"])
-def selected_organization(request):
-    """
-    This is a simple view for keeping track of the organizations that a user has
-    selected.
-    :param request: The request that resulted in invocation of this method.
-    :return: A Django request object.
-    """
-
-    if request.method == "GET":
-        query = UserOrganizationSelectQuery(size=3)
-        query.filter_by_user(request.user.uuid)
-        query.sort_by_selected()
-        response = query.search(config.es_user_info_index)
-        to_return = []
-        for result in response.results:
-            to_return.append({
-                "uuid": result["_source"]["org_uuid"],
-                "name": result["_source"]["org_name"],
-            })
-        return Response(to_return, status=200)
-    elif request.method == "POST":
-        if "uuid" not in request.data:
-            raise ParseError("No UUID found in request body.")
-        try:
-            organization = get_object_or_404(Organization, pk=request.data["uuid"])
-        except ValueError:
-            raise ParseError("Invalid UUID.")
-        if not request.user.is_superuser and not organization.can_user_read(request.user):
-            raise NotFound()
-        select = UserOrganizationSelectModel(
-            user_uuid=request.user.uuid,
-            org_uuid=organization.uuid,
-            org_name=organization.name,
-        )
-        select.save(config.es_user_info_index)
-        return Response(status=204)
-    else:
-        raise MethodNotAllowed(method=request.method)

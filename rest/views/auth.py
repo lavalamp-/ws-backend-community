@@ -32,13 +32,13 @@ class WsTokenAuthentication(authentication.TokenAuthentication):
         return (token.user, token)
 
 
-class LogoutView(APIView):
+class LogoutView(BaseWsGenericAPIView):
     """
-    API endpoint that allows a user to log out.
+    Log out.
     """
 
-    queryset = get_user_model().objects.all()
-    authentication_classes = (WsTokenAuthentication,)
+    pagination_class = None
+    filter_backends = None
 
     def get(self, request, format=None):
         request.user.auth_token.delete()

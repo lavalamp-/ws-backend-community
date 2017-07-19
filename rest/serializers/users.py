@@ -25,8 +25,14 @@ class VerifyEmailSerializer(serializers.Serializer):
      This is used to verify a users email, after they first sign up
     """
 
-    email_token = serializers.UUIDField(required=True)
-    user_uuid = serializers.UUIDField(required=True)
+    email_token = serializers.UUIDField(
+        required=True,
+        help_text="The unique email validation token.",
+    )
+    user_uuid = serializers.UUIDField(
+        required=True,
+        help_text="The email address that the token is associated with",
+    )
 
     def validate(self, attrs):
         email_token = attrs.get('email_token')
@@ -54,12 +60,12 @@ class SetupAccountSerializer(serializers.Serializer):
      This is used to setup an invited user's account
     """
 
-    email_token = serializers.UUIDField(required=True)
-    user_uuid = serializers.UUIDField(required=True)
-    first_name = serializers.CharField(required=True)
-    last_name = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)
-    recaptcha_response = serializers.CharField(read_only=True)
+    email_token = serializers.UUIDField(required=True, help_text="The unique email validation token.")
+    user_uuid = serializers.UUIDField(required=True, help_text="The UUID of the user account to set up.")
+    first_name = serializers.CharField(required=True, help_text="The first name to associate with the account.")
+    last_name = serializers.CharField(required=True, help_text="The last name to associate with the account.")
+    password = serializers.CharField(required=True, help_text="The password for the account.")
+    recaptcha_response = serializers.CharField(read_only=True, help_text="The reCAPTCHA code to prove a valid request.")
 
     def validate(self, attrs):
         email_token = attrs.get('email_token')
@@ -130,9 +136,18 @@ class VerifyForgotPasswordSerializer(serializers.Serializer):
      This is used to reset a user's password, using the link from their email
     """
 
-    email_token = serializers.UUIDField(required=True)
-    user_uuid = serializers.UUIDField(required=True)
-    new_password = serializers.CharField(required=True)
+    email_token = serializers.UUIDField(
+        required=True,
+        help_text="The unique email token enabling a user to change their password.",
+    )
+    user_uuid = serializers.UUIDField(
+        required=True,
+        help_text="The UUID of the user that the email token is related to.",
+    )
+    new_password = serializers.CharField(
+        required=True,
+        help_text="The password to set for the user account.",
+    )
 
     def validate(self, attrs):
         email_token = attrs.get('email_token')
@@ -170,11 +185,26 @@ class UserSerializer(serializers.ModelSerializer):
     This serializer validates the inputs, used to create new users
     """
 
-    password = serializers.CharField(write_only=True)
-    username = serializers.EmailField(required=True)
-    first_name = serializers.CharField(required=True)
-    last_name = serializers.CharField(required=True)
-    recaptcha_response = serializers.CharField(read_only=True)
+    password = serializers.CharField(
+        write_only=True,
+        help_text="The account password.",
+    )
+    username = serializers.EmailField(
+        required=True,
+        help_text="The account username.",
+    )
+    first_name = serializers.CharField(
+        required=True,
+        help_text="The first name to associate with the account.",
+    )
+    last_name = serializers.CharField(
+        required=True,
+        help_text="The last name to associate with the account.",
+    )
+    recaptcha_response = serializers.CharField(
+        read_only=True,
+        help_text="The reCAPTCHA code used to prove valid request.",
+    )
 
     def create(self, validated_data):
 
@@ -216,5 +246,5 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserModel
-        fields = ("first_name", "last_name", "username", "password", "email", "recaptcha_response")
+        fields = ("first_name", "last_name", "username", "password", "recaptcha_response")
 

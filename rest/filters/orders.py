@@ -11,10 +11,11 @@ class OrderFilter(django_filters.rest_framework.FilterSet):
     This is a filter set for the Order rest model.
     """
 
-    min_order_cost = django_filters.NumberFilter(name="order_cost", lookup_expr="gte")
-    max_order_cost = django_filters.NumberFilter(name="order_cost", lookup_expr="lte")
-    has_been_charged = django_filters.BooleanFilter(name="has_been_charged")
+    has_been_placed = django_filters.BooleanFilter(
+        name="has_been_placed",
+        help_text="Whether or not the order has been placed.",
+    )
 
     class Meta:
         model = rest.models.Order
-        fields = ["min_order_cost", "max_order_cost", "has_been_charged"]
+        fields = ["has_been_placed"]

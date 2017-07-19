@@ -57,6 +57,7 @@ class Order(BaseWsModel):
     scoped_domains_count = models.IntegerField(null=False)
     scoped_endpoints_count = models.IntegerField(null=False)
     scoped_endpoints_size = models.IntegerField(null=False)
+    has_been_placed = models.BooleanField(default=False)
 
     # Foreign Keys
 
@@ -106,6 +107,7 @@ class Order(BaseWsModel):
         )
         self.receipt = receipt
         self.organization.update_monitored_times_scanned()
+        self.has_been_placed = True
         return True
 
     # Properties

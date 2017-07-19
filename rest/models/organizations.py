@@ -85,8 +85,15 @@ class Organization(BaseWsModel):
 
     # Columns
 
-    name = models.CharField(max_length=32)
-    description = models.CharField(max_length=256, null=True)
+    name = models.CharField(
+        max_length=32,
+        help_text="The name of the organization.",
+    )
+    description = models.CharField(
+        max_length=256,
+        null=True,
+        help_text="A brief description of the organization.",
+    )
 
     SCANNING_STATUS_TYPES = (
         ('on', 'On'),

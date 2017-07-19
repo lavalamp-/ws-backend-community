@@ -15,9 +15,12 @@ class DomainName(BaseWsModel):
 
     # Columns
 
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, help_text="The domain name.")
     is_monitored = models.BooleanField(default=False)
-    scanning_enabled = models.BooleanField(default=True)
+    scanning_enabled = models.BooleanField(
+        default=True,
+        help_text="Whether or not to include the domain name in scans.",
+    )
     times_scanned = models.IntegerField(default=0)
     last_scan_time = models.DateTimeField(null=True)
     scanning_status = models.BooleanField(default=False)
@@ -30,6 +33,7 @@ class DomainName(BaseWsModel):
         related_name="domain_names",
         on_delete=models.CASCADE,
         null=True,
+        help_text="The organization that owns the domain.",
     )
 
     ip_addresses = models.ManyToManyField(

@@ -140,7 +140,11 @@ class BaseOrganizationListCreateChildAPIView(WsListCreateChildAPIView, Organizat
 
 class NetworksByOrganizationView(BaseOrganizationListCreateChildAPIView):
     """
-    API endpoint for creating OrganizationNetwork objects.
+    get:
+    Get all of the networks associated with an organization.
+
+    post:
+    Create a new network for the referenced organization.
     """
 
     serializer_class = NetworkSerializer
@@ -195,7 +199,11 @@ class NetworksByOrganizationView(BaseOrganizationListCreateChildAPIView):
 
 class DomainNamesByOrganizationView(BaseOrganizationListCreateChildAPIView):
     """
-    API endpoint for creating domain name objects for an organization.
+    get:
+    Get all of the domain names associated with an organization.
+
+    post:
+    Create a new domain name for the referenced organization.
     """
 
     serializer_class = DomainNameSerializer
@@ -222,7 +230,11 @@ class DomainNamesByOrganizationView(BaseOrganizationListCreateChildAPIView):
 
 class OrdersByOrganizationView(BaseOrganizationListCreateChildAPIView):
     """
-    API endpoint for creating orders based on the current state of an organization.
+    get:
+    Get all orders associated with the organization.
+
+    post:
+    Create a new order for the organization.
     """
 
     serializer_class = rest.serializers.OrderSerializer
@@ -258,7 +270,17 @@ class OrdersByOrganizationView(BaseOrganizationListCreateChildAPIView):
 
 class OrganizationDetailView(OrganizationMixin, WsRetrieveUpdateDestroyAPIView):
     """
-    API endpoint for retrieving or manipulating information about a single organization.
+    get:
+    Get a specific organization.
+
+    put:
+    Update a specific organization.
+
+    patch:
+    Update a specific organization
+
+    delete:
+    Delete a specific organization.
     """
 
     def perform_destroy(self, instance):
@@ -268,7 +290,11 @@ class OrganizationDetailView(OrganizationMixin, WsRetrieveUpdateDestroyAPIView):
 
 class OrganizationListView(OrganizationMixin, WsListCreateAPIView):
     """
-    API endpoint for listing Organization objects.
+    get:
+    Get all organizations.
+
+    post:
+    Create a new organization.
     """
 
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
@@ -284,11 +310,7 @@ class OrganizationListView(OrganizationMixin, WsListCreateAPIView):
 @api_view(["GET"])
 def organization_permissions(request, pk=None):
     """
-    This is a function-based view that returns the permissions associated with the requesting user
-    and the given organization.
-    :param request: The request that invoked this method.
-    :param pk: The primary key of the organization being queried.
-    :return: A Django response.
+    Get the users and their relevant permission levels for an organization.
     """
     organization = get_object_or_404(Organization, pk=pk)
     if request.user.is_superuser:
@@ -425,12 +447,7 @@ class BaseOrganizationAdminAPIView(BaseOrganizationAPIView):
 @api_view(["POST"])
 def upload_networks_file(request, pk=None):
     """
-    This is a function-based view that handles the uploading of a file containing network data
-    for a specific organization.
-    :param request: The request that resulted in the invocation of this method.
-    :param pk: The primary key of the organization to associate the contents of the uploaded file
-    with.
-    :return: A Django response.
+    Upload a CSV file containing network names, IP addresses, and CIDR mask lengths.
     """
     organization = get_object_or_404(Organization, pk=pk)
     if not request.user.is_superuser:
@@ -474,11 +491,8 @@ class DomainsUploadAPIView(BaseOrganizationWriteAPIView):
 
     def post(self, request, pk=None):
         """
-        Handle the uploading of a file containing domain names.
-        :param request: The request that invoked this method.
-        :param pk: The primary key of the Organization to associate the newly-created domain names
-        with.
-        :return: A Django response.
+        Upload a file containing one domain name per line and associate all of the domains with the referenced
+        organization.
         """
         if "file" not in request.FILES:
             raise NotFound("No file found in request body.")
@@ -541,8 +555,7 @@ class DomainsUploadAPIView(BaseOrganizationWriteAPIView):
 
 class OrganizationUserAdminAPIView(BaseOrganizationAdminAPIView):
     """
-    This is an APIView that enables users that have administrative privileges for an organization
-    to manage the users associated with the organization.
+    This view handles user administration for an organization.
     """
 
     # Class Members
@@ -557,11 +570,7 @@ class OrganizationUserAdminAPIView(BaseOrganizationAdminAPIView):
 
     def patch(self, request, pk=None):
         """
-        Handle the removal of a given user from all authorization groups associated with the
-        queried organization.
-        :param request: The request that invoked this method.
-        :param pk: The primary key of the organization being queried.
-        :return: A Django response.
+        Update the permissions associated with a given organization user.
         """
         operation = self.get_body_argument("operation")
         self.__validate_patch_operation(operation)
@@ -575,10 +584,7 @@ class OrganizationUserAdminAPIView(BaseOrganizationAdminAPIView):
 
     def get(self, request, pk=None):
         """
-        Get information about the users that are currently associated with the queried organization.
-        :param request: The request that invoked this method.
-        :param pk: The primary key of the organization being queried.
-        :return: A Django response.
+        Get all of the users associated with an organization and their relevant permissions.
         """
         return Response(self.__get_user_matrix())
 

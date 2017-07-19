@@ -39,7 +39,6 @@ urlpatterns = [
     url(r'^organizations/(?P<pk>[-\w]+)/es/ssl-support/?$', views.OrganizationSslSupportReportListAPIView.as_view(), name="organizationsslsupport-list"),
     url(r'^organizations/(?P<pk>[-\w]+)/permissions/?$', views.organization_permissions, name="organizationpermission-details"),
     url(r'^organizations/(?P<pk>[-\w]+)/users/?$', views.OrganizationUserAdminAPIView.as_view(), name="organizationuser-admin"),
-    url(r'^organizations/(?P<pk>[-\w]+)/scan/?$', views.invoke_scan, name="organizationscan-invoke"),
     url(r'^organizations/(?P<pk>[-\w]+)/networks/upload/?$', views.upload_networks_file, name="orgnetworks-upload"),
     url(r'^organizations/(?P<pk>[-\w]+)/networks/?$', views.NetworksByOrganizationView.as_view(), name="orgnetworks-list"),
     url(r'^organizations/(?P<pk>[-\w]+)/domain-names/upload/?$', views.DomainsUploadAPIView.as_view(), name="orgdomainnames-upload"),
@@ -108,10 +107,6 @@ urlpatterns = [
     # Account URLs
 
     url(r'^account/change-password/?$', views.AccountChangePasswordView.as_view()),
-
-    # User Action URLs
-
-    url(r'^selected-organization/?$', views.selected_organization, name="selectedorganization-detail"),
 
     ### ABOVE HERE CONFIRMED NECESSARY
 

@@ -13,6 +13,12 @@ class BaseElasticsearchSingleMappedAPIView(BaseElasticsearchSingleMappedAPIViewM
     on database models and return a single result.
     """
 
+    def get(self, *args, **kwargs):
+        """
+        Get a single instance of a report for the requested data type.
+        """
+        return super(BaseElasticsearchSingleMappedAPIView, self).get(*args, **kwargs)
+
 
 class BaseElasticsearchManyMappedAPIView(BaseElasticsearchManyMappedAPIViewMixin, APIView):
     """
@@ -20,12 +26,24 @@ class BaseElasticsearchManyMappedAPIView(BaseElasticsearchManyMappedAPIViewMixin
     on database models and return multiple results.
     """
 
+    def get(self, *args, **kwargs):
+        """
+        Get all of the reports of the requested data type associated with the referenced parent instance.
+        """
+        return super(BaseElasticsearchManyMappedAPIView, self).get(*args, **kwargs)
+
 
 class BaseElasticsearchAnalyticsAPIView(BaseElasticsearchAnalyticsAPIViewMixin, APIView):
     """
     This is a base class for all Elasticsearch APIView classes that query Elasticsearch models based
     on database models and return statistical data.
     """
+
+    def get(self, *args, **kwargs):
+        """
+        Get analytical data about all of the given type of report associated with the referenced parent instance.
+        """
+        return super(BaseElasticsearchAnalyticsAPIView, self).get(*args, **kwargs)
 
 
 class BaseElasticsearchRelatedAPIView(BaseElasticsearchRelatedAPIViewMixin, APIView):
