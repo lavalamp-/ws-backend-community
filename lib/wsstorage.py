@@ -287,7 +287,7 @@ class GcsStorageHelper(RemoteStorageHelper):
             key=None,
             acl=DEFAULT_ACL,
     ):
-        blob = self.__get_blob(file_key=key, bucket=bucket)
+        blob = self.__create_blob(file_key=key, bucket=bucket)
         if local_file_path:
             to_return = blob.upload_from_filename(local_file_path)
         elif file_obj:
@@ -303,6 +303,16 @@ class GcsStorageHelper(RemoteStorageHelper):
         return storage.Client()
 
     # Private Methods
+
+    def __create_blob(self, file_key=None, bucket=None):
+        """
+        Create a new blob in the specified bucket using the specified file key.
+        :param file_key: The key that the file should be stored under.
+        :param bucket: The bucket where the file should be stored.
+        :return: The newly-created blob.
+        """
+        bucket = self.client.get_bucket(bucket)
+        return bucket.blob(file_key)
 
     def __get_blob(self, file_key=None, bucket=None):
         """
