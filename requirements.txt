@@ -19,6 +19,7 @@ cssselect==1.0.1
 Django==1.11
 django-cors-headers==2.0.2
 django-filter==1.0.2
+django-rest-swagger==2.1.2
 djangorestframework==3.6.2
 dnspython==1.15.0
 docutils==0.13.1
@@ -28,6 +29,7 @@ enum34==1.1.6
 Faker==0.7.11
 futures==3.1.1
 Geohash==1.0
+google-cloud-storage==1.2.0
 idna==2.5
 incremental==16.10.1
 ipaddress==1.0.18

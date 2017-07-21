@@ -145,6 +145,10 @@ from .wsregex import (
     RegexLib,
 )
 
+from .wsstorage import (
+    GcsStorageHelper,
+)
+
 from .wsupgrade import (
     UpgradeHelper,
 )
