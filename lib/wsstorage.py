@@ -10,7 +10,6 @@ from .config import ConfigManager
 config = ConfigManager.instance()
 
 
-@Singleton
 class RemoteStorageHelper(object):
     """
     This is a base class for helper classes that provide functionality for storing
@@ -245,6 +244,7 @@ class RemoteStorageHelper(object):
     # Representation and Comparison
 
 
+@Singleton
 class GcsStorageHelper(RemoteStorageHelper):
     """
     This is a class for interacting with Google Cloud Storage.
