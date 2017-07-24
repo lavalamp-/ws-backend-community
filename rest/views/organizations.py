@@ -7,8 +7,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 
-from lib import FilesystemHelper
-from lib import S3Helper
+from lib import FilesystemHelper, get_storage_helper
 from rest.responses import DomainsUploadResponse
 from rest.responses import NetworksUploadResponse
 from tasknode.tasks import initialize_organization, handle_organization_deletion, process_dns_text_file, \
@@ -499,21 +498,21 @@ class DomainsUploadAPIView(BaseOrganizationWriteAPIView):
         uploaded_file = request.FILES["file"]
         temp_path = FilesystemHelper.get_temporary_file_path()
         FilesystemHelper.write_to_file(file_path=temp_path, data=uploaded_file.read(), write_mode="wb+")
-        s3_helper = S3Helper.instance()
-        response, key = s3_helper.upload_dns_text_file(
+        storage_helper = get_storage_helper()
+        response, key = storage_helper.upload_dns_text_file(
             org_uuid=str(self.organization.uuid),
             local_file_path=temp_path,
-            bucket=config.aws_s3_bucket,
+            bucket=config.storage_bucket,
         )
         upload_model = UserUploadModel.from_database_model(database_model=self.request.user, upload_type="dns_text")
-        upload_model.set_s3_attributes(bucket=config.aws_s3_bucket, key=key, file_type="dns_text")
+        upload_model.set_s3_attributes(bucket=config.storage_bucket, key=key, file_type="dns_text")
         upload_model.save(self.organization.uuid)
         contents = FilesystemHelper.get_file_contents(path=temp_path, read_mode="rb")
         if contents.count("\n") > config.rest_domains_file_cutoff:
             process_dns_text_file.delay(
                 org_uuid=str(self.organization.uuid),
                 file_key=key,
-                file_bucket=config.aws_s3_bucket,
+                file_bucket=config.storage_bucket,
             )
             to_return = DomainsUploadResponse(batch_required=True)
         else:

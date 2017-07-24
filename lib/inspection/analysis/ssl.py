@@ -9,8 +9,8 @@ from cryptography.hazmat.primitives import serialization
 import logging
 
 from ..base import BaseInspector
-from lib import ElasticsearchableMixin, S3Helper, BaseWsException, FilesystemHelper, RegexLib, DatetimeHelper, \
-    ConfigManager
+from lib import ElasticsearchableMixin, BaseWsException, FilesystemHelper, RegexLib, DatetimeHelper, \
+    ConfigManager, get_storage_helper
 from lib.sqlalchemy import get_org_uuid_from_network_service_scan
 from wselasticsearch.query import SslCertificateQuery, SslVulnerabilitiesQuery, SslSupportQuery, SslVulnerabilityQuery
 
@@ -230,8 +230,8 @@ class SslSupportInspector(BaseInspector, ElasticsearchableMixin):
         Get a string representing the contents of the referenced SSL certificate.
         :return: A string representing the contents of the referenced SSL certificate.
         """
-        s3_helper = S3Helper.instance()
-        return s3_helper.get_file(
+        storage_helper = get_storage_helper()
+        return storage_helper.get_file(
             file_key=self.ssl_certificate_model["s3_key"],
             bucket=self.ssl_certificate_model["s3_bucket"],
         ).strip()

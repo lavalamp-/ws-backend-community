@@ -5,7 +5,7 @@ from celery.utils.log import get_task_logger
 
 from ..base import DatabaseTask
 from ...app import websight_app
-from lib import S3Helper
+from lib import get_storage_helper
 from lib.parsing import DomainsTextFileWrapper
 from lib.sqlalchemy import get_all_domains_for_organization, create_domain_for_organization
 
@@ -26,8 +26,8 @@ def process_dns_text_file(self, org_uuid=None, file_key=None, file_bucket=None):
         "Now processing DNS text file at %s for organization %s."
         % (file_key, org_uuid)
     )
-    s3_helper = S3Helper.instance()
-    contents = s3_helper.get_file(file_key=file_key, bucket=file_bucket)
+    storage_helper = get_storage_helper()
+    contents = storage_helper.get_file(file_key=file_key, bucket=file_bucket)
     file_wrapper = DomainsTextFileWrapper(contents)
     org_domains = get_all_domains_for_organization(db_session=self.db_session, org_uuid=org_uuid)
     logger.info(

@@ -11,7 +11,7 @@ from nassl._nassl import OpenSSLError
 from wselasticsearch.query import BulkElasticsearchQuery
 from ....app import websight_app
 from ...base import ServiceTask, NetworkServiceTask
-from lib import ConfigManager, FilesystemHelper, S3Helper, ValidationHelper, ConversionHelper
+from lib import ConfigManager, FilesystemHelper, ValidationHelper, get_storage_helper
 from lib.inspection import PortInspector
 from wselasticsearch.models import SslSupportModel, SslCertificateModel, SslVulnerabilitiesModel, \
     SslVulnerabilityModel
@@ -93,13 +93,13 @@ def upload_certificate_to_s3(org_uuid=None, cert_string=None, local_file_path=No
     was uploaded under.
     """
     FilesystemHelper.write_to_file(file_path=local_file_path, data=cert_string)
-    s3_helper = S3Helper.instance()
-    response, key = s3_helper.upload_ssl_certificate(
+    storage_helper = get_storage_helper()
+    response, key = storage_helper.upload_ssl_certificate(
         org_uuid=org_uuid,
         local_file_path=local_file_path,
-        bucket=config.aws_s3_bucket,
+        bucket=config.storage_bucket,
     )
-    return config.aws_s3_bucket, key
+    return config.storage_bucket, key
 
 
 @websight_app.task(bind=True, base=ServiceTask)

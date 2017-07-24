@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from lib import S3Helper
+from lib import get_storage_helper
 from ..mixin import BaseEsMixin
 
 
@@ -77,8 +77,8 @@ class WebServiceReportEsMixin(BaseEsMixin):
         if "has_screenshots" in to_return:
             has_screenshots = to_return["has_screenshots"]
         if has_screenshots and s3_key and s3_bucket:
-            s3_helper = S3Helper.instance()
-            to_return["screenshot_url"] = s3_helper.get_signed_url_for_key(
+            storage_helper = get_storage_helper()
+            to_return["screenshot_url"] = storage_helper.get_signed_url_for_key(
                 key=s3_key,
                 bucket=s3_bucket,
             )
@@ -353,8 +353,8 @@ class HttpScreenshotEsMixin(WebScanFiltersMixin):
         if "s3_bucket" in to_return:
             s3_bucket = to_return.pop("s3_bucket")
         if s3_key and s3_bucket:
-            s3_helper = S3Helper.instance()
-            to_return["image_url"] = s3_helper.get_signed_url_for_key(
+            storage_helper = get_storage_helper()
+            to_return["image_url"] = storage_helper.get_signed_url_for_key(
                 key=s3_key,
                 bucket=s3_bucket,
             )

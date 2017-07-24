@@ -58,11 +58,11 @@ class WsAuthTokenSerializer(AuthTokenSerializer):
 
                 # Attempt to find any past login attempts from
                 #   elastic search for this ip, within the threshold
-                attempts = get_login_attempts_for_ip_address_within_threshold(ip_address, config.es_default_index)
-
-                if attempts.results_count >= config.recaptcha_login_attempt_threshold:
-                    # Recaptcha required
-                    exception.require_recaptcha()
+                # attempts = get_login_attempts_for_ip_address_within_threshold(ip_address, config.es_default_index)
+                #
+                # if attempts.results_count >= config.recaptcha_login_attempt_threshold:
+                #     # Recaptcha required
+                #     exception.require_recaptcha()
 
                 raise exception
         else:

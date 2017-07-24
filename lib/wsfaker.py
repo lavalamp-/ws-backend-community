@@ -918,7 +918,7 @@ class WsFaker(object):
         Get a string representing an AWS S3 bucket.
         :return: A string representing an AWS S3 bucket.
         """
-        return config.aws_s3_bucket
+        return config.storage_bucket
 
     @staticmethod
     def get_s3_file_type():

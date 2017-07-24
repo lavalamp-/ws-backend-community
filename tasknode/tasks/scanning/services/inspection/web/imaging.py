@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from celery import group
 from celery.utils.log import get_task_logger
 
-from lib import S3Helper, ConfigManager
+from lib import ConfigManager, get_storage_helper
 from lib.inspection import HttpScreenshotter
 from lib.sqlalchemy import get_endpoint_information_for_web_service
 from ......app import websight_app
@@ -34,21 +34,21 @@ def upload_screenshot_to_s3(org_uuid=None, local_file_path=None):
     :return: A tuple containing (1) the bucket where the file was uploaded to and (2) the key it was
     uploaded under.
     """
-    s3_helper = S3Helper.instance()
+    storage_helper = get_storage_helper()
     logger.info(
         "Uploading HTTP screenshot at %s to S3."
         % (local_file_path,)
     )
-    response, key = s3_helper.upload_screenshot(
+    response, key = storage_helper.upload_screenshot(
         org_uuid=org_uuid,
         local_file_path=local_file_path,
-        bucket=config.aws_s3_bucket,
+        bucket=config.storage_bucket,
     )
     logger.info(
         "HTTP screenshot at %s successfully uploaded for organization %s. Bucket is %s, key is %s."
-        % (local_file_path, org_uuid, config.aws_s3_bucket, key)
+        % (local_file_path, org_uuid, config.storage_bucket, key)
     )
-    return config.aws_s3_bucket, key
+    return config.storage_bucket, key
 
 
 @websight_app.task(bind=True, base=ServiceTask)

@@ -48,7 +48,7 @@ class S3Helper(object):
         :return: The boto3 client response.
         """
         return self.create_bucket(
-            name=config.aws_s3_bucket,
+            name=config.storage_bucket,
             acl=config.aws_s3_default_acl,
         )
 
@@ -59,7 +59,7 @@ class S3Helper(object):
         """
         return self.s3.list_buckets()
 
-    def get_file(self, file_key=None, bucket=config.aws_s3_bucket):
+    def get_file(self, file_key=None, bucket=config.storage_bucket):
         """
         Get the contents of the file specified by file_key from the given bucket.
         :param file_key: The key where the file resides.
@@ -85,7 +85,7 @@ class S3Helper(object):
         Get an S3 key to use for uploading a HTML that Web Sight errored when parsing.
         :return: An S3 key to use for uploading a HTML that Web Sight errored when parsing.
         """
-        return self.get_key(path_component=config.aws_s3_bad_html_path)
+        return self.get_key(path_component=config.storage_bad_html_path)
 
     def get_key_for_dns_text_file(self, org_uuid):
         """
@@ -94,7 +94,7 @@ class S3Helper(object):
         :return: A string containing a key to use for uploading a DNS text file for the
         given user.
         """
-        return self.get_key(org_uuid=org_uuid, path_component=config.aws_s3_uploads_path)
+        return self.get_key(org_uuid=org_uuid, path_component=config.storage_uploads_path)
 
     def get_key_for_screenshot(self, org_uuid):
         """
@@ -103,7 +103,7 @@ class S3Helper(object):
         :return: A string containing a key to use for uploading a screenshot for the
         given organization.
         """
-        return self.get_key(org_uuid=org_uuid, path_component=config.aws_s3_screenshots_path)
+        return self.get_key(org_uuid=org_uuid, path_component=config.storage_screenshots_path)
 
     def get_key_for_ssl_certificate(self, org_uuid):
         """
@@ -112,9 +112,9 @@ class S3Helper(object):
         :return: A string containing a key to use for uploading an SSL certificate for the
         given organization.
         """
-        return self.get_key(org_uuid=org_uuid, path_component=config.aws_s3_certificates_path)
+        return self.get_key(org_uuid=org_uuid, path_component=config.storage_certificates_path)
 
-    def get_signed_url_for_key(self, key=None, bucket=config.aws_s3_bucket):
+    def get_signed_url_for_key(self, key=None, bucket=config.storage_bucket):
         """
         Generate and return a signed URL for the given key and bucket.
         :param key: The key to generate the URL for.
@@ -132,7 +132,7 @@ class S3Helper(object):
 
     def upload_file_to_bucket(
             self,
-            bucket=config.aws_s3_bucket,
+            bucket=config.storage_bucket,
             local_file_path=None,
             file_obj=None,
             key=None,
@@ -157,7 +157,7 @@ class S3Helper(object):
             Key=key,
         )
 
-    def upload_bad_html(self, local_file_path=None, bucket=config.aws_s3_bucket):
+    def upload_bad_html(self, local_file_path=None, bucket=config.storage_bucket):
         """
         Upload the given malformed HTML file to S3.
         :param local_file_path: The local file path where the malformed HTML resides.
@@ -177,7 +177,7 @@ class S3Helper(object):
             self,
             org_uuid=None,
             local_file_path=None,
-            bucket=config.aws_s3_bucket,
+            bucket=config.storage_bucket,
             file_obj=None,
     ):
         """
@@ -199,7 +199,7 @@ class S3Helper(object):
         )
         return response, file_key
 
-    def upload_screenshot(self, org_uuid=None, local_file_path=None, bucket=config.aws_s3_bucket):
+    def upload_screenshot(self, org_uuid=None, local_file_path=None, bucket=config.storage_bucket):
         """
         Upload the given screenshot to S3 on behalf of the given organization.
         :param org_uuid: The UUID of the organization that owns the screenshot.
@@ -216,7 +216,7 @@ class S3Helper(object):
         )
         return response, file_key
 
-    def upload_ssl_certificate(self, org_uuid=None, local_file_path=None, bucket=config.aws_s3_bucket):
+    def upload_ssl_certificate(self, org_uuid=None, local_file_path=None, bucket=config.storage_bucket):
         """
         Upload the given SSL certificate to S3 on behalf of the given organization.
         :param org_uuid: The UUID of the organization that owns the SSL certificate.

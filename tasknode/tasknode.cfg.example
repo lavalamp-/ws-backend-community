@@ -3,12 +3,7 @@
 aws_key_id = [[REPLACE]]
 aws_secret_key = [[REPLACE]]
 aws_default_region = us-west-1
-aws_s3_bucket = websight-dev
-aws_s3_screenshots_path = screenshots
 aws_s3_default_acl = private
-aws_s3_certificates_path = certificates
-aws_s3_bad_html_path = bad-html
-aws_s3_uploads_path = user-uploads
 
 [Celery]
 
@@ -102,6 +97,10 @@ fs_temporary_file_dir = /tmp/
 
 fingerprint_socket_timeout = 2
 
+[GCP]
+
+gcp_creds_file_path =
+
 [General]
 
 gen_default_encoding = utf-8
@@ -166,6 +165,16 @@ smtp_username = [[REPLACE]]
 smtp_password = [[REPLACE]]
 smtp_host = [[REPLACE]]
 smtp_port = [[REPLACE]]
+
+[Storage]
+
+storage_platform = gcs
+storage_bucket = websight-dev
+storage_screenshots_path = screenshots
+storage_certificates_path = certificates
+storage_bad_html_path = bad-html
+storage_uploads_path = user-uploads
+storage_signed_url_duration = 3600
 
 [Tasks]
 

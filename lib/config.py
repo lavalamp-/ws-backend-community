@@ -130,52 +130,12 @@ class ConfigManager(object):
         return self.__get_string("AWS", "aws_secret_key")
 
     @property
-    def aws_s3_bad_html_path(self):
-        """
-        Get the path segment to add to S3 paths when uploading HTML that Web Sight errors on parsing.
-        :return: the path segment to add to S3 paths when uploading HTML that Web Sight errors on parsing.
-        """
-        return self.__get_string("AWS", "aws_s3_bad_html_path")
-
-    @property
-    def aws_s3_bucket(self):
-        """
-        Get the name of the bucket to use for uploading files to.
-        :return: the name of the bucket to use for uploading files to.
-        """
-        return self.__get_string("AWS", "aws_s3_bucket")
-
-    @property
-    def aws_s3_certificates_path(self):
-        """
-        Get the path segment to add to S3 paths when uploading an SSL certificate.
-        :return: the path segment to add to S3 paths when uploading an SSL certificate.
-        """
-        return self.__get_string("AWS", "aws_s3_certificates_path")
-
-    @property
     def aws_s3_default_acl(self):
         """
         Get the default ACL to apply to all things uploaded to AWS S3.
         :return: the default ACL to apply to all things uploaded to AWS S3.
         """
         return self.__get_string("AWS", "aws_s3_default_acl")
-
-    @property
-    def aws_s3_screenshots_path(self):
-        """
-        Get the path segment to add to S3 paths when uploading a screenshot.
-        :return: the path segment to add to S3 paths when uploading a screenshot.
-        """
-        return self.__get_string("AWS", "aws_s3_screenshots_path")
-
-    @property
-    def aws_s3_uploads_path(self):
-        """
-        Get the path segment to add to S3 paths when uploading user uploads.
-        :return: the path segment to add to S3 paths when uploading user uploads.
-        """
-        return self.__get_string("AWS", "aws_s3_uploads_path")
 
     @property
     def celery_app_name(self):
@@ -786,6 +746,14 @@ class ConfigManager(object):
         return self.__get_string("Filesystem", "fs_temporary_file_dir")
 
     @property
+    def gcp_creds_file_path(self):
+        """
+        Get the local file path to where the Google Cloud Platform credentials file resides.
+        :return: the local file path to where the Google Cloud Platform credentials file resides.
+        """
+        return self.__get_string("GCP", "gcp_creds_file_path")
+
+    @property
     def gen_default_encoding(self):
         """
         Get the default string encoding used by Web Sight.
@@ -1132,6 +1100,62 @@ class ConfigManager(object):
         :return: the default username for the websight.io smtp account
         """
         return self.__get_string("SMTP", "smtp_username")
+
+    @property
+    def storage_bad_html_path(self):
+        """
+        Get the file path in which poorly-formed HTML should be stored in the cloud storage backend.
+        :return: the file path in which poorly-formed HTML should be stored in the cloud storage backend.
+        """
+        return self.__get_string("Storage", "storage_bad_html_path")
+
+    @property
+    def storage_bucket(self):
+        """
+        Get the default bucket name that Web Sight should use for cloud storage.
+        :return: the default bucket name that Web Sight should use for cloud storage.
+        """
+        return self.__get_string("Storage", "storage_bucket")
+
+    @property
+    def storage_certificates_path(self):
+        """
+        Get the file path in which SSL certificates should be stored in the cloud storage backend.
+        :return: the file path in which SSL certificates should be stored in the cloud storage backend.
+        """
+        return self.__get_string("Storage", "storage_certificates_path")
+
+    @property
+    def storage_platform(self):
+        """
+        Get a string depicting which cloud platform to use for file storage.
+        :return: a string depicting which cloud platform to use for file storage.
+        """
+        return self.__get_string("Storage", "storage_platform")
+
+    @property
+    def storage_screenshots_path(self):
+        """
+        Get the file path in which screenshots should be stored in the cloud storage backend.
+        :return: the file path in which screenshots should be stored in the cloud storage backend.
+        """
+        return self.__get_string("Storage", "storage_screenshots_path")
+
+    @property
+    def storage_signed_url_duration(self):
+        """
+        Get the amount of time in seconds that a signed URL should remain valid for.
+        :return: the amount of time in seconds that a signed URL should remain valid for.
+        """
+        return self.__get_int("Storage", "storage_signed_url_duration")
+
+    @property
+    def storage_uploads_path(self):
+        """
+        Get the file path in which user uploads should be stored in the cloud storage backend.
+        :return: the file path in which user uploads should be stored in the cloud storage backend.
+        """
+        return self.__get_string("Storage", "storage_uploads_path")
 
     @property
     def task_default_index(self):

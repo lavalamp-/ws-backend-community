@@ -15,10 +15,6 @@ import logging
 logger = logging.getLogger(__name__)
 initialize_lib_logger(logger)
 
-from .aws import (
-    S3Helper,
-)
-
 from .blacklist import (
     IPBlacklist,
 )
@@ -84,11 +80,6 @@ from .introspection import (
     WsIntrospectionHelper,
 )
 
-# Grequests performs monkey patch on gevent, which in turn messes up prefork pool
-# from .grequests import (
-#     GRequestsHelper,
-# )
-
 from .host import (
     HostHelper,
 )
@@ -147,6 +138,8 @@ from .wsregex import (
 
 from .wsstorage import (
     GcsStorageHelper,
+    get_storage_helper,
+    S3Helper,
 )
 
 from .wsupgrade import (

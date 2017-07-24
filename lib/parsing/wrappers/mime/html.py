@@ -6,7 +6,7 @@ from lxml import etree
 
 from .base import BaseMarkupWrapper
 from lib import CrawlableMixin, SanitationHelper, ConversionHelper, WsIntrospectionHelper, ConfigManager, \
-    S3Helper, FilesystemHelper
+    FilesystemHelper, get_storage_helper
 from .js import JavaScriptElementWrapper
 from wselasticsearch.models import MalformedHtmlModel
 
@@ -276,13 +276,13 @@ class HtmlWrapper(BaseMarkupWrapper, CrawlableMixin):
         :param error: The error that was thrown.
         :return: None
         """
-        s3_helper = S3Helper.instance()
+        storage_helper = get_storage_helper()
         temp_file = FilesystemHelper.get_temporary_file_path()
         FilesystemHelper.write_to_file(file_path=temp_file, write_mode="wb+", data=html)
-        response, key = s3_helper.upload_bad_html(temp_file, bucket=config.aws_s3_bucket)
+        response, key = storage_helper.upload_bad_html(temp_file, bucket=config.storage_bucket)
         FilesystemHelper.delete_file(temp_file)
         bad_html_model = MalformedHtmlModel(traceback="", error_message=error.message)
-        bad_html_model.set_s3_attributes(bucket=config.aws_s3_bucket, key=key, file_type="malformed-html")
+        bad_html_model.set_s3_attributes(bucket=config.storage_bucket, key=key, file_type="malformed-html")
         bad_html_model.save(config.es_default_index)
         logger.info("Successfully uploaded malformed HTML to S3, record to Elasticsearch.")
 
