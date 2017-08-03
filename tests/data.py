@@ -54,7 +54,6 @@ class WsTestData(object):
         "password": "P@ssw0rd123!!",
         "first_name": "Barry",
         "last_name": "Bonds",
-        "recaptcha_response": "asd123asd123",
     }
 
     UNUSED_IP_ADDRESS = "99.99.99.99"

@@ -96,10 +96,6 @@ from .mixin import (
     TempFileMixin,
 )
 
-from .recaptcha import (
-    RecaptchaHelper
-)
-
 from .sanitation import (
     SanitationHelper,
 )

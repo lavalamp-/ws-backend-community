@@ -954,30 +954,6 @@ class ConfigManager(object):
         return ConversionHelper.string_to_log_level(level_string)
 
     @property
-    def recaptcha_login_attempt_threshold(self):
-        """
-        Get the number of login attempts, for recaptcha checks
-        :return: The number of login attempts before recaptcha appears
-        """
-        return self.__get_int("Recaptcha", "recaptcha_login_attempt_threshold")
-
-    @property
-    def recaptcha_secret(self):
-        """
-        Get the secret key for recaptcha
-        :return: The secret key
-        """
-        return self.__get_string("Recaptcha", "recaptcha_secret")
-
-    @property
-    def recaptcha_timeout_minutes(self):
-        """
-        Get the number of minutes to search for login attempts, for recaptcha checks
-        :return: The number of minutes in the recaptcha window
-        """
-        return self.__get_int("Recaptcha", "recaptcha_timeout_minutes")
-
-    @property
     def redis_host(self):
         """
         Get the hostname of the machine that is running the Redis server.

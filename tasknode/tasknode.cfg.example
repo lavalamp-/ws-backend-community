@@ -134,12 +134,6 @@ log_max_bytes = 10485760
 log_max_files = 10
 log_error_file = error.log
 
-[Recaptcha]
-
-recaptcha_login_attempt_threshold = 3
-recaptcha_secret = [[REPLACE]]
-recaptcha_timeout_minutes = 1
-
 [Redis]
 
 redis_host = [[REPLACE]]

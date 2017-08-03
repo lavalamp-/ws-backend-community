@@ -11,7 +11,6 @@ from lib.config import ConfigManager
 from rest_framework import serializers
 from rest.lib.exception import WsRestNonFieldException, WsRestFieldException
 from lib.smtp.smtp import SmtpEmailHelper
-from lib.recaptcha import RecaptchaHelper
 from lib import RandomHelper
 import uuid
 from tasknode.tasks import send_emails_for_user_signup
@@ -65,7 +64,6 @@ class SetupAccountSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=True, help_text="The first name to associate with the account.")
     last_name = serializers.CharField(required=True, help_text="The last name to associate with the account.")
     password = serializers.CharField(required=True, help_text="The password for the account.")
-    recaptcha_response = serializers.CharField(read_only=True, help_text="The reCAPTCHA code to prove a valid request.")
 
     def validate(self, attrs):
         email_token = attrs.get('email_token')
@@ -73,14 +71,6 @@ class SetupAccountSerializer(serializers.Serializer):
         first_name = attrs.get('first_name')
         last_name = attrs.get('last_name')
         password = attrs.get('password')
-        recaptcha_response = self.initial_data.get('recaptcha_response', "")
-        recaptcha_is_valid = False
-
-        if recaptcha_response:
-            recaptcha_is_valid = RecaptchaHelper.is_valid_response(recaptcha_response)
-
-        if not recaptcha_is_valid:
-            raise WsRestNonFieldException('Supplied recaptcha token is invalid!')
 
         if not UserModel.validate_password_complexity(password):
             raise WsRestNonFieldException(UserModel.INVALID_PASSWORD_COMPLEXITY_ERROR_MESSAGE)
@@ -201,26 +191,13 @@ class UserSerializer(serializers.ModelSerializer):
         required=True,
         help_text="The last name to associate with the account.",
     )
-    recaptcha_response = serializers.CharField(
-        read_only=True,
-        help_text="The reCAPTCHA code used to prove valid request.",
-    )
 
     def create(self, validated_data):
 
         is_valid_password = UserModel.validate_password_complexity(validated_data['password'])
 
-        recaptcha_is_valid = False
-
-        recaptcha_response = self.initial_data.get('recaptcha_response', "")
-        if recaptcha_response:
-            recaptcha_is_valid = RecaptchaHelper.is_valid_response(recaptcha_response)
-
         if not is_valid_password:
             raise WsRestNonFieldException(UserModel.INVALID_PASSWORD_COMPLEXITY_ERROR_MESSAGE)
-
-        if not recaptcha_is_valid:
-            raise WsRestNonFieldException('Supplied recaptcha token is invalid!')
 
         try:
             user = UserModel.objects.create(
@@ -246,5 +223,5 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserModel
-        fields = ("first_name", "last_name", "username", "password", "recaptcha_response")
+        fields = ("first_name", "last_name", "username", "password")
 

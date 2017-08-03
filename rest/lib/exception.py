@@ -177,10 +177,6 @@ class WsBaseRestException(APIException):
         """ This will add a random key and value to the exception structure """
         self.errors_dict[key] = value
 
-    def require_recaptcha(self):
-        """ Sets the data attribute, that will require recaptcha on the front end"""
-        self.add_data("recaptcha", True)
-
     def to_json(self):
         return self.errors_dict
 

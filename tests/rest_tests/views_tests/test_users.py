@@ -10,7 +10,7 @@ from uuid import uuid4
 from tasknode.tasks import send_emails_for_user_signup
 from ..base import WsDjangoViewTestCase
 from ...data import WsTestData
-from lib import RecaptchaHelper, RandomHelper
+from lib import RandomHelper
 from lib.smtp import SmtpEmailHelper
 from rest.models import WsUser
 
@@ -50,9 +50,6 @@ class TestUserCreateView(WsDjangoViewTestCase):
             first_name=None,
             include_last_name=True,
             last_name=None,
-            include_recaptcha_response=True,
-            recaptcha_response=None,
-            recaptcha_succeeds=True,
     ):
         """
         Send a user creation request to the remote endpoint and return the response.
@@ -64,9 +61,6 @@ class TestUserCreateView(WsDjangoViewTestCase):
         :param first_name: The first name to submit in the request.
         :param include_last_name: Whether or not to include the last name in the request.
         :param last_name: The last name to submit in the request.
-        :param include_recaptcha_response: Whether or not to include the recaptcha response in the request.
-        :param recaptcha_response: The recaptch response to submit in the request.
-        :param recaptcha_succeeds: Whether or not recaptcha validation should succeed.
         :return: The response.
         """
         user_data = WsTestData.CREATE_USER
@@ -79,15 +73,6 @@ class TestUserCreateView(WsDjangoViewTestCase):
             to_send["first_name"] = first_name if first_name is not None else user_data["first_name"]
         if include_last_name:
             to_send["last_name"] = last_name if last_name is not None else user_data["last_name"]
-        if include_recaptcha_response:
-            to_send["recaptcha_response"] = recaptcha_response \
-                if recaptcha_response is not None \
-                else user_data["recaptcha_response"]
-        RecaptchaHelper.is_valid_response = MagicMock()
-        if recaptcha_succeeds:
-            RecaptchaHelper.is_valid_response.return_value = True
-        else:
-            RecaptchaHelper.is_valid_response.return_value = False
         return self.post(data=to_send)
 
     def test_successful_status(self):
@@ -187,14 +172,6 @@ class TestUserCreateView(WsDjangoViewTestCase):
         self.__send_create_user_request()
         user = self.get_last_created_user()
         self.assertFalse(user.is_superuser)
-
-    def test_successful_calls_recaptcha_is_valid(self):
-        """
-        Tests to ensure that a successful sign-up requests calls RecaptchaHelper.is_valid_response.
-        :return: None
-        """
-        self.__send_create_user_request()
-        self.assertTrue(RecaptchaHelper.is_valid_response.called)
 
     def test_successful_calls_smtp_helper_send_verification(self):
         """
@@ -317,22 +294,6 @@ class TestUserCreateView(WsDjangoViewTestCase):
         :return: None
         """
         response = self.__send_create_user_request(last_name="")
-        self.assertEqual(response.status_code, 400)
-
-    def test_no_recaptcha_response_fails(self):
-        """
-        Tests to ensure that a sign-up request with no recaptcha response fails.
-        :return: None
-        """
-        response = self.__send_create_user_request(include_recaptcha_response=False)
-        self.assertEqual(response.status_code, 400)
-
-    def test_invalid_recaptcha_response_fails(self):
-        """
-        Tests to ensure that a sign-up request with an invalid recaptcha response fails.
-        :return: None
-        """
-        response = self.__send_create_user_request(recaptcha_succeeds=False)
         self.assertEqual(response.status_code, 400)
 
 
@@ -514,9 +475,6 @@ class TestSetupAccountView(WsDjangoViewTestCase):
             last_name=None,
             include_password=True,
             password=None,
-            include_recaptcha_response=True,
-            recaptcha_response=None,
-            recaptcha_succeeds=True,
     ):
         """
         Send a setup account request to the API endpoint and return the response.
@@ -530,9 +488,6 @@ class TestSetupAccountView(WsDjangoViewTestCase):
         :param last_name: The last name to include in the request.
         :param include_password: Whether or not to include the password in the request.
         :param password: The password to include the in request.
-        :param include_recaptcha_response: Whether or not to include the recaptcha response in the request.
-        :param recaptcha_response: The recaptcha response to include in the request.
-        :param recaptcha_succeeds: Whether or not the recaptcha check should succeed.
         :return: The API response.
         """
         to_send = {}
@@ -547,13 +502,6 @@ class TestSetupAccountView(WsDjangoViewTestCase):
             to_send["last_name"] = last_name if last_name is not None else user_data["last_name"]
         if include_password:
             to_send["password"] = password if password is not None else user_data["password"]
-        if include_recaptcha_response:
-            to_send["recaptcha_response"] = recaptcha_response if recaptcha_response is not None else "asd123"
-        RecaptchaHelper.is_valid_response = MagicMock()
-        if recaptcha_succeeds:
-            RecaptchaHelper.is_valid_response.return_value = True
-        else:
-            RecaptchaHelper.is_valid_response.return_value = False
         return self.post(data=to_send)
 
     def test_success_status(self):
@@ -610,14 +558,6 @@ class TestSetupAccountView(WsDjangoViewTestCase):
         user_data = self.get_user_data(user="user_1")
         auth_check = authenticate(username=user_data["username"], password="P@ssw0rd123!!")
         self.assertTrue(auth_check)
-
-    def test_success_calls_recaptcha_validate(self):
-        """
-        Tests to ensure that a successful request invokes the RecaptchaHelper.is_valid_response method.
-        :return: None
-        """
-        self.send()
-        self.assertTrue(RecaptchaHelper.is_valid_response.called)
 
     def test_no_email_token_fails(self):
         """
@@ -763,22 +703,6 @@ class TestSetupAccountView(WsDjangoViewTestCase):
         :return: None
         """
         response = self.send(password="ASDasd123456")
-        self.assertEqual(response.status_code, 400)
-
-    def test_no_recaptcha_response_fails(self):
-        """
-        Tests to ensure that a request that does not contain a recaptcha response fails.
-        :return: None
-        """
-        response = self.send(include_recaptcha_response=False)
-        self.assertEqual(response.status_code, 400)
-
-    def test_invalid_recaptcha_response_fails(self):
-        """
-        Tests to ensure that a request that contains an invalid recaptcha response fails.
-        :return: None
-        """
-        response = self.send(recaptcha_succeeds=False)
         self.assertEqual(response.status_code, 400)
 
     @property

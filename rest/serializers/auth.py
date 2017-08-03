@@ -2,7 +2,6 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 
 from django.utils import timezone
 from wselasticsearch.models import LoginAttemptModel
-from wselasticsearch.ops import get_login_attempts_for_ip_address_within_threshold
 from lib import DjangoUtils
 from rest_framework.fields import empty
 from rest_framework import serializers
@@ -55,14 +54,6 @@ class WsAuthTokenSerializer(AuthTokenSerializer):
                 user_agent = None
                 login_attempt = LoginAttemptModel(ip_address, user_agent, timezone.now())
                 login_attempt.save(config.es_default_index)
-
-                # Attempt to find any past login attempts from
-                #   elastic search for this ip, within the threshold
-                # attempts = get_login_attempts_for_ip_address_within_threshold(ip_address, config.es_default_index)
-                #
-                # if attempts.results_count >= config.recaptcha_login_attempt_threshold:
-                #     # Recaptcha required
-                #     exception.require_recaptcha()
 
                 raise exception
         else:
