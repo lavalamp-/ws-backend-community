@@ -614,6 +614,14 @@ class ConfigManager(object):
         )
 
     @property
+    def es_use_http_auth(self):
+        """
+        Get whether or not to use HTTP authentication to the Elasticsearch service.
+        :return: whether or not to use HTTP authentication to the Elasticsearch service.
+        """
+        return self.__get_bool("Elasticsearch", "es_use_http_auth")
+
+    @property
     def es_username(self):
         """
         Get the username to connect to Elasticsearch with.

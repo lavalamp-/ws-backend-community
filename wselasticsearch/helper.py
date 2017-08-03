@@ -397,11 +397,19 @@ class ElasticsearchHelper(object):
             }
         else:
             proxies = {}
-        return Elasticsearch(
-            [config.es_url],
-            connection_class=WsElasticsearchConnection,
-            proxies=proxies,
-        )
+        if config.es_use_http_auth:
+            return Elasticsearch(
+                [config.es_url],
+                http_auth=(config.es_username, config.es_password),
+                connection_class=WsElasticsearchConnection,
+                proxies=proxies,
+            )
+        else:
+            return Elasticsearch(
+                [config.es_url],
+                connection_class=WsElasticsearchConnection,
+                proxies=proxies,
+            )
 
     # Properties
 

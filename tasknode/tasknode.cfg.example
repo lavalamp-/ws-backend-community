@@ -65,6 +65,7 @@ dns_dnsdb_ip_history_time = 31536000
 
 [Elasticsearch]
 
+es_use_http_auth = True
 es_username = [[REPLACE]]
 es_password = [[REPLACE]]
 es_host = [[REPLACE]]
