@@ -15,6 +15,10 @@ class DomainNameReportEsMixin(BaseEsMixin):
         return DomainNameReportQuery
 
     def _apply_aggregates_to_query(self, query):
+        query.aggregate_on_term(key="has_resolutions", name="has_resolutions")
+        query.aggregate_on_term(key="related_ips.ip_address", name="related_ips")
+        query.aggregate_on_term(key="resolutions.record_type", name="resolution_type")
+        query.aggregate_on_term(key="domain_added_by", name="domain_added_by")
         return query
 
 

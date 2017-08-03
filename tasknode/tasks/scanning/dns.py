@@ -15,7 +15,7 @@ from lib.sqlalchemy import get_all_included_domain_uuids_for_organization, creat
     check_domain_name_scanning_status, get_or_create_domain_name_for_organization
 from lib import ConfigManager, FilesystemHelper, RegexLib, BaseWsException, \
     enumerate_subdomains_for_domain as enumerate_subdomains_for_domain_dnsdb
-from lib.inspection import DomainInspector
+from lib.inspection import DomainInspector, DomainNameScanInspector
 from .ip import scan_ip_address_for_services_from_domain, scan_ip_address
 from lib.sqlalchemy import update_domain_name_scan_completed as update_domain_name_scan_completed_op, \
     update_domain_name_scanning_status as update_domain_name_scanning_status_op
@@ -404,6 +404,14 @@ def create_report_for_domain_name_scan(self, org_uuid=None, domain_uuid=None, do
     """
     logger.info(
         "Now creating report for domain name scan %s."
+        % (domain_scan_uuid,)
+    )
+    self.wait_for_es()
+    inspector = DomainNameScanInspector(domain_scan_uuid=domain_scan_uuid, db_session=self.db_session)
+    report = inspector.to_es_model(model_uuid=domain_scan_uuid, db_session=self.db_session)
+    report.save(org_uuid)
+    logger.info(
+        "Successfully generated domain name scan report for domain name scan %s."
         % (domain_scan_uuid,)
     )
 

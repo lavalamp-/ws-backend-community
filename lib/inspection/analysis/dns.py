@@ -172,7 +172,7 @@ class DomainNameScanInspector(BaseInspector, ElasticsearchableMixin):
         """
         if self._related_ips is None:
             related_ips = []
-            for result in self.dns_record_models:
+            for result in self.dns_record_models.results:
                 if result["_source"]["contains_ip_address"]:
                     related_ips.append({
                         "ip_address": result["_source"]["record_content"],
