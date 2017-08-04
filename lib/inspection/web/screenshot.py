@@ -184,10 +184,10 @@ class HttpScreenshotter(BaseInspector, ElasticsearchableMixin):
         Take a screenshot of the configured endpoint.
         :return: None
         """
-        from lib import DnsResolutionHelper
-        dns_helper = DnsResolutionHelper.instance()
+        # from lib import DnsResolutionHelper
+        # dns_helper = DnsResolutionHelper.instance()
         self.__prepare_driver()
-        dns_helper.add_resolution(domain_name=self.hostname, ip_address=self.ip_address)
+        # dns_helper.add_resolution(domain_name=self.hostname, ip_address=self.ip_address)
         self.driver.get(self.url)
         logger.debug(
             "Sleeping for %s seconds before saving screenshot for endpoint %s."
@@ -195,7 +195,7 @@ class HttpScreenshotter(BaseInspector, ElasticsearchableMixin):
         )
         time.sleep(config.selenium_screenshot_delay)
         self.driver.save_screenshot(self.output_file_path)
-        dns_helper.remove_resolution(self.hostname)
+        # dns_helper.remove_resolution(self.hostname)
         cropped_image = ImageProcessingHelper.crop_selenium_screenshot(self.output_file_path)
         cropped_image.save(self.output_file_path, format=config.selenium_screenshot_format)
         logger.debug(
