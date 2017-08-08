@@ -13,12 +13,12 @@ class WsPresentationResponse(WsBaseResponse):
 
     # Instantiation
 
-    def __init__(self, fields=None, sortable_fields=None, filterable_fields=None, *args, **kwargs):
+    def __init__(self, fields=None, sortable_fields=None, filter_fields=None, *args, **kwargs):
         super(WsPresentationResponse, self).__init__(*args, **kwargs)
         self.data = {
             "fields": fields,
             "sortable_fields": sortable_fields,
-            "filterable_fields": filterable_fields,
+            "filter_fields": filter_fields,
         }
 
     # Static Methods
@@ -38,7 +38,7 @@ class WsPresentationResponse(WsBaseResponse):
         return cls(
             fields=api_view.queryable_model_fields,
             sortable_fields=api_view.sortable_fields if hasattr(api_view, "sortable_fields") else [],
-            filterable_fields=api_view.filterable_fields if hasattr(api_view, "filterable_fields") else [],
+            filter_fields=api_view.filter_fields if hasattr(api_view, "filter_fields") else [],
             *args,
             **kwargs
         )
@@ -56,7 +56,7 @@ class WsPresentationResponse(WsBaseResponse):
         return cls(
             fields=list(api_view.serializer_class.Meta.fields),
             sortable_fields=list(api_view.ordering_fields) if hasattr(api_view, "ordering_fields") else [],
-            filterable_fields=list(api_view.filter_class.Meta.fields) if hasattr(api_view, "filter_class") else [],
+            filter_fields=list(api_view.filter_class.Meta.fields) if hasattr(api_view, "filter_class") else [],
             *args,
             **kwargs
         )

@@ -801,7 +801,7 @@ class PresentableTestCaseMixin(object):
     APIView functionality for data presentation.
     """
 
-    presentation_fields = ["fields", "sortable_fields", "filterable_fields"]
+    presentation_fields = ["fields", "sortable_fields", "filter_fields"]
 
     def test_presentation_returns_fields(self):
         """
@@ -846,22 +846,22 @@ class PresentableTestCaseMixin(object):
         response = self.send_presentation_request()
         self.assertTrue(isinstance(response.json()["sortable_fields"], list))
 
-    def test_presentation_returns_filterable_fields(self):
+    def test_presentation_returns_filter_fields(self):
         """
         Tests that submitting a presentation request returns a response that contains the queried object's
-        filterable fields.
+        filter fields.
         :return: None
         """
         response = self.send_presentation_request()
-        self.assertTrue("filterable_fields" in response.json())
+        self.assertTrue("filter_fields" in response.json())
 
-    def test_presentation_returns_filterable_fields_list(self):
+    def test_presentation_returns_filter_fields_list(self):
         """
         Tests that submitting a presentation request returns a response with a list of filterable fields.
         :return: None
         """
         response = self.send_presentation_request()
-        self.assertTrue(isinstance(response.json()["filterable_fields"], list))
+        self.assertTrue(isinstance(response.json()["filter_fields"], list))
 
     def test_presentation_response_keys(self):
         """

@@ -152,7 +152,7 @@ class BaseElasticsearchFilterableMappedAPIViewMixin(BaseElasticsearchMappedAPIVi
 
     def get(self, *args, **kwargs):
         to_return = super(BaseElasticsearchFilterableMappedAPIViewMixin, self).get(*args, **kwargs)
-        to_return.data["filterable_fields"] = self.filterable_fields
+        to_return.data["filter_fields"] = self.filter_fields
         return to_return
 
     # Protected Methods
@@ -191,7 +191,7 @@ class BaseElasticsearchFilterableMappedAPIViewMixin(BaseElasticsearchMappedAPIVi
     # Properties
 
     @property
-    def filterable_fields(self):
+    def filter_fields(self):
         """
         Get a list of the fields that the Elasticsearch model referenced by this
         view can be filtered on.
