@@ -446,7 +446,7 @@ class DeployChecker(object):
         :return: whether or not the index where user information is stored in Elasticsearch exists.
         """
         if self._user_index_present is None:
-            if not self.s3_available:
+            if not self.elasticsearch_available:
                 self._user_index_present = False
             else:
                 self._user_index_present = self.__check_for_user_index()
