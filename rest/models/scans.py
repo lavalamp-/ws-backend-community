@@ -3,8 +3,8 @@ from __future__ import absolute_import
 
 from django.db import models
 
-from .organizations import Organization
 from .base import BaseWsModel
+from lib import FileHelper
 
 
 class ScanInvocation(BaseWsModel):
@@ -17,8 +17,178 @@ class ScanInvocation(BaseWsModel):
     # Foreign Keys
 
     organization = models.ForeignKey(
-        Organization,
+        "Organization",
         related_name="scan_invocations",
         null=True,
         on_delete=models.CASCADE,
     )
+
+
+class ScanConfigManager(models.Manager):
+    """
+    This is a manager class for handling operations around the creation and manipulation of
+    ScanConfig objects.
+    """
+
+    def create(self, **kwargs):
+        """
+        Create the ScanConfig and all of the necessary related objects.
+        :param kwargs: Keyword arguments to pass to the create method.
+        :return: The newly-created ScanConfig object.
+        """
+        scan_config = super(ScanConfigManager, self).create(**kwargs)
+        self.__create_default_dns_record_types_for_config(scan_config)
+        self.__create_default_scan_ports_for_config(scan_config)
+        return scan_config
+
+    def __create_default_dns_record_types_for_config(self, scan_config):
+        """
+        Get a list of DnsRecordType models representing the default record types to include
+        in scans.
+        :param scan_config: The ScanConfig to associate the DNS record types with.
+        :return: A list of DnsRecordType models representing the default record types to include
+        in scans.
+        """
+        from .dns import DnsRecordType
+        dns_record_types = FileHelper.get_dns_record_types()
+        to_return = []
+        for record_type, include_by_default, scan in dns_record_types:
+            to_return.append(DnsRecordType.objects.create(
+                record_type=record_type,
+                scan_config=scan_config,
+            ))
+        return to_return
+
+    def __create_default_scan_ports_for_config(self, scan_config):
+        """
+        Get a list of ScanPort objects representing the default ports to run network scans for
+        in scans.
+        :param scan_config: The ScanConfig to associate the DNS record types with.
+        :return: A list of ScanPort objects representing the default ports to run network scans for
+        in scans.
+        """
+        from .organizations import ScanPort
+        scan_ports = FileHelper.get_scan_ports_and_protocols()
+        to_return = []
+        for port_number, protocol in scan_ports:
+            to_return.append(ScanPort.objects.create(
+                port_number=port_number,
+                protocol=protocol,
+                scan_config=scan_config,
+            ))
+        return to_return
+
+
+class ScanConfig(BaseWsModel):
+    """
+    This is a class for representing the configuration options associated with a single scan.
+    """
+
+    objects = ScanConfigManager()
+
+    # Columns
+
+    # DNS
+
+    dns_enumerate_subdomains = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="Whether or not to enumerate subdomains.",
+    )
+    dns_scan_resolutions = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to scan IP addresses associated with domain name resolutions.",
+    )
+
+    # IP Addresses
+
+    ip_address_geolocate = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to geolocate IP addresses.",
+    )
+    ip_address_reverse_hostname = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to retrieve reverse hostname data for IP addresses.",
+    )
+    ip_address_historic_dns = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="Whether or not to retrieve historic DNS data for IP addresses.",
+    )
+    ip_address_as_data = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="Whether or not to retrieve data about IP addresses' autonomous systems.",
+    )
+    ip_address_whois_data = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="Whether or not to retrieve WHOIS data about an IP address.",
+    )
+    ip_address_scan_network_services = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to run network service scans against individual IP addresses.",
+    )
+
+    # Network Services
+
+    network_service_check_liveness = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to check for network service liveness.",
+    )
+    network_service_check_ssl = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to retrieve information about SSL associated with network services.",
+    )
+    network_service_fingerprint = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to fingerprint the applications found on live network services.",
+    )
+    network_service_inspect_app = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to inspect applications found on live network services.",
+    )
+    network_service_scan_bandwidth = models.CharField(
+        max_length=16,
+        default="10M",
+        null=False,
+        help_text="The maximum bandwidth to throttle Zmap scans at.",
+    )
+
+    # Applications
+
+    app_inspect_web_app = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to inspect discovered web applications.",
+    )
+
+    # Web Apps
+
+    web_app_enum_vhosts = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="Whether or not to enumerate virtual hosts for web servers.",
+    )
+    web_app_take_screenshot = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to take screenshots of web applications.",
+    )
+    web_app_do_crawling = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to crawl web applications or just retrieve the landing page resource.",
+    )
+
+    # Foreign Keys
+
+

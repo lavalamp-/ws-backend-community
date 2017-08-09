@@ -361,6 +361,51 @@ class FilesystemHelper(object):
     # Representation and Comparison
 
 
+class FileHelper(object):
+    """
+    This class contains helper methods for retrieving the contents of files associated with the
+    Web Sight platform.
+    """
+
+    @staticmethod
+    def get_dns_record_types():
+        """
+        Get a list of tuples containing (1) the DNS record type, (2) whether or not to collect data
+        about the DNS record type by default and (3) whether or not to scan IP addresses associated with the
+        the record type from the default DNS record types file.
+        :return: A list of tuples containing (1) the DNS record type, (2) whether or not to collect data
+        about the DNS record type by default and (3) whether or not to scan IP addresses associated with the
+        the record type from the default DNS record types file.
+        """
+        contents = FilesystemHelper.get_file_contents(path=config.files_dns_record_types_path)
+        contents = [x.strip() for x in contents.strip().split("\n")]
+        to_return = []
+        for line in contents:
+            line_split = [x.strip() for x in line.split(",")]
+            to_return.append((
+                line_split[0],
+                line_split[1].lower() == "true",
+                line_split[2].lower() == "true",
+            ))
+        return to_return
+
+    @staticmethod
+    def get_scan_ports_and_protocols():
+        """
+        Get a list of tuples containing (1) the port number and (2) the protocol for all of the
+        ports that are scanned by default.
+        :return: A list of tuples containing (1) the port number and (2) the protocol for all of the
+        ports that are scanned by default.
+        """
+        contents = FilesystemHelper.get_file_contents(path=config.files_default_scan_ports_path)
+        contents = [x.strip() for x in contents.strip().split("\n")]
+        ports = []
+        for line in contents:
+            line_split = [x.strip() for x in line.split(",")]
+            ports.append((int(line_split[0]), line_split[1]))
+        return ports
+
+
 class PathHelper(object):
     """
     This class contains helper methods for interacting with the current PATH environment

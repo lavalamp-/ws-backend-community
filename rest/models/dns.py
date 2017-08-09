@@ -6,6 +6,7 @@ from django.db import models
 from .base import BaseWsModel
 from .organizations import Organization
 from .networks import IpAddress
+from .scans import ScanConfig
 
 
 class DomainName(BaseWsModel):
@@ -68,6 +69,29 @@ class DomainNameScan(BaseWsModel):
     domain_name = models.ForeignKey(
         DomainName,
         related_name="domain_name_scans",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+
+
+class DnsRecordType(BaseWsModel):
+    """
+    This is a class for representing a DNS record type.
+    """
+
+    # Columns
+
+    record_type = models.CharField(
+        max_length=16,
+        null=False,
+        help_text="The DNS record type.",
+    )
+
+    # Foreign Keys
+
+    scan_config = models.ForeignKey(
+        ScanConfig,
+        related_name="dns_record_types",
         on_delete=models.CASCADE,
         null=False,
     )

@@ -12,6 +12,7 @@ from .base import (
 from .dns import (
     DomainName,
     DomainNameScan,
+    DnsRecordType,
 )
 
 from .fingerprints import (
@@ -53,6 +54,7 @@ from .services import (
 )
 
 from .scans import (
+    ScanConfig,
     ScanInvocation,
 )
 

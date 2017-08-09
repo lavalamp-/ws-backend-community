@@ -14,8 +14,6 @@ from lib.sqlalchemy import get_enabled_network_ranges_for_organization, get_port
     get_containing_network_uuid_for_organization, get_or_create_ip_address_from_org_network, \
     get_or_create_network_service_from_org_ip, create_network_scan_for_organization, update_network_scan_completed, \
     get_org_uuid_from_order, get_monitored_network_ranges_for_order
-from .monitoring import initialize_network_service_monitoring, initialize_ip_address_monitoring
-from .ip import scan_ip_address
 from .services import scan_network_service
 
 logger = get_task_logger(__name__)

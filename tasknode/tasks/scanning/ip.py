@@ -23,7 +23,6 @@ from wselasticsearch.ops import get_open_ports_from_ip_address_scan, update_ip_a
     update_not_ip_address_scan_latest_state
 from lib import DatetimeHelper, enumerate_domains_for_ip_address, ConfigManager
 from .services import network_service_inspection_pass, scan_network_service
-from .monitoring import initialize_network_service_monitoring
 from wselasticsearch.flags import DataFlagger
 
 logger = get_task_logger(__name__)

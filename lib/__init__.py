@@ -62,6 +62,7 @@ from .exception import (
 from .export import *
 
 from .filesystem import (
+    FileHelper,
     FilesystemHelper,
     PathHelper,
 )

@@ -9,6 +9,7 @@ from datetime import timedelta
 from rest_framework.exceptions import ValidationError
 
 from .base import BaseWsModel
+from .scans import ScanConfig
 from lib import ConfigManager, FilesystemHelper
 
 config = ConfigManager.instance()
@@ -518,6 +519,13 @@ class ScanPort(BaseWsModel):
 
     organization = models.ForeignKey(
         Organization,
+        related_name="scan_ports",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    scan_config = models.ForeignKey(
+        ScanConfig,
         related_name="scan_ports",
         on_delete=models.CASCADE,
         null=True,
