@@ -27,8 +27,14 @@ logger = get_task_logger(__name__)
 config = ConfigManager.instance()
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def inspect_http_service(self, org_uuid=None, network_service_scan_uuid=None, network_service_uuid=None):
+@websight_app.task(bind=True, base=WebServiceTask)
+def inspect_http_service(
+        self,
+        org_uuid=None,
+        network_service_scan_uuid=None,
+        network_service_uuid=None,
+        order_uuid=None,
+):
     """
     Inspect the HTTP service running on the given network service on behalf of the given
     organization and network service scan.
@@ -41,27 +47,32 @@ def inspect_http_service(self, org_uuid=None, network_service_scan_uuid=None, ne
         "Now inspecting HTTP service residing on network service %s. Organization is %s."
         % (network_service_uuid, org_uuid)
     )
-    populate_and_scan_web_services_from_network_service_scan.si(
-        org_uuid=org_uuid,
-        network_service_scan_uuid=network_service_scan_uuid,
-        network_service_uuid=network_service_uuid,
-        use_ssl=False,
-    ).apply_async()
-    # task_sigs = []
-    # task_kwargs = {
-    #     "org_uuid": org_uuid,
-    #     "network_service_scan_uuid": network_service_scan_uuid,
-    #     "service_uuid": network_service_uuid,
-    #     "use_ssl": False,
-    # }
-    # task_sigs.append(discover_virtual_hosts_for_web_service.si(**task_kwargs))
-    # task_sigs.append(inspect_virtual_hosts_for_network_service.si(**task_kwargs))
-    # logger.info(
-    #     "Now kicking off %s tasks to inspect HTTP service at %s. Organization is %s."
-    #     % (len(task_sigs), network_service_uuid, org_uuid)
-    # )
-    # canvas_sig = chain(task_sigs)
-    # self.finish_after(signature=canvas_sig)
+    scan_config = self.order.scan_config
+    if scan_config.web_app_enum_vhosts:
+        task_sigs = []
+        task_kwargs = {
+            "org_uuid": org_uuid,
+            "network_service_scan_uuid": network_service_scan_uuid,
+            "network_service_uuid": network_service_uuid,
+            "use_ssl": False,
+            "order_uuid": order_uuid,
+        }
+        task_sigs.append(discover_virtual_hosts_for_web_service.si(**task_kwargs))
+        task_sigs.append(inspect_virtual_hosts_for_network_service.si(**task_kwargs))
+        logger.info(
+            "Now kicking off %s tasks to inspect HTTP service at %s. Organization is %s."
+            % (len(task_sigs), network_service_uuid, org_uuid)
+        )
+        canvas_sig = chain(task_sigs)
+        self.finish_after(signature=canvas_sig)
+    else:
+        populate_and_scan_web_services_from_network_service_scan.si(
+            org_uuid=org_uuid,
+            network_service_scan_uuid=network_service_scan_uuid,
+            network_service_uuid=network_service_uuid,
+            use_ssl=False,
+            order_uuid=order_uuid,
+        ).apply_async()
 
 
 @websight_app.task(bind=True, base=ServiceTask)

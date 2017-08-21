@@ -105,6 +105,12 @@ class ScanConfig(BaseWsModel):
         help_text="Whether or not this scanning configuration is one of the default configurations "
                   "provided by Web Sight.",
     )
+    saved_for_later = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="Whether or not this scanning configuration should be saved as a configuration that "
+                  "can be used in future scans.",
+    )
 
     # General Setup
 
@@ -236,6 +242,12 @@ class ScanConfig(BaseWsModel):
 
     # Web Apps
 
+    web_app_include_http_on_https = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="Whether or not to inspect HTTP services that are hosted on the same IP address "
+                  "and port as HTTPS services.",
+    )
     web_app_enum_vhosts = models.BooleanField(
         default=False,
         null=False,
