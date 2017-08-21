@@ -18,6 +18,18 @@ class OrderManager(models.Manager):
     This is a manager class for handling operations around the creation of order models.
     """
 
+    def create(self, *args, **kwargs):
+        """
+        Create and return an instance of an order.
+        :param args: Positional arguments for super.
+        :param kwargs: Keyword arguments for super.
+        :return: The newly-created order.
+        """
+        from .scans import ScanConfig
+        to_return = super(OrderManager, self).create(*args, **kwargs)
+        to_return.scan_config = ScanConfig.objects.create(order=to_return)
+        return to_return
+
     def create_from_user_and_organization(self, user=None, organization=None):
         """
         Create and return a new order object based on the contents of the given organization and user.

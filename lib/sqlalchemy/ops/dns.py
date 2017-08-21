@@ -38,6 +38,7 @@ def add_ip_address_to_domain_name(domain_uuid=None, db_session=None, ip_address=
     return new_ip
 
 
+#TESTME
 def check_domain_name_scanning_status(db_session=None, domain_uuid=None, update_status=True):
     """
     Check to see whether the given domain name is currently being scanned. If it is not, then modify it to
@@ -113,6 +114,7 @@ def create_domain_for_organization(org_uuid=None, name=None, added_by="user"):
     )
 
 
+#TESTME
 def create_domain_scan_for_domain(domain_uuid):
     """
     Create and return a new DomainNameScan object associated with the given domain name.
@@ -239,6 +241,7 @@ def get_name_from_domain(db_session=None, domain_uuid=None):
     return result[0]
 
 
+#TESTME
 def get_or_create_domain_name_for_organization(db_session=None, name=None, added_by="user", org_uuid=None):
     """
     Get a domain name representing the given input data as owned by the given organization. If a matching
@@ -316,6 +319,7 @@ def update_domain_name_scan(scan_uuid=None, db_session=None, update_dict=None):
     )
 
 
+#TESTME
 def update_domain_name_scanning_status(db_session=None, scanning_status=None, domain_uuid=None):
     """
     Update the given domain name to reflect whether or not the domain is currently being scanned.
@@ -330,6 +334,7 @@ def update_domain_name_scanning_status(db_session=None, scanning_status=None, do
     update_domain_name(db_session=db_session, domain_uuid=domain_uuid, update_dict=update_dict)
 
 
+#TESTME
 def update_domain_name_scan_completed(scan_uuid=None, db_session=None):
     """
     Update the given DomainNameScan to reflect that scanning has concluded.

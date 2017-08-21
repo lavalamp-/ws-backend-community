@@ -28,6 +28,7 @@ def get_all_domains_for_ip_address(org_uuid=None, ip_address=None, filter_by_lat
     return list(to_return)
 
 
+#TESTME
 def get_all_subdomains_from_domain_scan_enumeration(org_uuid=None, parent_domain=None, domain_scan_uuid=None):
     """
     Get a list containing all of the subdomains that were found for the given parent domain during the given
@@ -67,6 +68,7 @@ def get_all_user_added_domain_names_for_organization(org_uuid=None, filter_by_la
     return list(to_return)
 
 
+#TESTME
 def get_ip_addresses_from_domain_name_scan(domain_scan_uuid=None, org_uuid=None):
     """
     Get a list of the IP addresses that were discovered during the given domain name scan.

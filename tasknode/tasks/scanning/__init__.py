@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from .base import (
-    initialize_scan_for_organization,
-)
-
 from .dns import (
     create_and_inspect_domains_from_subdomain_enumeration,
     create_report_for_domain_name_scan,
     enumerate_subdomains_by_dnsdb,
     enumerate_subdomains_for_domain,
     gather_data_for_domain_name,
-    initiate_dns_scans_for_organization,
-    initiate_dns_scan_for_organization,
     resolve_domain_name_for_organization,
     scan_domain_name,
-    scan_endpoints_from_domain_inspection,
     scan_ip_addresses_for_domain_name_scan,
     update_domain_name_scanning_status,
     update_domain_name_scan_completed,

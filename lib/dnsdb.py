@@ -210,6 +210,7 @@ def enumerate_subdomains_for_domains(domains):
     return list(to_return)
 
 
+#TESTME
 def enumerate_subdomains_for_domain(domain):
     """
     Enumerate subdomains for the given domain through DNSDB.

@@ -5,18 +5,19 @@ from celery import group
 from celery.utils.log import get_task_logger
 
 from tasknode.app import websight_app
-from tasknode.tasks.base import DatabaseTask
+from tasknode.tasks.base import ScanTask
 from lib.sqlalchemy import count_domains_for_order, \
     count_networks_for_order, get_network_scan_interval_for_organization, get_org_uuid_from_order, \
     get_monitored_domain_uuids_from_order
 from lib import DatetimeHelper
-from .dns import initiate_dns_scan_for_organization, scan_domain_name
+from .dns import scan_domain_name
 from .zmap import zmap_scan_order
 
 logger = get_task_logger(__name__)
 
 
-@websight_app.task(bind=True, base=DatabaseTask)
+#USED
+@websight_app.task(bind=True, base=ScanTask)
 def handle_placed_order(self, order_uuid=None):
     """
     Handle the placement of the given order.
@@ -28,29 +29,36 @@ def handle_placed_order(self, order_uuid=None):
         % (order_uuid,)
     )
     task_sigs = []
-    domain_count = count_domains_for_order(db_session=self.db_session, order_uuid=order_uuid)
-    logger.info(
-        "Domain count for order %s is %s."
-        % (order_uuid, domain_count)
-    )
-    if domain_count > 0:
-        task_sigs.append(initiate_domain_scans_for_order.si(order_uuid=order_uuid, scan_endpoints=True))
-    network_count = count_networks_for_order(db_session=self.db_session, order_uuid=order_uuid)
-    logger.info(
-        "Networks count for order %s is %s."
-        % (order_uuid, network_count)
-    )
-    if network_count > 0:
-        task_sigs.append(initiate_network_scans_for_order.si(order_uuid=order_uuid, requeue=False))
-    canvas_sig = group(task_sigs)
-    canvas_sig.apply_async()
-    logger.info(
-        "All scanning tasks for order %s kicked off successfully."
-        % (order_uuid,)
-    )
+    scan_config = self.order.scan_config
+    if scan_config.scan_domain_names:
+        domain_count = count_domains_for_order(db_session=self.db_session, order_uuid=order_uuid)
+        logger.info(
+            "Domain count for order %s is %s."
+            % (order_uuid, domain_count)
+        )
+        if domain_count > 0:
+            task_sigs.append(initiate_domain_scans_for_order.si(order_uuid=order_uuid, scan_endpoints=True))
+    if scan_config.scan_ip_addresses:
+        network_count = count_networks_for_order(db_session=self.db_session, order_uuid=order_uuid)
+        logger.info(
+            "Networks count for order %s is %s."
+            % (order_uuid, network_count)
+        )
+        if network_count > 0:
+            task_sigs.append(initiate_network_scans_for_order.si(order_uuid=order_uuid, requeue=False))
+    if len(task_sigs) > 0:
+        canvas_sig = group(task_sigs)
+        canvas_sig.apply_async()
+        logger.info(
+            "All scanning tasks for order %s kicked off successfully."
+            % (order_uuid,)
+        )
+    else:
+        logger.warning("No tasks were created as a result of call to handle_placed_order.")
 
 
-@websight_app.task(bind=True, base=DatabaseTask)
+#USED
+@websight_app.task(bind=True, base=ScanTask)
 def initiate_domain_scans_for_order(self, order_uuid=None, scan_endpoints=True):
     """
     Initiate all of the domain name scans for the given order.
@@ -73,6 +81,7 @@ def initiate_domain_scans_for_order(self, order_uuid=None, scan_endpoints=True):
         task_sigs.append(scan_domain_name.si(
             org_uuid=org_uuid,
             domain_uuid=domain_uuid,
+            order_uuid=order_uuid,
         ))
     logger.info(
         "Now kicking off %s tasks as a group to scan domains for organization %s."
@@ -82,7 +91,8 @@ def initiate_domain_scans_for_order(self, order_uuid=None, scan_endpoints=True):
     canvas_sig.apply_async()
 
 
-@websight_app.task(bind=True, base=DatabaseTask)
+#USED
+@websight_app.task(bind=True, base=ScanTask)
 def initiate_network_scans_for_order(self, order_uuid=None, requeue=False):
     """
     Initiate all of the network scans for the given order.
@@ -106,7 +116,7 @@ def initiate_network_scans_for_order(self, order_uuid=None, requeue=False):
             "Queueing up an additional instance of %s in %s seconds (%s)."
             % (self.name, scan_interval, next_time)
         )
-        initiate_network_scans_for_order.si(org_uuid=org_uuid, requeue=requeue).apply_async(eta=next_time)
+        initiate_network_scans_for_order.si(order_uuid=order_uuid, requeue=requeue).apply_async(eta=next_time)
     else:
         logger.info("Requeueing not enabled, therefore not queueing up another network scanning task.")
 

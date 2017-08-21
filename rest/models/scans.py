@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from django.db import models
 
 from .base import BaseWsModel
+from .orders import Order
 from lib import FileHelper
 
 
@@ -88,6 +89,36 @@ class ScanConfig(BaseWsModel):
 
     # Columns
 
+    # Reference
+
+    name = models.CharField(
+        max_length=64,
+        help_text="A name to associate with this scanning configuration.",
+    )
+    description = models.CharField(
+        max_length=256,
+        help_text="A brief description about what this scanning configuration entails.",
+    )
+    is_default = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="Whether or not this scanning configuration is one of the default configurations "
+                  "provided by Web Sight.",
+    )
+
+    # General Setup
+
+    scan_domain_names = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to scan domain names associated with the scan.",
+    )
+    scan_ip_addresses = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to scan IP addresses associated with the scan.",
+    )
+
     # DNS
 
     dns_enumerate_subdomains = models.BooleanField(
@@ -121,7 +152,7 @@ class ScanConfig(BaseWsModel):
     ip_address_as_data = models.BooleanField(
         default=False,
         null=False,
-        help_text="Whether or not to retrieve data about IP addresses' autonomous systems.",
+        help_text="Whether or not toint retrieve data about IP addresses' autonomous systems.",
     )
     ip_address_whois_data = models.BooleanField(
         default=False,
@@ -191,4 +222,9 @@ class ScanConfig(BaseWsModel):
 
     # Foreign Keys
 
-
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="scan_config",
+    )
