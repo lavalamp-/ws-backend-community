@@ -39,10 +39,6 @@ from .ip import (
     update_ip_address_scanning_status,
 )
 
-from .networks import (
-    initiate_network_scans_for_organization,
-)
-
 from .orders import (
     handle_placed_order,
     initiate_domain_scans_for_order,
@@ -52,9 +48,8 @@ from .orders import (
 from .services import *
 
 from .zmap import (
+    handle_live_zmap_service,
     update_zmap_scan_completed,
     zmap_scan_order,
     zmap_scan_order_for_port,
-    zmap_scan_organization,
-    zmap_scan_organization_for_port,
 )

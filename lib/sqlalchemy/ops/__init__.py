@@ -97,6 +97,10 @@ from .organizations import (
     update_org_network_service_monitoring_state,
 )
 
+from .scans import (
+    get_ports_to_scan_for_scan_config,
+)
+
 from .services import (
     create_new_network_service_scan,
     get_latest_network_service_scan_uuids_for_organization,

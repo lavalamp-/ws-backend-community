@@ -113,10 +113,20 @@ class ScanConfig(BaseWsModel):
         null=False,
         help_text="Whether or not to scan domain names associated with the scan.",
     )
+    scan_network_ranges = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to scan network ranges associated with the scan.",
+    )
     scan_ip_addresses = models.BooleanField(
         default=True,
         null=False,
-        help_text="Whether or not to scan IP addresses associated with the scan.",
+        help_text="Whether or not to gather information about individual IP addresses.",
+    )
+    scan_network_services = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to gather information about individual network services.",
     )
 
     # DNS
@@ -130,6 +140,21 @@ class ScanConfig(BaseWsModel):
         default=True,
         null=False,
         help_text="Whether or not to scan IP addresses associated with domain name resolutions.",
+    )
+
+    # Networks
+
+    network_scan_bandwidth = models.CharField(
+        max_length=16,
+        default="10M",
+        null=False,
+        help_text="The maximum bandwidth to throttle Zmap scans at.",
+    )
+    network_inspect_live_hosts = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to continue gathering host-specific information when a host is found "
+                  "to be alive as a result of network discovery."
     )
 
     # IP Addresses
@@ -186,12 +211,6 @@ class ScanConfig(BaseWsModel):
         default=True,
         null=False,
         help_text="Whether or not to inspect applications found on live network services.",
-    )
-    network_service_scan_bandwidth = models.CharField(
-        max_length=16,
-        default="10M",
-        null=False,
-        help_text="The maximum bandwidth to throttle Zmap scans at.",
     )
 
     # Applications

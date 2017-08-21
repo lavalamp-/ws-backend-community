@@ -10,7 +10,8 @@ from celery.utils.log import get_task_logger
 
 from lib import ConfigManager, RedisHelper, TempFileMixin
 from lib.sqlalchemy import get_sa_session, get_endpoint_information_for_org_network_service, IpAddress, IpAddressScan, \
-    NetworkService, NetworkServiceScan, WebService, WebServiceScan, Order, DomainName, DomainNameScan
+    NetworkService, NetworkServiceScan, WebService, WebServiceScan, Order, DomainName, DomainNameScan, Network, \
+    OrganizationNetworkScan
 from lib.parsing import UrlWrapper
 from tasknode import websight_app
 
@@ -602,6 +603,22 @@ class ScanTask(DatabaseTask):
         """
         return self.task_kwargs.get("order_uuid", None)
 
+    @property
+    def organization(self):
+        """
+        Get the organization that this scanning task is associated with.
+        :return: the organization that this scanning task is associated with.
+        """
+        return self.order.organization if self.order is not None else None
+
+    @property
+    def org_uuid(self):
+        """
+        Get the UUID of the organization that this task is associated with.
+        :return: the UUID of the organization that this task is associated with.
+        """
+        return str(self.order.organization.uuid) if self.order is not None else None
+
 
 class DomainNameTask(ScanTask):
     """
@@ -658,6 +675,52 @@ class DomainNameTask(ScanTask):
         """
         from lib.inspection import DomainInspector
         return DomainInspector(self.domain.name)
+
+
+class NetworkTask(ScanTask):
+    """
+    This is a base task type for all tasks that are intended to investigate a network.
+    """
+
+    abstract = True
+
+    @property
+    def network(self):
+        """
+        Get the network that this task is associated with.
+        :return: The network that this task is associated with.
+        """
+        if self.network_uuid:
+            return Network.by_uuid(uuid=self.network_uuid, db_session=self.db_session)
+        else:
+            return None
+
+    @property
+    def network_scan(self):
+        """
+        Get the NetworkScan that this task is associated with.
+        :return: the NetworkScan that this task is associated with.
+        """
+        if self.network_scan_uuid:
+            return OrganizationNetworkScan.by_uuid(uuid=self.network_scan_uuid, db_session=self.db_session)
+        else:
+            return None
+
+    @property
+    def network_scan_uuid(self):
+        """
+        Get the UUID of the network scan that this task is associated with.
+        :return: the UUID of the network scan that this task is associated with.
+        """
+        return self.task_kwargs.get("network_scan_uuid", None)
+
+    @property
+    def network_uuid(self):
+        """
+        Get the UUID of the network that this task is associated with.
+        :return: the UUID of the network that this task is associated with.
+        """
+        return self.task_kwargs.get("network_uuid", None)
 
 
 class ServiceTask(ScanTask):

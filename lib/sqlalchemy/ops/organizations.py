@@ -14,6 +14,7 @@ from .base import update_model_instance, is_unique_constraint_exception
 logger = logging.getLogger(__name__)
 
 
+#TESTME
 def create_network_scan_for_organization(db_session=None, org_uuid=None):
     """
     Create a new NetworkScan object, associate it with the given organization, and return it.
@@ -60,6 +61,7 @@ def get_all_organization_uuids(db_session):
     return [x[0] for x in to_return]
 
 
+#TESTME
 def get_containing_network_uuid_for_organization(org_uuid=None, input_ip_address=None, db_session=None):
     """
     Get the UUID of the Network that contains the given IP address for the given
@@ -297,6 +299,7 @@ def get_org_network_service_monitoring_status(service_uuid=None, db_session=None
     return results[0]
 
 
+#TESTME
 def get_or_create_ip_address_from_org_network(
         network_uuid=None,
         address=None,
@@ -339,6 +342,7 @@ def get_or_create_ip_address_from_org_network(
         )
 
 
+#TESTME
 def get_or_create_network_service_from_org_ip(
         ip_uuid=None,
         port=None,
@@ -451,6 +455,7 @@ def update_network_scan(scan_uuid=None, update_dict=None, db_session=None):
     )
 
 
+#TESTME
 def update_network_scan_completed(scan_uuid=None, db_session=None):
     """
     Update the given NetworkScan to reflect that scanning has concluded.

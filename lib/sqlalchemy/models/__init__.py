@@ -38,6 +38,10 @@ from .networks import (
     Network,
 )
 
+from .scans import (
+    ScanConfig,
+)
+
 from .services import (
     NetworkService,
     NetworkServiceScan,
