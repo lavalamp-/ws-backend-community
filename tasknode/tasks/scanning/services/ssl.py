@@ -12,8 +12,7 @@ from wselasticsearch.query import BulkElasticsearchQuery
 from ....app import websight_app
 from ...base import ServiceTask, NetworkServiceTask
 from lib import ConfigManager, FilesystemHelper, ValidationHelper, get_storage_helper
-from lib.inspection import PortInspector
-from wselasticsearch.models import SslSupportModel, SslCertificateModel, SslVulnerabilitiesModel, \
+from wselasticsearch.models import SslSupportModel, SslCertificateModel, \
     SslVulnerabilityModel
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.synchronous_scanner import SynchronousScanner
@@ -24,7 +23,7 @@ from sslyze.plugins.heartbleed_plugin import HeartbleedScanCommand
 from sslyze.plugins.openssl_ccs_injection_plugin import OpenSslCcsInjectionScanCommand
 from sslyze.plugins.session_renegotiation_plugin import SessionRenegotiationScanCommand
 from sslyze.plugins.session_resumption_plugin import SessionResumptionSupportScanCommand
-from lib.sqlalchemy import NetworkServiceScan, get_related_uuids_from_network_service_scan, \
+from lib.sqlalchemy import get_related_uuids_from_network_service_scan, \
     get_latest_network_service_scan_uuids_for_organization, get_all_ssl_flags_for_organization, DefaultFlag
 from wselasticsearch.ops import delete_ssl_inspection_documents_for_network_service_scan
 from .analysis import create_ssl_support_report_for_network_service_scan
@@ -81,6 +80,7 @@ def get_ssl_vulnerabilities_command_map():
     }
 
 
+#TESTME
 def upload_certificate_to_s3(org_uuid=None, cert_string=None, local_file_path=None):
     """
     Upload the given SSL certificate to AWS S3 and return a tuple describing where it was uploaded
@@ -102,8 +102,15 @@ def upload_certificate_to_s3(org_uuid=None, cert_string=None, local_file_path=No
     return config.storage_bucket, key
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def inspect_tcp_service_for_ssl_support(self, org_uuid=None, network_service_uuid=None, network_service_scan_uuid=None):
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
+def inspect_tcp_service_for_ssl_support(
+        self,
+        org_uuid=None,
+        network_service_uuid=None,
+        network_service_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Collect all possible information about SSL support found on the referenced network service.
     :param org_uuid: The UUID of the organization to collect information on behalf of.
@@ -112,13 +119,13 @@ def inspect_tcp_service_for_ssl_support(self, org_uuid=None, network_service_uui
     with.
     :return: None
     """
-    ip_address, port, protocol = self.get_endpoint_information(network_service_uuid)
+    ip_address = self.network_service.ip_address.address
+    port = self.network_service.port
     logger.info(
         "Now inspecting TCP service at %s:%s for SSL data for organization %s. Scan is %s."
         % (ip_address, port, org_uuid, network_service_scan_uuid)
     )
-    inspector = PortInspector(address=ip_address, port=port, protocol="tcp")
-    initial_check = inspector.check_ssl_support()
+    initial_check = self.inspector.check_ssl_support()
     if not initial_check:
         logger.info(
             "Service at %s:%s does not support any version of SSL."
@@ -134,11 +141,16 @@ def inspect_tcp_service_for_ssl_support(self, org_uuid=None, network_service_uui
         "org_uuid": org_uuid,
         "network_service_uuid": network_service_uuid,
         "network_service_scan_uuid": network_service_scan_uuid,
+        "order_uuid": order_uuid,
     }
     collection_sigs = []
-    collection_sigs.append(enumerate_vulnerabilities_for_ssl_service.si(**task_kwargs))
-    collection_sigs.append(enumerate_cipher_suites_for_ssl_service.si(**task_kwargs))
-    collection_sigs.append(retrieve_ssl_certificate_for_tcp_service.si(**task_kwargs))
+    scan_config = self.order.scan_config
+    if scan_config.ssl_enumerate_vulns:
+        collection_sigs.append(enumerate_vulnerabilities_for_ssl_service.si(**task_kwargs))
+    if scan_config.ssl_enumerate_cipher_suites:
+        collection_sigs.append(enumerate_cipher_suites_for_ssl_service.si(**task_kwargs))
+    if scan_config.ssl_retrieve_cert:
+        collection_sigs.append(retrieve_ssl_certificate_for_tcp_service.si(**task_kwargs))
     task_sigs.append(group(collection_sigs))
     task_sigs.append(create_ssl_support_report_for_network_service_scan.si(**task_kwargs))
     task_sigs.append(apply_flags_to_ssl_support_scan.si(**task_kwargs))
@@ -150,12 +162,14 @@ def inspect_tcp_service_for_ssl_support(self, org_uuid=None, network_service_uui
     self.finish_after(signature=canvas_sig)
 
 
-@websight_app.task(bind=True, base=ServiceTask)
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
 def enumerate_vulnerabilities_for_ssl_service(
         self,
         org_uuid=None,
         network_service_uuid=None,
         network_service_scan_uuid=None,
+        order_uuid=None,
 ):
     """
     Enumerate all of the SSL-based vulnerabilities for the given SSL/TLS service.
@@ -177,6 +191,7 @@ def enumerate_vulnerabilities_for_ssl_service(
             network_service_uuid=network_service_uuid,
             network_service_scan_uuid=network_service_scan_uuid,
             vulnerability_name=command_name,
+            order_uuid=order_uuid,
         ))
     canvas_sig = group(task_sigs)
     logger.info(
@@ -186,13 +201,15 @@ def enumerate_vulnerabilities_for_ssl_service(
     self.finish_after(signature=canvas_sig)
 
 
-@websight_app.task(bind=True, base=ServiceTask)
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
 def test_ssl_service_for_ssl_vulnerability(
         self,
         org_uuid=None,
         network_service_uuid=None,
         network_service_scan_uuid=None,
         vulnerability_name=None,
+        order_uuid=None,
 ):
     """
     Test the given network service for the specified SSL vulnerability.
@@ -210,7 +227,8 @@ def test_ssl_service_for_ssl_vulnerability(
     command_map = get_ssl_vulnerabilities_command_map()
     ValidationHelper.validate_in(to_check=vulnerability_name, contained_by=command_map.keys())
     command = command_map[vulnerability_name]["command"]
-    ip_address, port, protocol = self.get_endpoint_information(network_service_uuid)
+    ip_address = self.network_service.ip_address.address
+    port = self.network_service.port
     scanner = SynchronousScanner()
     server_info = ServerConnectivityInfo(hostname=ip_address, ip_address=ip_address, port=port)
     try:
@@ -223,9 +241,8 @@ def test_ssl_service_for_ssl_vulnerability(
         return
     try:
         result = scanner.run_scan_command(server_info, command())
-        vuln_model = SslVulnerabilityModel.from_database_model_uuid(
-            uuid=network_service_scan_uuid,
-            db_session=self.db_session,
+        vuln_model = SslVulnerabilityModel.from_database_model(
+            self.network_service_scan,
             test_errored=False,
             vuln_test_name=vulnerability_name,
         )
@@ -237,9 +254,8 @@ def test_ssl_service_for_ssl_vulnerability(
             })
         vuln_model.save(org_uuid)
     except (socket.error, OpenSSLError):
-        vuln_model = SslVulnerabilityModel.from_database_model_uuid(
-            uuid=network_service_scan_uuid,
-            db_session=self.db_session,
+        vuln_model = SslVulnerabilityModel.from_database_model(
+            self.network_service_scan,
             test_errored=True,
         )
         vuln_model.save(org_uuid)
@@ -249,12 +265,14 @@ def test_ssl_service_for_ssl_vulnerability(
     )
 
 
-@websight_app.task(bind=True, base=ServiceTask)
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
 def enumerate_cipher_suites_for_ssl_service(
         self,
         org_uuid=None,
         network_service_uuid=None,
         network_service_scan_uuid=None,
+        order_uuid=None,
 ):
     """
     Enumerate all of the cipher suites that the given SSL/TLS service supports.
@@ -268,7 +286,8 @@ def enumerate_cipher_suites_for_ssl_service(
         "Now enumerating supported cipher suites for network service %s."
         % (network_service_uuid,)
     )
-    ip_address, port, protocol = self.get_endpoint_information(network_service_uuid)
+    ip_address = self.network_service.ip_address.address
+    port = self.network_service.port
     server_info = ServerConnectivityInfo(hostname=ip_address, ip_address=ip_address, port=port)
     try:
         server_info.test_connectivity_to_server()
@@ -279,8 +298,8 @@ def enumerate_cipher_suites_for_ssl_service(
         )
         return
     scanner = SynchronousScanner()
-    network_service_scan = NetworkServiceScan.by_uuid(db_session=self.db_session, uuid=network_service_scan_uuid)
     bulk_query = BulkElasticsearchQuery()
+    network_service_scan = self.network_service_scan
     for ssl_protocol, command in get_ssl_cipher_suite_commands():
         result = scanner.run_scan_command(server_info, command())
         ssl_support_record = SslSupportModel.from_database_model(
@@ -301,113 +320,14 @@ def enumerate_cipher_suites_for_ssl_service(
     )
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def check_tcp_service_for_ssl_protocol_cipher_support(
-        self,
-        org_uuid=None,
-        service_uuid=None,
-        ssl_protocol=None,
-        scan_uuid=None
-):
-    """
-    Check to see what ciphers this TCP service supports for the given SSL protocol.
-    :param org_uuid: The UUID of the organization to collect information on behalf of.
-    :param service_uuid: The UUID of the network service to check for SSL support.
-    :param ssl_protocol: The SSL protocol to check
-    :param scan_uuid: The UUID of the network service scan that this SSL version check is associated
-    with.
-    :return: None
-    """
-    ip_address, port, protocol = self.get_endpoint_information(service_uuid)
-    server_info = ServerConnectivityInfo(hostname=ip_address, ip_address=ip_address, port=port)
-    synchronous_scanner = SynchronousScanner()
-    command = None
-    if ssl_protocol == 'PROTOCOL_TLSv1' or ssl_protocol == 'PROTOCOL_TLS':
-        command = Tlsv10ScanCommand()
-    elif ssl_protocol == 'PROTOCOL_TLSv1_1':
-        command = Tlsv11ScanCommand()
-    elif ssl_protocol == 'PROTOCOL_TLSv1_2':
-        command = Tlsv12ScanCommand()
-    elif ssl_protocol == 'PROTOCOL_SSLv23':
-        command = Sslv20ScanCommand()
-    elif ssl_protocol == 'PROTOCOL_SSLv3':
-        command = Sslv30ScanCommand()
-    else:
-        raise ValueError(
-            "Not sure how to run scan command for SSL protocol of %s."
-            % (ssl_protocol,)
-        )
-    cipher_scan_result = synchronous_scanner.run_scan_command(server_info, command)
-    ssl_support_record = SslSupportModel.from_database_model_uuid(
-        uuid=scan_uuid,
-        db_session=self.db_session,
-        ssl_version=ssl_protocol,
-        supported=True,
-    )
-    ssl_support_record.accepted_ciphers = [ cipher.name for cipher in cipher_scan_result.accepted_cipher_list ]
-    ssl_support_record.rejected_ciphers = [ cipher.name for cipher in cipher_scan_result.rejected_cipher_list ]
-    ssl_support_record.errored_ciphers = [ cipher.name for cipher in cipher_scan_result.errored_cipher_list ]
-    if cipher_scan_result.preferred_cipher is not None:
-        ssl_support_record.preferred_cipher = cipher_scan_result.preferred_cipher.name
-    else:
-        ssl_support_record.preferred_cipher = None
-    ssl_support_record.save(org_uuid)
-
-
-@websight_app.task(bind=True, base=ServiceTask)
-def check_tcp_service_for_ssl_protocol_support(
-        self,
-        org_uuid=None,
-        service_uuid=None,
-        ssl_protocol=None,
-        scan_uuid=None,
-):
-    """
-    Check to see if the given TCP service supports the given SSL protocol.
-    :param org_uuid: The UUID of the organization to collect information on behalf of.
-    :param service_uuid: The UUID of the network service to check for SSL support.
-    :param ssl_protocol: The SSL protocol to check support for.
-    :param scan_uuid: The UUID of the network service scan that this SSL version check is associated
-    with.
-    :return: None
-    """
-    ip_address, port, protocol = self.get_endpoint_information(service_uuid)
-    logger.info(
-        "Now checking TCP service at %s:%s for support of SSL protocol %s. Organization is %s. Scan is %s."
-        % (ip_address, port, ssl_protocol, org_uuid, scan_uuid)
-    )
-    inspector = PortInspector(address=ip_address, port=port, protocol="tcp")
-    version_supported = inspector.check_ssl_support(ssl_version_name=ssl_protocol)
-
-    logger.info(
-        "TCP endpoint at %s:%s %s support SSL version %s. Elasticsearch updated successfully."
-        % (ip_address, port, "does" if version_supported else "does not", ssl_protocol)
-    )
-
-    if version_supported:
-        #Spin off a thread, and check ciphers since we support this version of SSL
-        cipher_signature = check_tcp_service_for_ssl_protocol_cipher_support.si(
-            org_uuid=org_uuid,
-            service_uuid=service_uuid,
-            ssl_protocol=ssl_protocol,
-            scan_uuid=scan_uuid)
-        self.finish_after(signature=cipher_signature)
-    else:
-        ssl_support_record = SslSupportModel.from_database_model_uuid(
-            uuid=scan_uuid,
-            db_session=self.db_session,
-            ssl_version=ssl_protocol,
-            supported=version_supported,
-        )
-        ssl_support_record.save(org_uuid)
-
-
-@websight_app.task(bind=True, base=ServiceTask)
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
 def retrieve_ssl_certificate_for_tcp_service(
         self,
         org_uuid=None,
         network_service_uuid=None,
         network_service_scan_uuid=None,
+        order_uuid=None,
 ):
     """
     Retrieve the SSL certificate associated with the given TCP service.
@@ -417,17 +337,8 @@ def retrieve_ssl_certificate_for_tcp_service(
     with.
     :return: None
     """
-    ip_address, port, protocol = self.get_endpoint_information(network_service_uuid)
-    logger.info(
-        "Now retrieving SSL certificate for TCP service %s:%s. Organization is %s. Scan is %s."
-        % (ip_address, port, org_uuid, network_service_scan_uuid)
-    )
-    inspector = PortInspector(address=ip_address, port=port, protocol="tcp")
-    cert_string, pem_cert = inspector.get_ssl_certificate()
-    cert_model = SslCertificateModel.from_database_model_uuid(
-        uuid=network_service_scan_uuid,
-        db_session=self.db_session,
-    )
+    cert_string, pem_cert = self.inspector.get_ssl_certificate()
+    cert_model = SslCertificateModel.from_database_model(self.network_service_scan)
     cert_model = SslCertificateModel.populate_from_x509_certificate(certificate=pem_cert, to_populate=cert_model)
     bucket, key = upload_certificate_to_s3(
         org_uuid=org_uuid,
@@ -437,8 +348,8 @@ def retrieve_ssl_certificate_for_tcp_service(
     cert_model.set_s3_attributes(bucket=bucket, key=key, file_type="ssl certificate")
     cert_model.save(org_uuid)
     logger.info(
-        "Successfully retrieved and saved SSL certificate for TCP service %s:%s. Organization was %s, scan was %s."
-        % (ip_address, port, org_uuid, network_service_scan_uuid)
+        "Successfully retrieved and saved SSL certificate for TCP service %s. Organization was %s, scan was %s."
+        % (network_service_uuid, org_uuid, network_service_scan_uuid)
     )
 
 
@@ -507,62 +418,15 @@ def redo_ssl_support_inspection_for_network_service_scan(self, network_service_s
     self.finish_after(signature=canvas_sig)
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def retrieve_ssl_vulnerabilities_for_tcp_service(
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
+def apply_flags_to_ssl_support_scan(
         self,
         org_uuid=None,
-        service_uuid=None,
-        scan_uuid=None,
+        network_service_uuid=None,
+        network_service_scan_uuid=None,
+        order_uuid=None,
 ):
-    """
-    This performs various SSL vulnerability scans on the tcp service
-    :param org_uuid: The UUID of the organization to collect information on behalf of.
-    :param service_uuid: The UUID of the network service to retrieve the SSL certificate for.
-    :param scan_uuid: The UUID of the network service scan that this SSL certificate retrieval is associated
-    with.
-    :return: None
-    """
-    ip_address, port, protocol = self.get_endpoint_information(service_uuid)
-    ssl_vulnerabilities_record = SslVulnerabilitiesModel.from_database_model_uuid(
-        uuid=scan_uuid,
-        db_session=self.db_session
-    )
-    server_info = ServerConnectivityInfo(hostname=ip_address, ip_address=ip_address, port=port)
-    try:
-        server_info.test_connectivity_to_server()
-    except ServerConnectivityError as e:
-        # Could not establish an SSL connection to the server
-        logger.error(
-            "Error making an SSL connection to the server while looking for vulnerabilities, something went really wrong."
-        )
-    synchronous_scanner = SynchronousScanner()
-
-    fallback_scsv_command = FallbackScsvScanCommand()
-    fallback_scsv_result = synchronous_scanner.run_scan_command(server_info, fallback_scsv_command)
-    ssl_vulnerabilities_record.supports_fallback_scsv = fallback_scsv_result.supports_fallback_scsv
-
-    heartbleed_command = HeartbleedScanCommand()
-    heartbleed_result = synchronous_scanner.run_scan_command(server_info, heartbleed_command)
-    ssl_vulnerabilities_record.is_vulnerable_to_heartbleed = heartbleed_result.is_vulnerable_to_heartbleed
-
-    openssl_css_injection_command = OpenSslCcsInjectionScanCommand()
-    openssl_css_injection_result = synchronous_scanner.run_scan_command(server_info, openssl_css_injection_command)
-    ssl_vulnerabilities_record.is_vulnerable_to_ccs_injection = openssl_css_injection_result.is_vulnerable_to_ccs_injection
-
-    session_renegotion_command = SessionRenegotiationScanCommand()
-    session_renegotion_result = synchronous_scanner.run_scan_command(server_info, session_renegotion_command)
-    ssl_vulnerabilities_record.accepts_client_renegotiation = session_renegotion_result.accepts_client_renegotiation
-    ssl_vulnerabilities_record.supports_secure_renegotiation = session_renegotion_result.supports_secure_renegotiation
-
-    session_resumption_support_command = SessionResumptionSupportScanCommand()
-    session_resumption_support_result = synchronous_scanner.run_scan_command(server_info, session_resumption_support_command)
-    ssl_vulnerabilities_record.is_ticket_resumption_supported = session_resumption_support_result.is_ticket_resumption_supported
-
-    ssl_vulnerabilities_record.save(org_uuid)
-
-
-@websight_app.task(bind=True, base=NetworkServiceTask)
-def apply_flags_to_ssl_support_scan(self, org_uuid=None, network_service_uuid=None, network_service_scan_uuid=None):
     """
     Apply all of the necessary flags to the results of data gathered during the given SSL support scan.
     :param org_uuid: The UUID of the organization that owns the network service.
@@ -590,11 +454,13 @@ def apply_flags_to_ssl_support_scan(self, org_uuid=None, network_service_uuid=No
             network_service_scan_uuid=network_service_scan_uuid,
             flag_uuid=flag.uuid,
             flag_type=flag_type,
+            order_uuid=order_uuid,
         ))
     canvas_sig = chain(task_sigs)
     self.finish_after(signature=canvas_sig)
 
 
+#USED
 @websight_app.task(bind=True, base=NetworkServiceTask)
 def apply_flag_to_ssl_support_scan(
         self,
@@ -603,6 +469,7 @@ def apply_flag_to_ssl_support_scan(
         network_service_scan_uuid=None,
         flag_uuid=None,
         flag_type=None,
+        order_uuid=None,
 ):
     """
     Apply the given flag to the given SSL support scan.

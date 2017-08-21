@@ -6,6 +6,7 @@ from lib.sqlalchemy import NetworkServiceScan, NetworkService, Organization, IpA
 from .base import update_model_instance
 
 
+#TESTME
 def create_new_network_service_scan(network_service_uuid=None, db_session=None):
     """
     Create and return a new NetworkServiceScan object and ensure that it's related to the
@@ -99,6 +100,7 @@ def update_network_service_scan(scan_uuid=None, update_dict=None, db_session=Non
     )
 
 
+#TESTME
 def update_network_service_scan_completed(scan_uuid=None, db_session=None):
     """
     Update the given NetworkServiceScan to reflect that scanning has concluded.

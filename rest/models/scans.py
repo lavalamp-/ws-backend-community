@@ -128,6 +128,11 @@ class ScanConfig(BaseWsModel):
         null=False,
         help_text="Whether or not to gather information about individual network services.",
     )
+    scan_ssl_support = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to gather information about SSL supporting services.",
+    )
 
     # DNS
 
@@ -192,11 +197,6 @@ class ScanConfig(BaseWsModel):
         null=False,
         help_text="Whether or not to check for network service liveness.",
     )
-    network_service_check_ssl = models.BooleanField(
-        default=True,
-        null=False,
-        help_text="Whether or not to retrieve information about SSL associated with network services.",
-    )
     network_service_fingerprint = models.BooleanField(
         default=True,
         null=False,
@@ -206,6 +206,24 @@ class ScanConfig(BaseWsModel):
         default=True,
         null=False,
         help_text="Whether or not to inspect applications found on live network services.",
+    )
+
+    # SSL
+
+    ssl_enumerate_vulns = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to enumerate the presence of vulnerabilities in SSL services.",
+    )
+    ssl_enumerate_cipher_suites = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to enumerate the supported cipher suites found within an SSL service.",
+    )
+    ssl_retrieve_cert = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to retrieve the certificate presented by an SSL supporting service.",
     )
 
     # Applications

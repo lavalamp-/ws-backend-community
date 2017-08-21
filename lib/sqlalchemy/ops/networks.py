@@ -14,6 +14,7 @@ from .base import update_model_instance, is_unique_constraint_exception
 config = ConfigManager.instance()
 
 
+#TESTME
 def check_network_service_scanning_status(db_session=None, service_uuid=None, update_status=True):
     """
     Check to see whether or not the given network service is currently being scanned. If it is not, then
@@ -381,6 +382,7 @@ def update_network_service(service_uuid=None, update_dict=None, db_session=None)
     )
 
 
+#TESTME
 def update_network_service_scanning_status(status=None, service_uuid=None, db_session=None):
     """
     Update the given network service scan to reflect the given scanning status.

@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from wselasticsearch.query import NetworkServiceScanMultidocQuery
 
 
+#TESTME
 def update_network_service_scan_latest_state(scan_uuid=None, latest_state=None, org_uuid=None):
     """
     Update all of the Elasticsearch documents associated with the given network service scan to
@@ -19,6 +20,7 @@ def update_network_service_scan_latest_state(scan_uuid=None, latest_state=None, 
     return query.update_by_query(org_uuid)
 
 
+#TESTME
 def update_not_network_service_scan_latest_state(
         scan_uuid=None,
         latest_state=None,
