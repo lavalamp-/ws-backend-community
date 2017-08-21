@@ -882,6 +882,17 @@ class NetworkServiceTask(ScanTask):
 
     abstract = True
 
+    def get_endpoint_information(self):
+        """
+        Get a tuple containing the IP address, port, and protocol associated with the remote service.
+        :return: A tuple containing (1) the IP address, (2) the port, and (3) the protocol associated
+        with the given service.
+        """
+        return get_endpoint_information_for_org_network_service(
+            service_uuid=self.network_service_uuid,
+            db_session=self.db_session,
+        )
+
     @property
     def inspector(self):
         """

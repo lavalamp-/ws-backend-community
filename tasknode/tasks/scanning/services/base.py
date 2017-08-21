@@ -5,8 +5,8 @@ from celery import chain
 from celery.utils.log import get_task_logger
 
 from ....app import websight_app
-from ...base import ServiceTask, NetworkServiceTask, ScanTask
-from lib import DatetimeHelper, ConfigManager
+from ...base import NetworkServiceTask, ScanTask
+from lib import ConfigManager
 from lib.sqlalchemy import get_network_service_scan_interval_for_organization, \
     update_network_service_scan_completed as update_network_service_scan_completed_op, \
     update_network_service_scanning_status as update_network_service_scanning_status_op, \
