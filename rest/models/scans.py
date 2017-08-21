@@ -184,11 +184,6 @@ class ScanConfig(BaseWsModel):
         null=False,
         help_text="Whether or not to retrieve WHOIS data about an IP address.",
     )
-    ip_address_scan_network_services = models.BooleanField(
-        default=True,
-        null=False,
-        help_text="Whether or not to run network service scans against individual IP addresses.",
-    )
 
     # Network Services
 

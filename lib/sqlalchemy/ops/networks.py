@@ -53,6 +53,7 @@ def check_network_service_scanning_status(db_session=None, service_uuid=None, up
     return do_scan
 
 
+#TESTME
 def check_ip_address_scanning_status(db_session=None, ip_address_uuid=None, update_status=True):
     """
     Check to see whether the given IP address is currently being scanned. If it is not, then modify it to
@@ -89,6 +90,7 @@ def check_ip_address_scanning_status(db_session=None, ip_address_uuid=None, upda
     return do_scan
 
 
+#TESTME
 def create_ip_address_scan_for_ip(ip_address_uuid):
     """
     Create and return a new IP address scan associated with the given IP address.
@@ -330,6 +332,7 @@ def update_ip_address_scan(scan_uuid=None, update_dict=None, db_session=None):
     )
 
 
+#TESTME
 def update_ip_address_scan_completed(scan_uuid=None, db_session=None):
     """
     Update the given IP address scan to indicate that the scan has completed.
@@ -343,6 +346,7 @@ def update_ip_address_scan_completed(scan_uuid=None, db_session=None):
     update_ip_address_scan(scan_uuid=scan_uuid, db_session=db_session, update_dict=update_dict)
 
 
+#TESTME
 def update_ip_address_scanning_status(ip_address_uuid=None, db_session=None, scanning_status=None):
     """
     Update the scanning status for the given IP address to the given value.
