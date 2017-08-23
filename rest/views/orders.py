@@ -4,10 +4,10 @@ from __future__ import absolute_import
 import django_filters
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.response import Response
 
-from .base import WsListAPIView, WsRetrieveAPIView
+from .base import WsListAPIView, WsRetrieveAPIView, WsRetrieveUpdateAPIView
 from .exception import OperationNotAllowed, OperationFailed
 import rest.models
 import rest.serializers
@@ -45,6 +45,55 @@ class OrderDetailView(OrderQuerysetMixin, WsRetrieveAPIView):
     """
 
     serializer_class = rest.serializers.OrderSerializer
+
+
+class OrderScanConfigDetailView(WsRetrieveUpdateAPIView):
+    """
+    get:
+    Get the ScanConfig object associated with a given order.
+
+    put:
+    Update the ScanConfig object associated with a given order.
+
+    patch:
+    Update the ScanConfig object associated with a given order.
+    """
+
+    _order = None
+    _scan_config = None
+
+    serializer_class = rest.serializers.ScanConfigSerializer
+
+    def check_permissions(self, request):
+        super(OrderScanConfigDetailView, self).check_permissions(request)
+        if self.order.user != request.user:
+            raise PermissionDenied()
+
+    def get_object(self):
+        return self.scan_config
+
+    @property
+    def order(self):
+        """
+        Get the order that is being requested within this handler
+        :return: the order that is being requested within this handler
+        """
+        if self._order is None:
+            self._order = get_object_or_404(rest.models.Order, pk=self.kwargs["pk"])
+        return self._order
+
+    @property
+    def scan_config(self):
+        """
+        Get the ScanConfig object that is associated with self.order.
+        :return: the ScanConfig object that is associated with self.order.
+        """
+        if self._scan_config is None:
+            if not self.order.scan_config:
+                raise NotFound()
+            else:
+                self._scan_config = self.order.scan_config
+        return self._scan_config
 
 
 @api_view(["PUT"])

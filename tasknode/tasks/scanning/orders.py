@@ -11,7 +11,7 @@ from lib.sqlalchemy import count_domains_for_order, \
     get_monitored_domain_uuids_from_order
 from lib import DatetimeHelper
 from .dns import scan_domain_name
-from .zmap import zmap_scan_order
+from .network import zmap_scan_order
 
 logger = get_task_logger(__name__)
 

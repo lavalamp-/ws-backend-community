@@ -35,6 +35,7 @@ from .networks import (
 from .orders import (
     OrderDetailView,
     OrderListView,
+    OrderScanConfigDetailView,
     place_order,
 )
 

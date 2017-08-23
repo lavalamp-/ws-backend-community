@@ -35,6 +35,10 @@ from .services import (
     NetworkServiceSummarySerializer,
 )
 
+from .scans import (
+    ScanConfigSerializer,
+)
+
 from .users import (
     UserSerializer,
     VerifyEmailSerializer,

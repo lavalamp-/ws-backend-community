@@ -56,4 +56,3 @@ class OrderSerializer(WsBaseModelSerializer):
         extra_kwargs = {
             "organization": {"read_only": True},
         }
-

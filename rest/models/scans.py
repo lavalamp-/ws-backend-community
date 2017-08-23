@@ -94,10 +94,12 @@ class ScanConfig(BaseWsModel):
     name = models.CharField(
         max_length=64,
         help_text="A name to associate with this scanning configuration.",
+        null=True,
     )
     description = models.CharField(
         max_length=256,
         help_text="A brief description about what this scanning configuration entails.",
+        null=True,
     )
     is_default = models.BooleanField(
         default=False,
@@ -274,6 +276,6 @@ class ScanConfig(BaseWsModel):
     order = models.OneToOneField(
         Order,
         on_delete=models.CASCADE,
-        null=False,
+        null=True,
         related_name="scan_config",
     )

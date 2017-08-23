@@ -55,6 +55,7 @@ urlpatterns = [
 
     # Order URLs
 
+    url(r'^orders/(?P<pk>[-\w]+)/scan-config/?$', views.OrderScanConfigDetailView.as_view(), name="order-scan-config-detail"),
     url(r'^orders/(?P<pk>[-\w]+)/place/?$', views.place_order, name="order-place"),
     url(r'^orders/(?P<pk>[-\w]+)/?$', views.OrderDetailView.as_view(), name="order-detail"),
     url(r'^orders/?$', views.OrderListView.as_view(), name="order-list"),

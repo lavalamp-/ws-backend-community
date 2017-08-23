@@ -74,6 +74,16 @@ class WsRetrieveUpdateDestroyAPIView(
     """
 
 
+class WsRetrieveUpdateAPIView(
+    OwnershipFilterMixin,
+    WsRetrieveMixin,
+    WsUpdateMixin,
+):
+    """
+    A base RetrieveUpdateAPIView class for all Web Sight REST RetrieveUpdateAPIView handlers.
+    """
+
+
 class WsCreateAPIView(generics.CreateAPIView):
     """
     A base CreateAPIView class for all Web Sight REST CreateAPIView handlers.
