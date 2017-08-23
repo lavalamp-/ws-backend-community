@@ -8,7 +8,7 @@ from lib import ConfigManager, get_storage_helper
 from lib.inspection import HttpScreenshotter
 from lib.sqlalchemy import get_endpoint_information_for_web_service
 from ......app import websight_app
-from .....base import ServiceTask
+from .....base import ServiceTask, WebServiceTask
 
 logger = get_task_logger(__name__)
 config = ConfigManager.instance()
@@ -51,8 +51,15 @@ def upload_screenshot_to_s3(org_uuid=None, local_file_path=None):
     return config.storage_bucket, key
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def screenshot_web_service(self, web_service_uuid=None, org_uuid=None, web_service_scan_uuid=None):
+#USED
+@websight_app.task(bind=True, base=WebServiceTask)
+def screenshot_web_service(
+        self,
+        web_service_uuid=None,
+        org_uuid=None,
+        web_service_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Take screenshots of all the relevant endpoints for the given web service.
     :param web_service_uuid: The UUID of the web service to take screenshots for.
@@ -80,13 +87,22 @@ def screenshot_web_service(self, web_service_uuid=None, org_uuid=None, web_servi
             org_uuid=org_uuid,
             web_service_scan_uuid=web_service_scan_uuid,
             url_path=url_path,
+            order_uuid=order_uuid,
         ))
     canvas_sig = group(task_sigs)
     self.finish_after(signature=canvas_sig)
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def screenshot_web_service_url(self, web_service_uuid=None, org_uuid=None, web_service_scan_uuid=None, url_path=None):
+#USED
+@websight_app.task(bind=True, base=WebServiceTask)
+def screenshot_web_service_url(
+        self,
+        web_service_uuid=None,
+        org_uuid=None,
+        web_service_scan_uuid=None,
+        url_path=None,
+        order_uuid=None,
+):
     """
     Record a screenshot for the given web service and the given URL path.
     :param web_service_uuid: The UUID of the web service to screenshot.

@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from wselasticsearch.query import WebScanMultidocQuery
 
 
+#TESTME
 def update_web_service_scan_from_report(scan_uuid=None, web_service_report=None, org_uuid=None):
     """
     Update all of the documents currently indexed in Elasticsearch for the given web service scan to reflect
@@ -22,6 +23,7 @@ def update_web_service_scan_from_report(scan_uuid=None, web_service_report=None,
     return query.update_by_query(org_uuid)
 
 
+#TESTME
 def update_web_service_scan_latest(scan_uuid=None, org_uuid=None):
     """
     Update the referenced web service scan and set it as the latest scan to have been run.
@@ -48,6 +50,7 @@ def update_web_service_scan_latest_state(scan_uuid=None, latest_state=None, org_
     return query.update_by_query(org_uuid)
 
 
+#TESTME
 def update_web_service_scan_not_latest(scan_uuid=None, org_uuid=None):
     """
     Update the referenced web service scan and remove it as the latest scan to have been run.

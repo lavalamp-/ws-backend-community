@@ -263,6 +263,11 @@ class ScanConfig(BaseWsModel):
         null=False,
         help_text="Whether or not to crawl web applications or just retrieve the landing page resource.",
     )
+    web_app_enum_user_agents = models.BooleanField(
+        default=True,
+        null=False,
+        help_text="Whether or not to gather information about user agent responses for a web application.",
+    )
 
     # Foreign Keys
 

@@ -9,36 +9,22 @@ from lib.inspection import WebScanInspector
 from wselasticsearch.ops import update_web_service_scan_from_report, get_latest_web_service_report_ids, \
     get_web_service_scan_uuid_from_report_id
 from ......app import websight_app
-from .....base import ServiceTask
+from .....base import ServiceTask, WebServiceTask
 from lib import ConfigManager
 
 config = ConfigManager.instance()
 logger = get_task_logger(__name__)
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def analyze_web_service_scan(self, org_uuid=None, web_service_scan_uuid=None, web_service_uuid=None):
-    """
-    Analyze the data collected during the referenced web service scan, compile a WebServiceReport for
-    the scanned web service, and commit the WebServiceReport to Elasticsearch.
-    :param org_uuid: The UUID of the organization that owns the scan.
-    :param web_service_scan_uuid: The UUID of the web service scan to analyze.
-    :param web_service_uuid: The UUID of the web service that was scanned.
-    :return: None
-    """
-    logger.info(
-        "Now analyzing web service scan %s. Organization is %s."
-        % (web_service_scan_uuid, org_uuid)
-    )
-    task_sigs = []
-    task_args = {"org_uuid": org_uuid, "web_service_scan_uuid": web_service_scan_uuid, "web_service_uuid": web_service_uuid}
-    task_sigs.append(create_report_for_web_service_scan.si(**task_args))
-    canvas_sig = group(task_sigs)
-    self.finish_after(signature=canvas_sig)
-
-
-@websight_app.task(bind=True, base=ServiceTask)
-def create_report_for_web_service_scan(self, org_uuid=None, web_service_scan_uuid=None, web_service_uuid=None):
+#USED
+@websight_app.task(bind=True, base=WebServiceTask)
+def create_report_for_web_service_scan(
+        self,
+        org_uuid=None,
+        web_service_scan_uuid=None,
+        web_service_uuid=None,
+        order_uuid=None,
+):
     """
     Analyze the data collected during the given web service scan, create a WebServiceReportModel based on
     the collected data, update all of the Elasticsearch documents associated with the scan to reflect
@@ -59,7 +45,7 @@ def create_report_for_web_service_scan(self, org_uuid=None, web_service_scan_uui
         "Sleeping for %s seconds to allow time for Elasticsearch to complete indexing..."
         % (config.celery_es_update_delay,)
     )
-    time.sleep(config.celery_es_update_delay)
+    self.wait_for_es()
     response = update_web_service_scan_from_report(scan_uuid=web_service_scan_uuid, web_service_report=report, org_uuid=org_uuid)
     logger.info(
         "A total of %s documents were updated. Now saving report."
