@@ -51,6 +51,11 @@ from .organizations import (
     upload_networks_file,
 )
 
+from .scans import (
+    ScanConfigDetailView,
+    ScanConfigListView,
+)
+
 from .swagger import (
     SwaggerSchemaView,
 )

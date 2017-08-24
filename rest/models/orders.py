@@ -27,7 +27,13 @@ class OrderManager(models.Manager):
         """
         from .scans import ScanConfig
         to_return = super(OrderManager, self).create(*args, **kwargs)
-        to_return.scan_config = ScanConfig.objects.create(order=to_return)
+        organization = kwargs.get("organization", None)
+        user = kwargs.get("user", None)
+        to_return.scan_config = ScanConfig.objects.create(
+            order=to_return,
+            organization=organization,
+            user=user,
+        )
         return to_return
 
     def create_from_user_and_organization(self, user=None, organization=None):

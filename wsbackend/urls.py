@@ -105,6 +105,11 @@ urlpatterns = [
     url(r'^domain-names/(?P<pk>[-\w]+)/?$', views.DomainNameDetailView.as_view(), name="domain-detail"),
     url(r'^domain-names/?$', views.DomainNameListView.as_view(), name="domain-list"),
 
+    # Scan Config URLs
+
+    url(r'^scan-configs/(?P<pk>[-\w]+)/?$', views.ScanConfigDetailView.as_view(), name="scan-config-detail"),
+    url(r'^scan-configs/?$', views.ScanConfigListView.as_view(), name="scan-config-list"),
+
     # Account URLs
 
     url(r'^account/change-password/?$', views.AccountChangePasswordView.as_view()),

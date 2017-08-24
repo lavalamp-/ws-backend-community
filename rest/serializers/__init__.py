@@ -14,6 +14,7 @@ from .admin import (
 )
 
 from .dns import (
+    DnsRecordTypeSerializer,
     DomainNameSerializer,
 )
 
@@ -28,7 +29,8 @@ from .orders import (
 from .organizations import (
     OrganizationSerializer,
     OrganizationNetworkUploadRangeSerializer,
-    OrganizationDomainNameUploadRangeSerializer
+    OrganizationDomainNameUploadRangeSerializer,
+    ScanPortSerializer,
 )
 
 from .services import (

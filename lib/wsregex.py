@@ -58,6 +58,7 @@ class RegexLib(object):
         flags=re.IGNORECASE,
     )
     zmap_bandwidth_regex = re.compile("^\d+[GMK]$")
+    zmap_empty_bandwidth_regex = re.compile("^0+[GMK]$")
 
     ssl_certificate_regex = re.compile("(-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----)", flags=re.DOTALL)
     authority_info_uri_regex = re.compile("URI:(.*)")

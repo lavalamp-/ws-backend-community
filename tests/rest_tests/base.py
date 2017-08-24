@@ -5,7 +5,7 @@ from django.test import TestCase, Client
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from rest.models import WsUser, Organization, Network, DomainName, Order
+from rest.models import WsUser, Organization, Network, DomainName, Order, ScanConfig
 from ..data import WsTestData
 from .mixin import ParameterizedRouteMixin, PaginatedTestCaseMixin
 
@@ -101,6 +101,8 @@ class WsDjangoTestCase(TestCase):
             return self.get_order_for_user(user=user)
         elif object_class == Organization:
             return self.get_organization_for_user(user=user)
+        elif object_class == ScanConfig:
+            return self.get_scan_config_for_user(user=user)
         else:
             raise TypeError(
                 "No mapping to retrieve object of type %s for user %s."
@@ -124,6 +126,14 @@ class WsDjangoTestCase(TestCase):
         """
         user = self.get_user(user=user)
         return user.organizations[0]
+
+    def get_scan_config_for_user(self, user="user_1"):
+        """
+        Get the ScanConfig object to use for testing purposes for the given user.
+        :param user: The user to retrieve the ScanConfig for.
+        :return: The ScanConfig associated with the given user.,
+        """
+        return self.get_order_for_user(user=user).scan_config
 
     def get_user(self, user="user_1"):
         """

@@ -5,7 +5,7 @@ from csv import reader, DictReader
 
 from rest_framework.validators import UniqueTogetherValidator
 
-from rest.models import Organization, DomainName, Network
+from rest.models import Organization, DomainName, Network, ScanPort
 from rest.lib.exception import WsRestNonFieldException
 from django.db import IntegrityError
 from .base import WsBaseModelSerializer
@@ -145,3 +145,37 @@ class OrganizationDomainNameUploadRangeSerializer(serializers.Serializer):
             raise WsRestNonFieldException('No Organization with that uuid found.')
 
         return attrs
+
+
+class ScanPortSerializer(WsBaseModelSerializer):
+    """
+    This is a serializer class for serializing data related to ScanPort models.
+    """
+
+    scan_config = serializers.PrimaryKeyRelatedField(read_only=True)
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = ScanPort
+        fields = (
+            "port_number",
+            "protocol",
+            "added_by",
+            "included",
+            "created",
+            "uuid",
+            "scan_config",
+            "organization",
+        )
+        read_only_fields = (
+            "added_by",
+            "included",
+            "created",
+            "uuid",
+        )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ScanPort.objects.all(),
+                fields=("scan_config", "port_number", "protocol"),
+            )
+        ]

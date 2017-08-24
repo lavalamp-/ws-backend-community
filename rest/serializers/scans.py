@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from .base import WsBaseModelSerializer
 import rest.models
+from lib import RegexLib
 
 
 class ScanConfigSerializer(WsBaseModelSerializer):
@@ -13,6 +14,21 @@ class ScanConfigSerializer(WsBaseModelSerializer):
     """
 
     order = serializers.PrimaryKeyRelatedField(read_only=True)
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    def validate_network_scan_bandwidth(self, value):
+        """
+        Validate the contents of value are valid for use as a network scanning bandwidth.
+        :param value: The value to validate.
+        :return: The value if validation is passed.
+        """
+        if not RegexLib.zmap_bandwidth_regex.match(value):
+            raise serializers.ValidationError(
+                "The network scan bandwidth must be an integer followed by a bytes-per-second notation "
+                "(ex: 100K, 10M, 1G)."
+            )
+        return value
 
     class Meta:
         model = rest.models.ScanConfig
@@ -50,6 +66,8 @@ class ScanConfigSerializer(WsBaseModelSerializer):
             "uuid",
             "is_default",
             "created",
+            "organization",
+            "user",
         )
         read_only_fields = (
             "is_default",

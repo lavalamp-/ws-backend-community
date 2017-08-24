@@ -5,7 +5,8 @@ from django.db import models
 
 from .base import BaseWsModel
 from .orders import Order
-from lib import FileHelper
+from .wsuser import WsUser
+from lib import FileHelper, RegexLib
 
 
 class ScanInvocation(BaseWsModel):
@@ -279,3 +280,44 @@ class ScanConfig(BaseWsModel):
         null=True,
         related_name="scan_config",
     )
+
+    organization = models.ForeignKey(
+        "rest.Organization",
+        related_name="scan_configs",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    user = models.ForeignKey(
+        WsUser,
+        related_name="scan_configs",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    def get_ready_errors(self):
+        """
+        Get a list of strings describing errors associated with this ScanConfig object that prevent it
+        from being used in a placed order.
+        :return: A list of strings describing errors associated with this ScanConfig object that prevent it
+        from being used in a placed order.
+        """
+        to_return = []
+        if not self.scan_domain_names \
+                and not self.scan_network_ranges \
+                and not self.scan_ip_addresses \
+                and not self.scan_network_services \
+                and not self.scan_ssl_support:
+            to_return.append("No scanning activities are enabled.")
+        if self.scan_network_ranges or self.scan_ip_addresses:
+            if self.scan_ports.count() == 0:
+                to_return.append("Network port scanning is enabled but no ports are defined.")
+        if self.scan_network_ranges and RegexLib.zmap_empty_bandwidth_regex.match(self.network_scan_bandwidth):
+            to_return.append(
+                "Network port scanning is enabled but the bandwidth is set to zero (%s)."
+                % (self.network_scan_bandwidth,)
+            )
+        if self.scan_domain_names:
+            if self.dns_record_types.count() == 0:
+                to_return.append("DNS scanning is enabled but no record types are defined.")
+        return to_return
