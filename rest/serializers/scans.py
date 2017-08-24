@@ -47,7 +47,12 @@ class ScanConfigSerializer(WsBaseModelSerializer):
             "web_app_do_crawling",
             "web_app_enum_user_agents",
             "order",
+            "uuid",
+            "is_default",
+            "created",
         )
         read_only_fields = (
             "is_default",
+            "uuid",
+            "created",
         )

@@ -66,8 +66,8 @@ class OrderScanConfigDetailView(WsRetrieveUpdateAPIView):
 
     def check_permissions(self, request):
         super(OrderScanConfigDetailView, self).check_permissions(request)
-        if self.order.user != request.user:
-            raise PermissionDenied()
+        if self.order.user != request.user and not request.user.is_superuser:
+            raise NotFound()
 
     def get_object(self):
         return self.scan_config
