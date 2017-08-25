@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.generics import get_object_or_404
+
 import rest.models
 import rest.serializers
-from .base import WsListAPIView, WsRetrieveAPIView
+from .base import WsListAPIView, WsRetrieveUpdateAPIView, WsListCreateChildAPIView
 
 
 class ScanConfigQuerysetMixin(object):
@@ -27,8 +30,59 @@ class ScanConfigListView(ScanConfigQuerysetMixin, WsListAPIView):
     """
 
 
-class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveAPIView):
+class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveUpdateAPIView):
     """
     get:
     Get a specific scan configuration object.
     """
+
+    _scan_config = None
+
+    def check_permissions(self, request):
+        super(ScanConfigDetailView, self).check_permissions(request)
+        if (not self.scan_config.order or self.scan_config.order.user != request.user) \
+                and not request.user.is_superuser:
+            raise NotFound()
+
+    def initial(self, request, *args, **kwargs):
+        self._scan_config = None
+        return super(ScanConfigDetailView, self).initial(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        if not self.scan_config.can_be_modified:
+            raise PermissionDenied("That scan configuration cannot be modified.")
+        else:
+            return super(ScanConfigDetailView, self).perform_update(serializer)
+
+    @property
+    def scan_config(self):
+        """
+        Get the ScanConfig that this handler is referencing.
+        :return: the ScanConfig that this handler is referencing.
+        """
+        if self._scan_config is None:
+            self._scan_config = get_object_or_404(rest.models.ScanConfig, pk=self.kwargs["pk"])
+        return self._scan_config
+
+
+class BaseScanConfigListCreateChildAPIView(WsListCreateChildAPIView):
+    """
+    This is a base class for all views that intend to query or create children for a ScanConfig
+    object.
+    """
+
+    def check_object_permissions(self, request, obj):
+        super(BaseScanConfigListCreateChildAPIView, self).check_object_permissions(request, obj)
+        if (not self.parent_object.order or self.parent_object.order.user != request.user) \
+                and not request.user.is_superuser:
+            raise NotFound()
+
+    def perform_create(self, serializer):
+        if not self.parent_object.can_be_modified:
+            raise PermissionDenied("That scan configuration cannot be modified.")
+        else:
+            return super(BaseScanConfigListCreateChildAPIView, self).perform_create(serializer)
+
+    @property
+    def parent_class(self):
+        return rest.models.ScanConfig

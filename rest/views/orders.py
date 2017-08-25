@@ -47,55 +47,6 @@ class OrderDetailView(OrderQuerysetMixin, WsRetrieveAPIView):
     serializer_class = rest.serializers.OrderSerializer
 
 
-class OrderScanConfigDetailView(WsRetrieveUpdateAPIView):
-    """
-    get:
-    Get the ScanConfig object associated with a given order.
-
-    put:
-    Update the ScanConfig object associated with a given order.
-
-    patch:
-    Update the ScanConfig object associated with a given order.
-    """
-
-    _order = None
-    _scan_config = None
-
-    serializer_class = rest.serializers.ScanConfigSerializer
-
-    def check_permissions(self, request):
-        super(OrderScanConfigDetailView, self).check_permissions(request)
-        if self.order.user != request.user and not request.user.is_superuser:
-            raise NotFound()
-
-    def get_object(self):
-        return self.scan_config
-
-    @property
-    def order(self):
-        """
-        Get the order that is being requested within this handler
-        :return: the order that is being requested within this handler
-        """
-        if self._order is None:
-            self._order = get_object_or_404(rest.models.Order, pk=self.kwargs["pk"])
-        return self._order
-
-    @property
-    def scan_config(self):
-        """
-        Get the ScanConfig object that is associated with self.order.
-        :return: the ScanConfig object that is associated with self.order.
-        """
-        if self._scan_config is None:
-            if not self.order.scan_config:
-                raise NotFound()
-            else:
-                self._scan_config = self.order.scan_config
-        return self._scan_config
-
-
 @api_view(["PUT"])
 def place_order(request, pk=None):
     """

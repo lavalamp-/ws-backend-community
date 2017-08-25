@@ -15,6 +15,7 @@ class OrderSerializer(WsBaseModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     networks = serializers.SlugRelatedField(many=True, read_only=True, slug_field="network_cidr")
     domain_names = serializers.SlugRelatedField(many=True, read_only=True, slug_field="name")
+    scan_config = serializers.PrimaryKeyRelatedField(read_only=True)
 
     def create(self, validated_data):
         """
@@ -41,6 +42,7 @@ class OrderSerializer(WsBaseModelSerializer):
             "user",
             "networks",
             "domain_names",
+            "scan_config",
         )
         read_only_fields = (
             "created",

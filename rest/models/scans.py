@@ -321,3 +321,14 @@ class ScanConfig(BaseWsModel):
             if self.dns_record_types.count() == 0:
                 to_return.append("DNS scanning is enabled but no record types are defined.")
         return to_return
+
+    @property
+    def can_be_modified(self):
+        """
+        Get whether or not this ScanConfig object can be modified.
+        :return: whether or not this ScanConfig object can be modified.
+        """
+        if self.order:
+            return not self.order.has_been_placed
+        else:
+            return True
