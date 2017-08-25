@@ -1,5 +1,7 @@
 # Web Sight Back-end (API & Task Node)
 
+[![Black Hat Arsenal](https://www.toolswatch.org/badges/arsenal/2017.svg)](https://www.toolswatch.org/2017/06/the-black-hat-arsenal-usa-2017-phenomenal-line-up-announced/)
+
 Web Sight is a software platform that enables red and blue teams to automate the information gathering processes required by their day-to-day jobs. At present, Web Sight performs the following activities:
 
 * Domain name enumeration
