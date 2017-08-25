@@ -152,9 +152,6 @@ class ScanPortSerializer(WsBaseModelSerializer):
     This is a serializer class for serializing data related to ScanPort models.
     """
 
-    scan_config = serializers.PrimaryKeyRelatedField(read_only=True)
-    organization = serializers.PrimaryKeyRelatedField(read_only=True)
-
     class Meta:
         model = ScanPort
         fields = (

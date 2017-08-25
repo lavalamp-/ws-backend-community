@@ -425,14 +425,11 @@ class ListCreateChildMixin(ListChildMixin):
 
     # Public Methods
 
-    def perform_create(self, serializer):
-        """
-        Handle the creation of the child object.
-        :param serializer: The serializer to create the object from.
-        :return: None
-        """
-        parent_mapping = self._get_parent_mapping()
-        serializer.save(**parent_mapping)
+    def get_serializer(self, *args, **kwargs):
+        if "data" in kwargs:
+            mapping = self._get_parent_mapping()
+            kwargs["data"][mapping.keys()[0]] = mapping[mapping.keys()[0]].uuid
+        return super(ListCreateChildMixin, self).get_serializer(*args, **kwargs)
 
     # Protected Methods
 

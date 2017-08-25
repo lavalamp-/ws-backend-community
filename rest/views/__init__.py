@@ -51,8 +51,10 @@ from .organizations import (
 )
 
 from .scans import (
+    DnsRecordTypesByScanConfigView,
     ScanConfigDetailView,
     ScanConfigListView,
+    ScanPortsByScanConfigView,
 )
 
 from .swagger import (

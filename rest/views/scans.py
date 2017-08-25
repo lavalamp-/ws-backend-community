@@ -86,3 +86,55 @@ class BaseScanConfigListCreateChildAPIView(WsListCreateChildAPIView):
     @property
     def parent_class(self):
         return rest.models.ScanConfig
+
+
+class DnsRecordTypesByScanConfigView(BaseScanConfigListCreateChildAPIView):
+    """
+    get:
+    Get all of the DnsRecordType models associated with a ScanConfig.
+
+    post:
+    Create a new DnsRecordType for the referenced ScanConfig.
+    """
+
+    serializer_class = rest.serializers.DnsRecordTypeSerializer
+    ordering_fields = ("record_type",)
+
+    def _get_parent_mapping(self):
+        return {
+            "scan_config": self.parent_object,
+        }
+
+    @property
+    def relationship_key(self):
+        return "scan_config_id"
+
+    @property
+    def child_attribute(self):
+        return "dns_record_types"
+
+
+class ScanPortsByScanConfigView(BaseScanConfigListCreateChildAPIView):
+    """
+    get:
+    Get all of the ScanPort models associated with a ScanConfig.
+
+    post:
+    Create a new ScanPort for the referenced ScanConfig.
+    """
+
+    serializer_class = rest.serializers.ScanPortSerializer
+    ordering_fields = ("port_number",)
+
+    def _get_parent_mapping(self):
+        return {
+            "scan_config": self.parent_object,
+        }
+
+    @property
+    def relationship_key(self):
+        return "scan_config_id"
+
+    @property
+    def child_attribute(self):
+        return "scan_ports"

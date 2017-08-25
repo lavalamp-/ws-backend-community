@@ -55,10 +55,11 @@ class ScanConfigManager(models.Manager):
         dns_record_types = FileHelper.get_dns_record_types()
         to_return = []
         for record_type, include_by_default, scan in dns_record_types:
-            to_return.append(DnsRecordType.objects.create(
-                record_type=record_type,
-                scan_config=scan_config,
-            ))
+            if include_by_default:
+                to_return.append(DnsRecordType.objects.create(
+                    record_type=record_type,
+                    scan_config=scan_config,
+                ))
         return to_return
 
     def __create_default_scan_ports_for_config(self, scan_config):

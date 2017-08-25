@@ -63,8 +63,6 @@ class DnsRecordTypeSerializer(WsBaseModelSerializer):
     This is a serializer class for providing details about a DnsRecordType.
     """
 
-    scan_config = serializers.PrimaryKeyRelatedField(read_only=True)
-
     def validate_record_type(self, value):
         """
         Validate that the contents of value represnt a valid DNS record type supported by

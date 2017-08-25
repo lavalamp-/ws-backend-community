@@ -4,7 +4,7 @@ from __future__ import absolute_import
 import rest.models
 from tests.rest_tests.mixin import ListTestCaseMixin, PresentableTestCaseMixin, ExporterCustomFieldsMixin, \
     ExporterTestCaseMixin, RetrieveTestCaseMixin, CustomFieldsMixin, ParameterizedRouteMixin,\
-    UpdateTestCaseMixin
+    UpdateTestCaseMixin, CreateTestCaseMixin
 from ..base import WsDjangoViewTestCase
 
 
@@ -344,3 +344,209 @@ class TestScanConfigDetailView(
     @property
     def updated_model_class(self):
         return rest.models.ScanConfig
+
+
+class TestDnsRecordTypesByScanConfigView(
+    ListTestCaseMixin,
+    CreateTestCaseMixin,
+    PresentableTestCaseMixin,
+    ParameterizedRouteMixin,
+    ExporterCustomFieldsMixin,
+    ExporterTestCaseMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for the DnsRecordTypesByScanConfigView APIView.
+    """
+
+    _api_route = "/scan-configs/%s/dns-record-types/"
+    _url_parameters = None
+
+    def test_create_creates_object(self, *args, **kwargs):
+        scan_config = self.get_scan_config_for_user()
+        scan_config.dns_record_types.all().delete()
+        super(TestDnsRecordTypesByScanConfigView, self).test_create_creates_object()
+
+    def __send_create_request(
+            self,
+            user="user_1",
+            query_string=None,
+            input_uuid="POPULATE",
+            login=True,
+            include_record_type=True,
+            record_type="A",
+            delete_existing_record_type=True,
+    ):
+        """
+        Send an HTTP request to the configured API endpoint to create a new child model object and return
+        the response.
+        :param user: The user to send the request on behalf of.
+        :param query_string: The query string to include in the URL.
+        :param input_uuid: The UUID of the parent object to query.
+        :param login: Whether or not to log in before sending the request.
+        :param include_record_type: Whether or not to include the record_type parameter.
+        :param record_type: The record_type parameter to include.
+        :param delete_existing_record_type: Whether or not to delete the existing record type that matches
+        record_type for the referenced ScanConfig.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        if input_uuid == "POPULATE":
+            scan_config = self.get_scan_config_for_user(user=user)
+            input_uuid = str(scan_config.uuid)
+        self._url_parameters = input_uuid
+        to_send = {}
+        if include_record_type:
+            to_send["record_type"] = record_type
+        if delete_existing_record_type:
+            scan_config = rest.models.ScanConfig.objects.get(pk=input_uuid)
+            try:
+                scan_config.dns_record_types.get(record_type=record_type).delete()
+            except rest.models.DnsRecordType.DoesNotExist:
+                pass
+        return self.post(query_string=query_string, data=to_send)
+
+    def __send_list_request(self, user="user_1", query_string=None, input_uuid="POPULATE", login=True):
+        """
+        Send an HTTP request to the configured API endpoint and return the response.
+        :param user: A string depicting the user to send the request as.
+        :param query_string: The query string to include in the URL.
+        :param login: Whether or not to log the requesting user in.
+        :param input_uuid: The UUID of the ScanConfig object to request.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        if input_uuid == "POPULATE":
+            scan_config = self.get_scan_config_for_user(user=user)
+            input_uuid = str(scan_config.uuid)
+        self._url_parameters = input_uuid
+        return self.get(query_string=query_string)
+
+    @property
+    def create_method(self):
+        return self.__send_create_request
+
+    @property
+    def created_object_class(self):
+        return rest.models.DnsRecordType
+
+    @property
+    def custom_fields_field(self):
+        return "uuid"
+
+    @property
+    def custom_fields_method(self):
+        return self.__send_list_request
+
+    @property
+    def list_method(self):
+        return self.__send_list_request
+
+    @property
+    def presentation_method(self):
+        return self.__send_list_request
+
+    @property
+    def response_has_many(self):
+        return True
+
+
+class TestScanPortsByScanConfigView(
+    ListTestCaseMixin,
+    CreateTestCaseMixin,
+    PresentableTestCaseMixin,
+    ParameterizedRouteMixin,
+    ExporterCustomFieldsMixin,
+    ExporterTestCaseMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for the ScanPortsByScanConfigView APIView.
+    """
+
+    _api_route = "/scan-configs/%s/scan-ports/"
+    _url_parameters = None
+
+    def __send_create_request(
+            self,
+            user="user_1",
+            query_string=None,
+            input_uuid="POPULATE",
+            login=True,
+            include_port_number=True,
+            port_number=1234,
+            include_protocol=True,
+            protocol="TCP",
+    ):
+        """
+        Send an HTTP request to the configured API endpoint to create a new child model object and return
+        the response.
+        :param user: The user to send the request on behalf of.
+        :param query_string: The query string to include in the URL.
+        :param input_uuid: The UUID of the parent object to query.
+        :param login: Whether or not to log in before sending the request.
+        :param include_port_number: Whether or not to include the port number in the request.
+        :param port_number: The port number to include in the request.
+        :param include_protocol: Whether or not to include the protocol in the request.
+        :param protocol: The protocol to include in the request.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        if input_uuid == "POPULATE":
+            scan_config = self.get_scan_config_for_user(user=user)
+            input_uuid = str(scan_config.uuid)
+        self._url_parameters = input_uuid
+        to_send = {}
+        if include_port_number:
+            to_send["port_number"] = port_number
+        if include_protocol:
+            to_send["protocol"] = protocol
+        return self.post(query_string=query_string, data=to_send)
+
+    def __send_list_request(self, user="user_1", query_string=None, input_uuid="POPULATE", login=True):
+        """
+        Send an HTTP request to the configured API endpoint and return the response.
+        :param user: A string depicting the user to send the request as.
+        :param query_string: The query string to include in the URL.
+        :param login: Whether or not to log the requesting user in.
+        :param input_uuid: The UUID of the ScanConfig object to request.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        if input_uuid == "POPULATE":
+            scan_config = self.get_scan_config_for_user(user=user)
+            input_uuid = str(scan_config.uuid)
+        self._url_parameters = input_uuid
+        return self.get(query_string=query_string)
+
+    @property
+    def create_method(self):
+        return self.__send_create_request
+
+    @property
+    def created_object_class(self):
+        return rest.models.ScanPort
+
+    @property
+    def custom_fields_field(self):
+        return "uuid"
+
+    @property
+    def custom_fields_method(self):
+        return self.__send_list_request
+
+    @property
+    def list_method(self):
+        return self.__send_list_request
+
+    @property
+    def presentation_method(self):
+        return self.__send_list_request
+
+    @property
+    def response_has_many(self):
+        return True
