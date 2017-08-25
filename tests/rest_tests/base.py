@@ -5,7 +5,7 @@ from django.test import TestCase, Client
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from rest.models import WsUser, Organization, Network, DomainName, Order, ScanConfig
+from rest.models import WsUser, Organization, Network, DomainName, Order, ScanConfig, DnsRecordType
 from ..data import WsTestData
 from .mixin import ParameterizedRouteMixin, PaginatedTestCaseMixin
 
@@ -14,6 +14,14 @@ class WsDjangoTestCase(TestCase):
     """
     This is a base class for all test cases used to testing the Web Sight Django API.
     """
+
+    def get_dns_record_type_for_user(self, user="user_1"):
+        """
+        Get the DnsRecordType to use for testing purposes for the given user.
+        :param user: The user to retrieve the DnsRecordType for.
+        :return: The DnsRecordType associated with the given user.
+        """
+        return self.get_scan_config_for_user(user=user).dns_record_types.first()
 
     def get_domain_name_for_user(self, user="user_1"):
         """
@@ -103,6 +111,8 @@ class WsDjangoTestCase(TestCase):
             return self.get_organization_for_user(user=user)
         elif object_class == ScanConfig:
             return self.get_scan_config_for_user(user=user)
+        elif object_class == DnsRecordType:
+            return self.get_dns_record_type_for_user(user=user)
         else:
             raise TypeError(
                 "No mapping to retrieve object of type %s for user %s."

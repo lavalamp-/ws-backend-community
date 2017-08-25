@@ -21,6 +21,8 @@ from .admin import (
 from .dns import (
     DomainNameDetailView,
     DomainNameListView,
+    DnsRecordTypeDetailView,
+    DnsRecordTypeListView,
 )
 
 from .elasticsearch import *

@@ -175,6 +175,16 @@ class WsFaker(object):
         return random.sample(WsFaker.get_dns_record_types(), 1)[0]
 
     @staticmethod
+    def get_dns_record_type_kwargs():
+        """
+        Get a dictionary of keyword arguments to use for instantiating a DnsRecordType object.
+        :return: A dictionary of keyword arguments to use for instantiating a DnsRecordType object.
+        """
+        return {
+            "record_type": random.sample(["ASD"], 1)[0]
+        }
+
+    @staticmethod
     def get_dns_record_types():
         """
         Get a list containing all of the DNS record types supported by Web Sight.

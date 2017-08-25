@@ -100,6 +100,8 @@ urlpatterns = [
 
     # Domain Name URLs
 
+    url(r'^dns-record-types/(?P<pk>[-\w]+)/?$', views.DnsRecordTypeDetailView.as_view(), name="dnsrecordtype-detail"),
+    url(r'^dns-record-types/?$', views.DnsRecordTypeListView.as_view(), name="dnsrecordtype-list"),
     url(r'^domain-names/(?P<pk>[-\w]+)/es/report/?$', views.DomainNameReportDetailAPIView.as_view(), name="domainreport-detail"),
     url(r'^domain-names/(?P<pk>[-\w]+)/?$', views.DomainNameDetailView.as_view(), name="domain-detail"),
     url(r'^domain-names/?$', views.DomainNameListView.as_view(), name="domain-list"),
