@@ -56,11 +56,9 @@ def place_order(request, pk=None):
     if not request.user.is_superuser:
         if not order.organization.can_user_scan(request.user):
             raise PermissionDenied("You do not have sufficient privileges to start scans for that organization.")
-    elif order.has_been_placed:
-        raise PermissionDenied("That order has already been placed.")
-    order_placed = order.place_order()
-    if not order_placed:
-        raise OperationFailed("An issue was encountered when attempting to place your order. Please try again.")
+    if not order.is_ready_to_place:
+        raise PermissionDenied(order.get_ready_errors())
+    order.place_order()
     order.save()
     send_emails_for_placed_order.delay(
         order_uuid=unicode(order.uuid),

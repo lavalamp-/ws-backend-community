@@ -333,3 +333,13 @@ class ScanConfig(BaseWsModel):
             return not self.order.has_been_placed
         else:
             return True
+
+    @property
+    def is_ready_to_place(self):
+        """
+        Get a boolean depicting whether or not this scan config is ready to be a part of
+        a placed order.
+        :return: A boolean depicting whether or not this scan config is ready to be a part of
+        a placed order.
+        """
+        return len(self.get_ready_errors()) == 0

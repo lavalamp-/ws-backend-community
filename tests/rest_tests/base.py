@@ -226,6 +226,31 @@ class WsDjangoViewTestCase(WsDjangoTestCase):
         """
         self.assertEqual(response.status_code, 403)
 
+    def assert_request_not_found(self, response):
+        """
+        Assert that the given response failed and returned a 404 not found.
+        :param response: The response to check.
+        :return: None
+        """
+        self.assertEqual(response.status_code, 404)
+
+    def assert_request_requires_auth(self, response):
+        """
+        Assert that the given response failed and returned a 401 not authorized.
+        :param response: The response to check.
+        :return: None
+        """
+        self.assertEqual(response.status_code, 401)
+
+    def assert_request_succeeds(self, response, status_code=200):
+        """
+        Assert that the given response indicates the request was successful.
+        :param response: The response to check.
+        :param status_code: The HTTP status code that indicates success.
+        :return: None
+        """
+        self.assertEqual(response.status_code, status_code)
+
     def delete(self, query_string=None, **kwargs):
         """
         Issue an HTTP DELETE request to the remote endpoint with the given keyword

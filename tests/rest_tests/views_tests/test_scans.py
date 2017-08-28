@@ -313,6 +313,38 @@ class TestScanConfigDetailView(
             to_send["web_app_enum_user_agents"] = web_app_enum_user_agents
         return self.patch(query_string=query_string, data=to_send)
 
+    def test_update_not_owned_regular_fails(self):
+        """
+        Tests that attempting to update a ScanConfig that you do not own as a non-admin user
+        fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        response = self.__send_update_request(input_uuid=str(scan_config.uuid), user="user_2")
+        self.assert_request_not_found(response)
+
+    def test_update_not_owned_admin_succeeds(self):
+        """
+        Tests that attempting to update a ScanConfig that you do not own as an admin user
+        succeeds.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        response = self.__send_update_request(input_uuid=str(scan_config.uuid), user="admin_1")
+        self.assert_request_succeeds(response)
+
+    def test_update_already_placed_fails(self):
+        """
+        Tests that attempting to update a ScanConfig that is associated with an order that
+        has already been placed fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        scan_config.order.has_been_placed = True
+        scan_config.order.save()
+        response = self.__send_update_request(input_uuid=str(scan_config.uuid), user="user_1")
+        self.assert_request_not_authorized(response)
+
     @property
     def custom_fields_field(self):
         return "uuid"
@@ -424,6 +456,22 @@ class TestDnsRecordTypesByScanConfigView(
         self._url_parameters = input_uuid
         return self.get(query_string=query_string)
 
+    def test_create_duplicate_fails(self):
+        """
+        Tests that attempting to create a new ScanPort for the given ScanConfig that is the same as an
+        existing ScanPort fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        dns_record = scan_config.dns_record_types.first()
+        response = self.__send_create_request(
+            user="user_1",
+            input_uuid=str(scan_config.uuid),
+            record_type=dns_record.record_type,
+            delete_existing_record_type=False,
+        )
+        self.assert_request_fails(response)
+
     @property
     def create_method(self):
         return self.__send_create_request
@@ -522,6 +570,22 @@ class TestScanPortsByScanConfigView(
             input_uuid = str(scan_config.uuid)
         self._url_parameters = input_uuid
         return self.get(query_string=query_string)
+
+    def test_create_duplicate_fails(self):
+        """
+        Tests that attempting to create a new ScanPort for the given ScanConfig that is the same as an
+        existing ScanPort fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        scan_port = scan_config.scan_ports.first()
+        response = self.__send_create_request(
+            user="user_1",
+            input_uuid=str(scan_config.uuid),
+            port_number=scan_port.port_number,
+            protocol=scan_port.protocol,
+        )
+        self.assert_request_fails(response)
 
     @property
     def create_method(self):

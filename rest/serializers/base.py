@@ -5,8 +5,6 @@ from rest_framework import serializers
 
 from django.conf import settings
 
-from rest.views.exception import OperationFailed
-
 
 class WsBaseSerializerMixin(object):
     """
@@ -19,7 +17,7 @@ class WsBaseSerializerMixin(object):
 
     def __init__(self, *args, **kwargs):
         super(WsBaseSerializerMixin, self).__init__(*args, **kwargs)
-        if self.request.method == "GET":
+        if self.request and self.request.method == "GET":
             self.__set_fields_by_query_params()
 
     # Static Methods
@@ -52,6 +50,7 @@ class WsBaseSerializerMixin(object):
                 if excluded_field in self.fields:
                     self.fields.pop(excluded_field)
         if len(self.fields) == 0:
+            from rest.views.exception import OperationFailed
             raise OperationFailed(detail="You must specify at least one valid field to query.")
 
     # Properties
@@ -78,7 +77,7 @@ class WsBaseSerializerMixin(object):
         Get the request that resulted in this serializer being invoked.
         :return: the request that resulted in this serializer being invoked.
         """
-        return self.context["request"]
+        return self.context.get("request", None)
 
     @property
     def requesting_user(self):

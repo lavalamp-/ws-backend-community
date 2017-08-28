@@ -642,7 +642,7 @@ class WsFaker(object):
         Create and return a string representing a network protocol.
         :return: A string representing a network protocol.
         """
-        return random.sample(["tcp", "udp", "sctp"], 1)[0]
+        return random.sample(["tcp", "udp"], 1)[0]
 
     @staticmethod
     def get_network_service_discovery_method():
@@ -787,6 +787,45 @@ class WsFaker(object):
                 "label": mime_type,
             })
         return to_return
+
+    @staticmethod
+    def get_scan_config_kwargs():
+        """
+        Get a dictionary containing arguments to pass to the creation method for a
+        ScanConfig.
+        :return: A dictionary containing arguments to pass to the creation method for a
+        ScanConfig.
+        """
+        return {
+            "name": WsFaker.get_word(),
+            "description": " ".join(WsFaker.get_words()),
+            "saved_for_later": RandomHelper.flip_coin(),
+            "scan_network_ranges": RandomHelper.flip_coin(),
+            "scan_ip_addresses": RandomHelper.flip_coin(),
+            "scan_network_services": RandomHelper.flip_coin(),
+            "scan_ssl_support": RandomHelper.flip_coin(),
+            "dns_enumerate_subdomains": RandomHelper.flip_coin(),
+            "dns_scan_resolutions": RandomHelper.flip_coin(),
+            "network_scan_bandwidth": WsFaker.get_zmap_scan_bandwidth(),
+            "network_inspect_live_hosts": RandomHelper.flip_coin(),
+            "ip_address_geolocate": RandomHelper.flip_coin(),
+            "ip_address_reverse_hostname": RandomHelper.flip_coin(),
+            "ip_address_historic_dns": RandomHelper.flip_coin(),
+            "ip_address_as_data": RandomHelper.flip_coin(),
+            "ip_address_whois_data": RandomHelper.flip_coin(),
+            "network_service_check_liveness": RandomHelper.flip_coin(),
+            "network_service_fingerprint": RandomHelper.flip_coin(),
+            "network_service_inspect_app": RandomHelper.flip_coin(),
+            "ssl_enumerate_vulns": RandomHelper.flip_coin(),
+            "ssl_enumerate_cipher_suites": RandomHelper.flip_coin(),
+            "ssl_retrieve_cert": RandomHelper.flip_coin(),
+            "app_inspect_web_app": RandomHelper.flip_coin(),
+            "web_app_include_http_on_https": RandomHelper.flip_coin(),
+            "web_app_enum_vhosts": RandomHelper.flip_coin(),
+            "web_app_take_screenshot": RandomHelper.flip_coin(),
+            "web_app_do_crawling": RandomHelper.flip_coin(),
+            "web_app_enum_user_agents": RandomHelper.flip_coin(),
+        }
 
     @staticmethod
     def get_scan_port_kwargs():

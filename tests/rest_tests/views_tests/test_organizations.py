@@ -1053,6 +1053,31 @@ class TestScanPortListView(
             self.login(user=user)
         return self.get(query_string=query_string)
 
+    def test_regular_user_list(self):
+        """
+        Tests that requesting the endpoint on behalf of a regular user returns the expected
+        number of results.
+        :return: None
+        """
+        response = self.__send_list_request(user="user_1")
+        user = self.get_user(user="user_1")
+        total_count = rest.models.ScanPort.objects\
+            .filter(
+                scan_config__order__organization__auth_groups__users=user,
+                scan_config__order__organization__auth_groups__name="org_read",
+            ).count()
+        self.assertEqual(response.json()["count"], total_count)
+
+    def test_admin_user_list(self):
+        """
+        Tests that requesting the endpoint on behalf of an admin user returns the expected
+        number of results.
+        :return: None
+        """
+        response = self.__send_list_request(user="admin_1")
+        total_count = rest.models.ScanPort.objects.count()
+        self.assertEqual(response.json()["count"], total_count)
+
     @property
     def custom_fields_field(self):
         return "uuid"

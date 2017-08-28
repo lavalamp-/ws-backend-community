@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from .base import BaseWsModel
 from .payments import Receipt
+import rest.models
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +92,24 @@ class Order(BaseWsModel):
 
     # Methods
 
+    def get_ready_errors(self):
+        """
+        Get a list of strings describing errors associated with this Order object that prevent it
+        from being used in a placed order.
+        :return: A list of strings describing errors associated with this Order object that prevent it
+        from being used in a placed order.
+        """
+        to_return = []
+        try:
+            to_return.extend(self.scan_config.get_ready_errors())
+        except rest.models.ScanConfig.DoesNotExist:
+            to_return.append("The order has no scanning configuration associated with it.")
+        if self.has_been_placed:
+            to_return.append("This order has already been placed.")
+        if self.networks.count() == 0 and self.domain_names.count() == 0:
+            to_return.append("No networks, IP addresses, or domain names were specified in the order.")
+        return to_return
+
     def get_receipt_description(self):
         """
         Get a string describing this order for the purposes of displaying receipt information
@@ -129,6 +148,14 @@ class Order(BaseWsModel):
         return True
 
     # Properties
+
+    @property
+    def is_ready_to_place(self):
+        """
+        Get a boolean depicting whether or not this order is ready to be placed.
+        :return: A boolean depicting whether or not this order is ready to be placed.
+        """
+        return len(self.get_ready_errors()) == 0
 
     # Representation
 

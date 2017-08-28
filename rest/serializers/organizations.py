@@ -152,6 +152,33 @@ class ScanPortSerializer(WsBaseModelSerializer):
     This is a serializer class for serializing data related to ScanPort models.
     """
 
+    def validate_port_number(self, value):
+        """
+        Validate that the contents of value are valid for use as a port number.
+        :param value: The value to validate.
+        :return: The value.
+        """
+        value = int(value)
+        if value < 0 or value > 65535:
+            raise serializers.ValidationError(
+                "%s is not a valid port number (must be in range 0-65,535)."
+                % (value,)
+            )
+        return value
+
+    def validate_protocol(self, value):
+        """
+        Validate that the contents of value are valid for use as a protocol.
+        :param value: The value to validate.
+        :return: None
+        """
+        if value.lower() not in ["tcp", "udp"]:
+            raise serializers.ValidationError(
+                "%s is not a valid protocol. Must be one of [TCP, UDP]."
+                % (value,)
+            )
+        return value
+
     class Meta:
         model = ScanPort
         fields = (
