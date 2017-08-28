@@ -17,7 +17,8 @@ from rest.serializers import OrganizationSerializer, OrganizationNetworkUploadRa
     OrganizationDomainNameUploadRangeSerializer, NetworkSerializer, DomainNameSerializer
 from wselasticsearch.models import UserUploadModel
 from .base import WsListCreateChildAPIView, WsListCreateAPIView, \
-    WsRetrieveUpdateDestroyAPIView, WsListChildAPIView, BaseWsAPIView
+    WsRetrieveUpdateDestroyAPIView, WsListChildAPIView, BaseWsAPIView, WsListAPIView, \
+    WsRetrieveDestroyAPIView
 from rest_framework.response import Response
 from lib.parsing import NetworksCsvWrapper, DomainsTextFileWrapper, CidrRangeWrapper
 from .exception import OperationNotAllowed
@@ -25,6 +26,7 @@ from lib import ConfigManager
 from lib.smtp import SmtpEmailHelper
 import rest.filters
 import rest.serializers
+import rest.models
 
 config = ConfigManager.instance()
 
@@ -743,3 +745,44 @@ class OrganizationUserAdminAPIView(BaseOrganizationAdminAPIView):
     # Properties
 
     # Representation and Comparison
+
+
+class ScanPortQuerysetMixin(object):
+    """
+    This is a mixin class that provides the queryset retrieval methods for querying ScanPort objects.
+    """
+
+    serializer_class = rest.serializers.ScanPortSerializer
+
+    def _get_su_queryset(self):
+        return rest.models.ScanPort.objects.all()
+
+    def _get_user_queryset(self):
+        return rest.models.ScanPort.objects\
+            .filter(
+                scan_config__order__organization__auth_groups__users=self.request.user,
+                scan_config__order__organization__auth_groups__name="org_read",
+            ).all()
+
+    def perform_destroy(self, instance):
+        if not instance.scan_config.can_be_modified:
+            raise PermissionDenied("The related scanning configuration cannot be modified at this time.")
+        else:
+            return super(ScanPortQuerysetMixin, self).perform_destroy(instance)
+
+
+class ScanPortListView(ScanPortQuerysetMixin, WsListAPIView):
+    """
+    get:
+    Get all ScanPort objects associated with the requesting user.
+    """
+
+
+class ScanPortDetailView(ScanPortQuerysetMixin, WsRetrieveDestroyAPIView):
+    """
+    get:
+    Get a specific ScanPort.
+
+    delete:
+    Delete a specific ScanPort.
+    """

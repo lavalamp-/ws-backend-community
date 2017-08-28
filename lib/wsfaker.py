@@ -789,6 +789,21 @@ class WsFaker(object):
         return to_return
 
     @staticmethod
+    def get_scan_port_kwargs():
+        """
+        Get a dictionary containing arguments to pass to the creation method for a
+        ScanPort.
+        :return: A dictionary containing arguments to pass to the creation method for a
+        ScanPort.
+        """
+        return {
+            "port_number": WsFaker.get_port(),
+            "protocol": WsFaker.get_network_protocol(),
+            "added_by": "user",
+            "included": RandomHelper.flip_coin(),
+        }
+
+    @staticmethod
     def get_server_header_value():
         """
         Get a string representing a server header value.

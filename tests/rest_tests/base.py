@@ -5,7 +5,8 @@ from django.test import TestCase, Client
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from rest.models import WsUser, Organization, Network, DomainName, Order, ScanConfig, DnsRecordType
+from rest.models import WsUser, Organization, Network, DomainName, Order, ScanConfig, DnsRecordType, \
+    ScanPort
 from ..data import WsTestData
 from .mixin import ParameterizedRouteMixin, PaginatedTestCaseMixin
 
@@ -113,6 +114,8 @@ class WsDjangoTestCase(TestCase):
             return self.get_scan_config_for_user(user=user)
         elif object_class == DnsRecordType:
             return self.get_dns_record_type_for_user(user=user)
+        elif object_class == ScanPort:
+            return self.get_scan_port_for_user(user=user)
         else:
             raise TypeError(
                 "No mapping to retrieve object of type %s for user %s."
@@ -144,6 +147,14 @@ class WsDjangoTestCase(TestCase):
         :return: The ScanConfig associated with the given user.,
         """
         return self.get_order_for_user(user=user).scan_config
+
+    def get_scan_port_for_user(self, user="user_1"):
+        """
+        Get the ScanPort object to use for testing purposes for the given user.
+        :param user: The user to retrieve the ScanPort for.
+        :return: The ScanPort associated with the given user.
+        """
+        return self.get_scan_config_for_user(user=user).scan_ports.first()
 
     def get_user(self, user="user_1"):
         """

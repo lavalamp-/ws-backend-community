@@ -108,6 +108,8 @@ urlpatterns = [
 
     # Scan Config URLs
 
+    url(r'^scan-ports/(?P<pk>[-\w]+)/?$', views.ScanPortDetailView.as_view(), name="scanport-detail"),
+    url(r'^scan-ports/?$', views.ScanPortListView.as_view(), name="scanport-list"),
     url(r'^scan-configs/(?P<pk>[-\w]+)/dns-record-types/?$', views.DnsRecordTypesByScanConfigView.as_view(), name="scanconfigdnsrecordtypes-list"),
     url(r'^scan-configs/(?P<pk>[-\w]+)/scan-ports/?$', views.ScanPortsByScanConfigView.as_view(), name="scanconfigscanports-list"),
     url(r'^scan-configs/(?P<pk>[-\w]+)/?$', views.ScanConfigDetailView.as_view(), name="scan-config-detail"),

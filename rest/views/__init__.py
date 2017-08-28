@@ -49,6 +49,8 @@ from .organizations import (
     OrganizationListView,
     OrganizationUserAdminAPIView,
     organization_permissions,
+    ScanPortDetailView,
+    ScanPortListView,
     upload_networks_file,
 )
 
