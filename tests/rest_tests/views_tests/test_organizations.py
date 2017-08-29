@@ -49,7 +49,6 @@ class TestNetworksByOrganizationView(
             user="user_1",
             query_string=None,
             login=True,
-            include_org_uuid=True,
             org_uuid="POPULATE",
             include_name=True,
             name="Awesome Network",
@@ -64,7 +63,6 @@ class TestNetworksByOrganizationView(
         :param user: A string depicting the user to submit the request as.
         :param query_string: The query string to include in the URL.
         :param login: Whether or not to log the requesting user in before sending the request.
-        :param include_org_uuid: Whether or not to include the org UUID in the request.
         :param org_uuid: The UUID of the organization to include in the request.
         :param include_name: Whether or not to include the network name in the request.
         :param name: The network name to include in the request.
@@ -77,40 +75,17 @@ class TestNetworksByOrganizationView(
         if login:
             self.login(user=user)
         to_send = {}
-        organization = self.get_organization_for_user(user=user)
         if org_uuid == "POPULATE":
+            organization = self.get_organization_for_user(user=user)
             org_uuid = str(organization.uuid)
-        if include_org_uuid:
-            to_send["organization"] = org_uuid
         if include_name:
             to_send["name"] = name
         if include_mask_length:
             to_send["mask_length"] = mask_length
         if include_address:
             to_send["address"] = address
-        self._url_parameters = str(organization.uuid)
+        self._url_parameters = str(org_uuid)
         return self.post(query_string=query_string, data=to_send)
-
-    def test_create_no_org_uuid_fails(self):
-        """
-        Tests that submitting a create request with no org UUID fails.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(include_org_uuid=False))
-
-    def test_create_empty_org_uuid_fails(self):
-        """
-        Tests that submitting a create request with an empty org UUID fails.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(org_uuid=None))
-
-    def test_create_invalid_org_uuid_fails(self):
-        """
-        Tests that submitted a create request with an invalid org UUID value fails.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(org_uuid="ASD123"))
 
     def test_create_unknown_org_uuid_fails(self):
         """
@@ -118,7 +93,7 @@ class TestNetworksByOrganizationView(
         :return: None
         """
         org_uuid = str(uuid4())
-        self.assert_request_fails(self.send_create_request(org_uuid=org_uuid))
+        self.assert_request_not_found(self.send_create_request(org_uuid=org_uuid))
 
     def test_create_not_owned_org_uuid_fails(self):
         """
@@ -324,7 +299,6 @@ class TestDomainNamesByOrganizationView(
             user="user_1",
             query_string=None,
             login=True,
-            include_org_uuid=True,
             org_uuid="POPULATE",
             include_name=True,
             name="foo.bar.com",
@@ -335,7 +309,6 @@ class TestDomainNamesByOrganizationView(
         :param user: A string depicting the user to submit the request as.
         :param query_string: The query string to include in the URL.
         :param login: Whether or not to log the requesting user in before sending the request.
-        :param include_org_uuid: Whether or not to include the org UUID in the request.
         :param org_uuid: The UUID of the organization to include in the request.
         :param include_name: Whether or not to include the domain name in the request.
         :param name: The domain name to include in the request.
@@ -344,36 +317,13 @@ class TestDomainNamesByOrganizationView(
         if login:
             self.login(user=user)
         to_send = {}
-        organization = self.get_organization_for_user(user=user)
         if org_uuid == "POPULATE":
+            organization = self.get_organization_for_user(user=user)
             org_uuid = str(organization.uuid)
-        if include_org_uuid:
-            to_send["organization"] = org_uuid
         if include_name:
             to_send["name"] = name
-        self._url_parameters = str(organization.uuid)
+        self._url_parameters = str(org_uuid)
         return self.post(query_string=query_string, data=to_send)
-
-    def test_create_no_org_uuid_fails(self):
-        """
-        Tests that submitting a create request with no org UUID fails.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(include_org_uuid=False))
-
-    def test_create_empty_org_uuid_fails(self):
-        """
-        Tests that submitting a create request with an empty org UUID fails.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(org_uuid=None))
-
-    def test_create_invalid_org_uuid_fails(self):
-        """
-        Tests that submitted a create request with an invalid org UUID value fails.
-        :return: None
-        """
-        self.assert_request_fails(self.send_create_request(org_uuid="ASD123"))
 
     def test_create_unknown_org_uuid_fails(self):
         """
@@ -381,7 +331,7 @@ class TestDomainNamesByOrganizationView(
         :return: None
         """
         org_uuid = str(uuid4())
-        self.assert_request_fails(self.send_create_request(org_uuid=org_uuid))
+        self.assert_request_not_found(self.send_create_request(org_uuid=org_uuid))
 
     def test_create_not_owned_org_uuid_fails(self):
         """
