@@ -172,7 +172,8 @@ class ScanPortSerializer(WsBaseModelSerializer):
         :param value: The value to validate.
         :return: None
         """
-        if value.lower() not in ["tcp", "udp"]:
+        value = value.lower()
+        if value not in ["tcp", "udp"]:
             raise serializers.ValidationError(
                 "%s is not a valid protocol. Must be one of [TCP, UDP]."
                 % (value,)

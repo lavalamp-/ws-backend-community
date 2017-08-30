@@ -96,6 +96,10 @@ class DnsRecordType(BaseWsModel):
         null=False,
     )
 
+    def save(self, *args, **kwargs):
+        self.record_type = self.record_type.upper()
+        return super(DnsRecordType, self).save(*args, **kwargs)
+
     def __repr__(self):
         return "<%s - %s (%s)>" % (
             self.__class__.__name__,

@@ -70,6 +70,7 @@ class DnsRecordTypeSerializer(WsBaseModelSerializer):
         :param value: The value to validate.
         :return: The validated value.
         """
+        value = value.upper()
         valid_record_types = [x[0] for x in FileHelper.get_dns_record_types()]
         if value not in valid_record_types:
             raise serializers.ValidationError(

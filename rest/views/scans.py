@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+from django.db.models import Q
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import get_object_or_404
 
 import rest.models
 import rest.serializers
+import rest.responses
 from .base import WsListAPIView, WsRetrieveUpdateAPIView, WsListCreateChildAPIView
 
 
@@ -138,3 +141,29 @@ class ScanPortsByScanConfigView(BaseScanConfigListCreateChildAPIView):
     @property
     def child_attribute(self):
         return "scan_ports"
+
+
+@api_view(["GET"])
+def check_scan_config_validity(request, pk=None):
+    """
+    Check to see if a given ScanConfig is valid for an order to be placed with
+    it.
+    :param request: The request that invoked this handler.
+    :param pk: The primary key of the ScanConfig to check.
+    :return: An HTTP response.
+    """
+    try:
+        if request.user.is_superuser:
+            query = rest.models.ScanConfig.objects
+        else:
+            query = rest.models.ScanConfig.objects\
+                .filter(
+                    Q(
+                        order__organization__auth_groups__users=request.user,
+                        order__organization__auth_groups__name="org_read",
+                    ) | Q(is_default=True)
+                )
+        scan_config = query.get(pk=pk)
+    except rest.models.ScanConfig.DoesNotExist:
+        raise NotFound()
+    return rest.responses.WsScanConfigValidityResponse(scan_config=scan_config, status=200)

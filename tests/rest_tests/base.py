@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 
 from rest.models import WsUser, Organization, Network, DomainName, Order, ScanConfig, DnsRecordType, \
     ScanPort
+import rest.models
 from ..data import WsTestData
 from .mixin import ParameterizedRouteMixin, PaginatedTestCaseMixin
 
@@ -15,6 +16,13 @@ class WsDjangoTestCase(TestCase):
     """
     This is a base class for all test cases used to testing the Web Sight Django API.
     """
+
+    def get_default_scan_config(self):
+        """
+        Get one of the default ScanConfig objects found in the database.
+        :return: A default ScanConfig object.
+        """
+        return rest.models.ScanConfig.objects.filter(is_default=True).first()
 
     def get_dns_record_type_for_user(self, user="user_1"):
         """

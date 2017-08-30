@@ -55,6 +55,7 @@ from .organizations import (
 )
 
 from .scans import (
+    check_scan_config_validity,
     DnsRecordTypesByScanConfigView,
     ScanConfigDetailView,
     ScanConfigListView,

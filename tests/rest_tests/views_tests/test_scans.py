@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+from uuid import uuid4
+
 import rest.models
 from tests.rest_tests.mixin import ListTestCaseMixin, PresentableTestCaseMixin, ExporterCustomFieldsMixin, \
     ExporterTestCaseMixin, RetrieveTestCaseMixin, CustomFieldsMixin, ParameterizedRouteMixin,\
@@ -614,3 +616,120 @@ class TestScanPortsByScanConfigView(
     @property
     def response_has_many(self):
         return True
+
+
+class TestCheckScanConfigValidityView(
+    ParameterizedRouteMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for testing the check_scan_config_validity API handler.
+    """
+
+    _api_route = "/scan-configs/%s/is-valid/"
+    _url_parameters = None
+
+    def __send_validity_check(self, user="user_1", input_uuid=None, login=True):
+        """
+        Send an HTTP request to the remote endpoint to check the validity of the referenced
+        ScanConfig.
+        :param input_uuid: The UUID of the order to place.
+        :param user: The user to submit the request on behalf of.
+        :param login: Whether or not to log in.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        if input_uuid is None:
+            scan_config = self.get_scan_config_for_user(user=user)
+            input_uuid = str(scan_config.uuid)
+        self._url_parameters = input_uuid
+        return self.get()
+
+    def test_owned_valid_check_is_valid(self):
+        """
+        Tests to ensure that checking the validity of a valid ScanConfig that the requesting user
+        owns returns the expected is_valid value.
+        :return: None
+        """
+        response = self.__send_validity_check()
+        self.assertTrue(response.json()["is_valid"])
+
+    def test_owned_valid_check_empty_errors(self):
+        """
+        Tests to ensure that checking the validity of a valid ScanConfig that the requesting user
+        owns returns an empty errors array.
+        :return: None
+        """
+        response = self.__send_validity_check()
+        self.assertEquals(len(response.json()["errors"]), 0)
+
+    def test_not_owned_not_found(self):
+        """
+        Tests to ensure that checking the validity of a ScanConfig object that the requesting user
+        (non-admin) does not own returns a not found response.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_2")
+        self.assert_request_not_found(self.__send_validity_check(user="user_1", input_uuid=str(scan_config.uuid)))
+
+    def test_not_authed_fails(self):
+        """
+        Tests to ensure that sending a request to the endpoint without authenticating returns the expected HTTP
+        response status.
+        :return: None
+        """
+        self.assert_request_requires_auth(self.__send_validity_check(login=False))
+
+    def test_unknown_uuid_fails(self):
+        """
+        Tests to ensure that sending a request with a random UUID returns the expected status code.
+        :return: None
+        """
+        self.assert_request_not_found(self.__send_validity_check(input_uuid=str(uuid4())))
+
+    def test_owned_not_valid_is_valid(self):
+        """
+        Tests to ensure that checking the validity of a ScanConfig that the requesting user
+        owns that is not valid returns the expected is_valid value.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        scan_config.network_scan_bandwidth = "0M"
+        scan_config.save()
+        response = self.__send_validity_check(user="user_1", input_uuid=str(scan_config.uuid))
+        scan_config.network_scan_bandwidth = "10M"
+        scan_config.save()
+        self.assertFalse(response.json()["is_valid"])
+
+    def test_owned_not_valid_errors(self):
+        """
+        Tests to ensure that checking the validity of a ScanConfig that the requesting user owns
+        that is not valid returns the expected errors value.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        scan_config.network_scan_bandwidth = "0M"
+        scan_config.save()
+        response = self.__send_validity_check(user="user_1", input_uuid=str(scan_config.uuid))
+        scan_config.network_scan_bandwidth = "10M"
+        scan_config.save()
+        self.assertGreater(len(response.json()["errors"]), 0)
+
+    def test_not_owned_admin_succeeds(self):
+        """
+        Tests to ensure that checking the validity of a ScanConfig that the requesting user (admin)
+        does not own returns the expected status code.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        self.assert_request_succeeds(self.__send_validity_check(user="admin_1", input_uuid=str(scan_config.uuid)))
+
+    def test_default_succeeds(self):
+        """
+        Tests to ensure that checking the validity of one of the default ScanConfig objects
+        returns the expected HTTP response status code.
+        :return: None
+        """
+        scan_config = self.get_default_scan_config()
+        self.assert_request_succeeds(self.__send_validity_check(input_uuid=str(scan_config.uuid)))

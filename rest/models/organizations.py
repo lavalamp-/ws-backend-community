@@ -531,3 +531,6 @@ class ScanPort(BaseWsModel):
         null=True,
     )
 
+    def save(self, *args, **kwargs):
+        self.protocol = self.protocol.lower()
+        return super(ScanPort, self).save(*args, **kwargs)
