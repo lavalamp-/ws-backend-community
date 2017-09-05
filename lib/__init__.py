@@ -24,6 +24,7 @@ from .bootstrap import (
     bootstrap_data_stores,
     bootstrap_django_models,
     bootstrap_nmap_configs,
+    bootstrap_scan_configs,
     bootstrap_zmap_configs,
 )
 

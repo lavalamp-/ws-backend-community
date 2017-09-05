@@ -618,6 +618,74 @@ class TestScanPortsByScanConfigView(
         return True
 
 
+class TestDefaultScanConfigListView(
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for testing the DefaultScanConfigListView API handler.
+    """
+
+    _api_route = "/scan-configs/default/"
+
+    def __send_request(self, user="user_1", login=True):
+        """
+        Send an HTTP request to the remote endpoint to check the validity of the referenced
+        ScanConfig.
+        :param user: The user to submit the request on behalf of.
+        :param login: Whether or not to log in.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        return self.get()
+
+    def test_no_auth_fails(self):
+        """
+        Tests that sending a request to this endpoint without logging in fails.
+        :return: None
+        """
+        self.assert_request_requires_auth(self.__send_request(login=False))
+
+    def test_regular_user_success(self):
+        """
+        Tests that sending a request to this endpoint as a regular user succeeds.
+        :return: None
+        """
+        self.assert_request_succeeds(self.__send_request(user="user_1"))
+
+    def test_admin_user_success(self):
+        """
+        Tests that sending a request to this endpoint as an administrative user succeeds.
+        :return: None
+        """
+        self.assert_request_succeeds(self.__send_request(user="admin_1"))
+
+    def test_response_count(self):
+        """
+        Tests that sending a request to this endpoint returns the expected number of items.
+        :return: None
+        """
+        response = self.__send_request()
+        count = rest.models.ScanConfig.objects.filter(is_default=True).count()
+        self.assertEqual(count, response.json()["count"])
+
+    def test_no_pagination(self):
+        """
+        Tests that the endpoint does not paginate records based on the contents of the default
+        pagination settings.
+        :return: None
+        """
+        new_configs = []
+        new_count = 100
+        for i in range(new_count):
+            new_configs.append(rest.models.ScanConfig.objects.create(is_default=True))
+        total_count = rest.models.ScanConfig.objects.filter(is_default=True).count()
+        response = self.__send_request()
+        for new_config in new_configs:
+            new_config.delete()
+        self.assertEqual(len(response.json()["results"]), total_count)
+
+
 class TestCheckScanConfigValidityView(
     ParameterizedRouteMixin,
     WsDjangoViewTestCase,

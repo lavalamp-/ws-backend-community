@@ -91,6 +91,18 @@ class BaseScanConfigListCreateChildAPIView(WsListCreateChildAPIView):
         return rest.models.ScanConfig
 
 
+class DefaultScanConfigListView(WsListAPIView):
+    """
+    This is a view for retrieving all of the default ScanConfig objects contained within the database.
+    """
+
+    pagination_enabled = False
+    serializer_class = rest.serializers.ScanConfigSerializer
+
+    def get_queryset(self):
+        return rest.models.ScanConfig.objects.filter(is_default=True).all()
+
+
 class DnsRecordTypesByScanConfigView(BaseScanConfigListCreateChildAPIView):
     """
     get:

@@ -8,7 +8,7 @@ import time
 from netaddr import IPNetwork
 from lib import ConfigManager
 
-from lib import WsFaker, RandomHelper, FilesystemHelper, WsIntrospectionHelper
+from lib import WsFaker, RandomHelper, FilesystemHelper, WsIntrospectionHelper, bootstrap_all_database_models
 from wselasticsearch.helper import ElasticsearchHelper
 from .data import WsTestData
 from rest.models import WsUser, Organization, Order
@@ -81,17 +81,6 @@ class WebSightDiscoverRunner(DiscoverRunner):
     # Protected Methods
 
     # Private Methods
-
-    def __add_default_scan_configs(self, count=10):
-        """
-        Create the given number of default ScanConfig objects.
-        :param count: The number of default ScanConfig objects to create.
-        :return: The newly-created ScanConfig objects.
-        """
-        to_return = []
-        for i in range(count):
-            to_return.append(rest.models.ScanConfig.objects.create(is_default=True))
-        return to_return
 
     def __add_domain_name_report_to_domain_name_scan(
             self,
@@ -279,7 +268,7 @@ class WebSightDiscoverRunner(DiscoverRunner):
         """
         for user_string, user_kwargs in WsTestData.USERS.iteritems():
             self.__populate_user(user_string=user_string, user_kwargs=user_kwargs)
-        self.__add_default_scan_configs()
+        bootstrap_all_database_models()
 
     def __populate_domain_name_scans_for_domain_name(self, domain_name=None, user_string=None, count=2):
         """

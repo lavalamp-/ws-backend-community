@@ -368,6 +368,17 @@ class FileHelper(object):
     """
 
     @staticmethod
+    def get_default_scan_configs():
+        """
+        Get a list of JSON dictionaries representing the default ScanConfig objects to populate in the
+        database.
+        :return: A list of JSON dictionaries representing the default ScanConfig objects to populate in the
+        database.
+        """
+        contents = FilesystemHelper.get_file_contents(path=config.files_default_scan_config_path)
+        return json.loads(contents)
+
+    @staticmethod
     def get_dns_record_types():
         """
         Get a list of tuples containing (1) the DNS record type, (2) whether or not to collect data
