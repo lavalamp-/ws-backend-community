@@ -93,6 +93,7 @@ from .mixin import (
     CrawlableMixin,
     DictableMixin,
     ElasticsearchableMixin,
+    JsonSerializableMixin,
     ScrapyItemizableMixin,
     TempFileMixin,
 )

@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from rest_framework.exceptions import ValidationError
 
+from lib import JsonSerializableMixin
 from .base import BaseWsModel
 from .scans import ScanConfig
 from lib import ConfigManager, FilesystemHelper
@@ -503,7 +504,7 @@ class OrganizationNetworkScan(BaseWsModel):
     )
 
 
-class ScanPort(BaseWsModel):
+class ScanPort(BaseWsModel, JsonSerializableMixin):
     """
     This is a class for representing the ports that are being monitored for a given organization.
     """
@@ -531,6 +532,24 @@ class ScanPort(BaseWsModel):
         null=True,
     )
 
+    @staticmethod
+    def from_json(to_parse):
+        return ScanPort.objects.create(
+            port_number=to_parse["port_number"],
+            protocol=to_parse["protocol"],
+            added_by=to_parse["added_by"],
+            included=to_parse["included"],
+            scan_config=to_parse.get("scan_config", None),
+        )
+
     def save(self, *args, **kwargs):
         self.protocol = self.protocol.lower()
         return super(ScanPort, self).save(*args, **kwargs)
+
+    def to_json(self):
+        return {
+            "port_number": self.port_number,
+            "protocol": self.protocol,
+            "added_by": self.added_by,
+            "included": self.included,
+        }

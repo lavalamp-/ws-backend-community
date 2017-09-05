@@ -2,11 +2,15 @@
 from __future__ import absolute_import
 
 from django.db import models
+import json
 
+from lib import JsonSerializableMixin, ConfigManager
 from .base import BaseWsModel
 from .orders import Order
 from .wsuser import WsUser
 from lib import FileHelper, RegexLib
+
+config = ConfigManager.instance()
 
 
 class ScanInvocation(BaseWsModel):
@@ -32,16 +36,32 @@ class ScanConfigManager(models.Manager):
     ScanConfig objects.
     """
 
-    def create(self, **kwargs):
+    def create(self, include_default_dns_record_types=True, include_default_scan_ports=True, **kwargs):
         """
         Create the ScanConfig and all of the necessary related objects.
+        :param include_default_dns_record_types: Whether or not to populate the default DNS record types in the
+        created object.
+        :param include_default_scan_ports: Whether or not to populate the default scan ports in the created
+        object.
         :param kwargs: Keyword arguments to pass to the create method.
         :return: The newly-created ScanConfig object.
         """
         scan_config = super(ScanConfigManager, self).create(**kwargs)
-        self.__create_default_dns_record_types_for_config(scan_config)
-        self.__create_default_scan_ports_for_config(scan_config)
+        if include_default_dns_record_types:
+            self.__create_default_dns_record_types_for_config(scan_config)
+        if include_default_scan_ports:
+            self.__create_default_scan_ports_for_config(scan_config)
         return scan_config
+
+    def write_defaults_to_file(self):
+        """
+        Write the contents of all of the default ScanConfig objects to the ScanConfig JSON file.
+        :return: None
+        """
+        configs = ScanConfig.objects.filter(is_default=True).all()
+        to_write = [x.to_json() for x in configs]
+        with open(config.files_default_scan_config_path, "w+") as f:
+            f.write(json.dumps(to_write))
 
     def __create_default_dns_record_types_for_config(self, scan_config):
         """
@@ -82,7 +102,7 @@ class ScanConfigManager(models.Manager):
         return to_return
 
 
-class ScanConfig(BaseWsModel):
+class ScanConfig(BaseWsModel, JsonSerializableMixin):
     """
     This is a class for representing the configuration options associated with a single scan.
     """
@@ -296,6 +316,55 @@ class ScanConfig(BaseWsModel):
         null=True,
     )
 
+    @staticmethod
+    def from_json(to_parse):
+        from .organizations import ScanPort
+        from .dns import DnsRecordType
+        to_return = ScanConfig.objects.create(
+            include_default_dns_record_types=False,
+            include_default_scan_ports=False,
+            name=to_parse["name"],
+            description=to_parse["description"],
+            is_default=to_parse["is_default"],
+            saved_for_later=to_parse["saved_for_later"],
+            scan_domain_names=to_parse["scan_domain_names"],
+            scan_network_ranges=to_parse["scan_network_ranges"],
+            scan_ip_addresses=to_parse["scan_ip_addresses"],
+            scan_network_services=to_parse["scan_network_services"],
+            scan_ssl_support=to_parse["scan_ssl_support"],
+            dns_enumerate_subdomains=to_parse["dns_enumerate_subdomains"],
+            dns_scan_resolutions=to_parse["dns_scan_resolutions"],
+            network_scan_bandwidth=to_parse["network_scan_bandwidth"],
+            network_inspect_live_hosts=to_parse["network_inspect_live_hosts"],
+            ip_address_geolocate=to_parse["ip_address_geolocate"],
+            ip_address_reverse_hostname=to_parse["ip_address_reverse_hostname"],
+            ip_address_as_data=to_parse["ip_address_as_data"],
+            ip_address_whois_data=to_parse["ip_address_whois_data"],
+            network_service_check_liveness=to_parse["network_service_check_liveness"],
+            network_service_fingerprint=to_parse["network_service_fingerprint"],
+            network_service_inspect_app=to_parse["network_service_inspect_app"],
+            ssl_enumerate_vulns=to_parse["ssl_enumerate_vulns"],
+            ssl_enumerate_cipher_suites=to_parse["ssl_enumerate_cipher_suites"],
+            ssl_retrieve_cert=to_parse["ssl_retrieve_cert"],
+            app_inspect_web_app=to_parse["app_inspect_web_app"],
+            web_app_include_http_on_https=to_parse["web_app_include_http_on_https"],
+            web_app_enum_vhosts=to_parse["web_app_enum_vhosts"],
+            web_app_take_screenshot=to_parse["web_app_take_screenshot"],
+            web_app_do_crawling=to_parse["web_app_do_crawling"],
+            web_app_enum_user_agents=to_parse["web_app_enum_user_agents"],
+        )
+        scan_ports = []
+        for scan_port_json in to_parse["scan_ports"]:
+            scan_port_json["scan_config"] = to_return
+            scan_ports.append(ScanPort.from_json(scan_port_json))
+        to_return.scan_ports = scan_ports
+        dns_record_types = []
+        for dns_record_type_json in to_parse["dns_record_types"]:
+            dns_record_type_json["scan_config"] = to_return
+            dns_record_types.append(DnsRecordType.from_json(dns_record_type_json))
+        to_return.dns_record_types = dns_record_types
+        return to_return
+
     def get_ready_errors(self):
         """
         Get a list of strings describing errors associated with this ScanConfig object that prevent it
@@ -323,6 +392,45 @@ class ScanConfig(BaseWsModel):
                 to_return.append("DNS scanning is enabled but no record types are defined.")
         return to_return
 
+    def to_json(self):
+        """
+        Get a JSON dictionary representing the internal state of this object.
+        :return: A JSON dictionary representing the internal state of this object.
+        """
+        return {
+            "name": self.name,
+            "description": self.description,
+            "is_default": self.is_default,
+            "saved_for_later": self.saved_for_later,
+            "scan_domain_names": self.scan_domain_names,
+            "scan_network_ranges": self.scan_network_ranges,
+            "scan_ip_addresses": self.scan_ip_addresses,
+            "scan_network_services": self.scan_network_services,
+            "scan_ssl_support": self.scan_ssl_support,
+            "dns_enumerate_subdomains": self.dns_enumerate_subdomains,
+            "dns_scan_resolutions": self.dns_scan_resolutions,
+            "network_scan_bandwidth": self.network_scan_bandwidth,
+            "network_inspect_live_hosts": self.network_inspect_live_hosts,
+            "ip_address_geolocate": self.ip_address_geolocate,
+            "ip_address_reverse_hostname": self.ip_address_reverse_hostname,
+            "ip_address_as_data": self.ip_address_as_data,
+            "ip_address_whois_data": self.ip_address_whois_data,
+            "network_service_check_liveness": self.network_service_check_liveness,
+            "network_service_fingerprint": self.network_service_fingerprint,
+            "network_service_inspect_app": self.network_service_inspect_app,
+            "ssl_enumerate_vulns": self.ssl_enumerate_vulns,
+            "ssl_enumerate_cipher_suites": self.ssl_enumerate_cipher_suites,
+            "ssl_retrieve_cert": self.ssl_retrieve_cert,
+            "app_inspect_web_app": self.app_inspect_web_app,
+            "web_app_include_http_on_https": self.web_app_include_http_on_https,
+            "web_app_enum_vhosts": self.web_app_enum_vhosts,
+            "web_app_take_screenshot": self.web_app_take_screenshot,
+            "web_app_do_crawling": self.web_app_do_crawling,
+            "web_app_enum_user_agents": self.web_app_enum_user_agents,
+            "scan_ports": [x.to_json() for x in self.scan_ports.all()],
+            "dns_record_types": [x.to_json() for x in self.dns_record_types.all()],
+        }
+
     @property
     def can_be_modified(self):
         """
@@ -343,3 +451,11 @@ class ScanConfig(BaseWsModel):
         a placed order.
         """
         return len(self.get_ready_errors()) == 0
+
+    def __repr__(self):
+        return "<%s - %s (%s, %s)>" % (
+            self.__class__.__name__,
+            self.uuid,
+            self.name,
+            self.is_default,
+        )

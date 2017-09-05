@@ -662,6 +662,15 @@ class ConfigManager(object):
         return self.__get_string("Files", "files_base_directory")
 
     @property
+    def files_default_scan_config_path(self):
+        """
+        Get the local file path to where the JSON file containing the default ScanConfig objects resides.
+        :return: the local file path to where the JSON file containing the default ScanConfig objects resides.
+        """
+        file_name = self.__get_string("Files", "files_default_scan_configs")
+        return os.path.join(self.files_base_directory, file_name)
+
+    @property
     def files_default_scan_ports_path(self):
         """
         Get the local file path to where the CSV file containing default scanning ports resides.
