@@ -302,13 +302,6 @@ class ScanConfig(BaseWsModel, JsonSerializableMixin):
         related_name="scan_config",
     )
 
-    organization = models.ForeignKey(
-        "rest.Organization",
-        related_name="scan_configs",
-        on_delete=models.CASCADE,
-        null=True,
-    )
-
     user = models.ForeignKey(
         WsUser,
         related_name="scan_configs",
@@ -364,6 +357,13 @@ class ScanConfig(BaseWsModel, JsonSerializableMixin):
             dns_record_types.append(DnsRecordType.from_json(dns_record_type_json))
         to_return.dns_record_types = dns_record_types
         return to_return
+
+    def duplicate(self):
+        """
+        Create and return a duplicate instance of this ScanConfig object.
+        :return: A newly-created duplicate instance of this ScanConfig object.
+        """
+        return ScanConfig.from_json(self.to_json())
 
     def get_ready_errors(self):
         """

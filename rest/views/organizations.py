@@ -5,8 +5,10 @@ import django_filters
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
+from rest_framework.permissions import IsAuthenticated
 
 from lib import FilesystemHelper, get_storage_helper
 from rest.responses import DomainsUploadResponse
@@ -787,3 +789,31 @@ class ScanPortDetailView(ScanPortQuerysetMixin, WsRetrieveDestroyAPIView):
             raise PermissionDenied("The related scanning configuration cannot be modified at this time.")
         else:
             return super(ScanPortDetailView, self).perform_destroy(instance)
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def retrieve_organization_scan_config(request, pk=None):
+    """
+    Retrieve the ScanConfig associated with the referenced organization.
+    :param request: The request received by this API handler.
+    :param pk: The primary key of the organization to retrieve the ScanConfig for.
+    :return: A response containing the ScanConfig associated with the given Organization.
+    """
+    if request.user.is_superuser:
+        query = rest.models.Organization.objects
+    else:
+        query = rest.models.Organization.objects.filter(
+            auth_groups__users=request.user,
+            auth_groups__name="org_read",
+        )
+    try:
+        organization = query.get(pk=pk)
+    except rest.models.Organization.DoesNotExist:
+        raise NotFound()
+    if not organization.scan_config:
+        raise NotFound()
+    else:
+        return_data = rest.serializers.ScanConfigSerializer(organization.scan_config)
+        return Response(return_data.data)

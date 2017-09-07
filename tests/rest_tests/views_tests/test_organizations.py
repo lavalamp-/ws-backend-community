@@ -1210,3 +1210,106 @@ class TestScanPortDetailView(
     @property
     def retrieved_object_class(self):
         return rest.models.ScanPort
+
+
+class TestRetrieveOrganizationScanConfig(
+    ParameterizedRouteMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for testing the retrieve_organization_scan_config function APIView.
+    """
+
+    _api_route = "/organizations/%s/scan-config/"
+    _url_parameters = None
+
+    def __create_organization_for_user(self, user_string="user_1"):
+        user = self.get_user(user=user_string)
+        org = rest.models.Organization.objects.create(name="Name", description="Description")
+        org.add_admin_user(user)
+        org.save()
+        return org
+
+    def __send_request(self, user="user_1", login=True, query_string=None, input_uuid=None):
+        """
+        Send an HTTP request to the configured endpoint and return the response.
+        :param user: A string depicting the user to send the request as.
+        :param login: Whether or not to log in before sending the request.
+        :param query_string: The query string to include in the request.
+        :param input_uuid: The UUID of the organization to request the ScanConfig of.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        self._url_parameters = str(input_uuid)
+        return self.get(query_string=query_string)
+
+    def test_auth_required(self):
+        """
+        Tests that this API endpoint requires authentication for invocation.
+        :return: None
+        """
+        org = self.__create_organization_for_user()
+        response = self.__send_request(login=False, input_uuid=org.uuid)
+        org.delete()
+        self.assert_request_requires_auth(response)
+
+    def test_regular_user_retrieve_owned_succeeds(self):
+        """
+        Tests that requesting the API endpoint for an organization owned by the given user succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        response = self.__send_request(user="user_1", input_uuid=org.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_regular_user_retrieve_not_owned_fails(self):
+        """
+        Tests that requesting the API endpoint for an organization not owned by the given user fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_2")
+        response = self.__send_request(user="user_1", input_uuid=org.uuid)
+        org.delete()
+        self.assert_request_not_found(response)
+
+    def test_retrieve_unknown_uuid_fails(self):
+        """
+        Tests that requesting the API endpoint with a random UUID fails.
+        :return: None
+        """
+        self.assert_request_not_found(self.__send_request(input_uuid=str(uuid4())))
+
+    def test_admin_user_retrieve_owned_succeeds(self):
+        """
+        Tests that requesting the API endpoint as an admin user for an org owned by the given user succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="admin_1")
+        response = self.__send_request(user="admin_1", input_uuid=org.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_admin_user_retrieve_not_owned_succeeds(self):
+        """
+        Tests that requesting the API endpoint as an admin user for an organization not owned by the user
+        succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        response = self.__send_request(user="admin_1", input_uuid=org.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_retrieve_no_scan_config_fails(self):
+        """
+        Tests that requesting the API endpoint as a regular user for an organization that does not have a
+        ScanConfig associated with it fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        org.scan_config.delete()
+        response = self.__send_request(user="user_1", input_uuid=org.uuid)
+        org.delete()
+        self.assert_request_not_found(response)

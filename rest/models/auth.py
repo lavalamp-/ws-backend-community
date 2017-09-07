@@ -5,7 +5,6 @@ from django.conf import settings
 from django.db import models
 
 from .base import BaseWsModel
-from .organizations import Organization
 
 
 class WsAuthGroup(BaseWsModel):
@@ -23,7 +22,7 @@ class WsAuthGroup(BaseWsModel):
     )
 
     organization = models.ForeignKey(
-        Organization,
+        "rest.Organization",
         related_name="auth_groups",
         null=True,
     )

@@ -31,6 +31,7 @@ class OrganizationManager(models.Manager):
         organization.auth_groups.set(self.__create_auth_groups())
         organization.scan_ports.set(self.__create_scan_ports())
         organization.org_config = self.__create_organization_config()
+        organization.scan_config = ScanConfig.objects.create(organization=organization)
         return organization
 
     def __create_auth_groups(self):
@@ -107,6 +108,13 @@ class Organization(BaseWsModel):
     scanning_status = models.CharField(max_length=64, default='off', choices=SCANNING_STATUS_TYPES, null=False, blank=False)
 
     # Foreign Keys
+
+    scan_config = models.OneToOneField(
+        ScanConfig,
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="organization",
+    )
 
     # Class Meta
 
@@ -210,6 +218,18 @@ class Organization(BaseWsModel):
         self.write_group.users.remove(user)
         self.admin_group.users.remove(user)
         self.scan_group.users.remove(user)
+
+    def set_scan_config(self, new_scan_config):
+        """
+        Set the contents of this organization's ScanConfig to the contents of the given ScanConfig.
+        :param new_scan_config: The ScanConfig to set this Organization's default ScanConfig's contents to.
+        :return: None
+        """
+        if self.scan_config:
+            self.scan_config.delete()
+        self.scan_config = new_scan_config.duplicate()
+        self.scan_config.is_default = False
+        self.scan_config.save()
 
     def set_user_permissions(self, user=None, permission_level=None):
         """

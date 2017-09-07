@@ -43,6 +43,7 @@ urlpatterns = [
     url(r'^organizations/(?P<pk>[-\w]+)/networks/?$', views.NetworksByOrganizationView.as_view(), name="orgnetworks-list"),
     url(r'^organizations/(?P<pk>[-\w]+)/domain-names/upload/?$', views.DomainsUploadAPIView.as_view(), name="orgdomainnames-upload"),
     url(r'^organizations/(?P<pk>[-\w]+)/domain-names/?$', views.DomainNamesByOrganizationView.as_view(), name="orgdomainnames-list"),
+    url(r'^organizations/(?P<pk>[-\w]+)/scan-config/?$', views.retrieve_organization_scan_config, name="orgscanconfig-details"),
     # url(r'^organizations/(?P<pk>[-\w]+)/es/web-tech-reports/analytics/?$', views.OrganizationWebTechReportAnalyticsAPIView.as_view(), name="organizationwebtechreport-analytics"),
     # url(r'^organizations/(?P<pk>[-\w]+)/es/web-tech-reports/?$', views.OrganizationWebTechReportListAPIView.as_view(), name="organizationwebtechreport-list"),
     # url(r'^organizations/(?P<pk>[-\w]+)/es/web-transactions/analytics/?$', views.OrganizationWebTransactionAnalyticsAPIView.as_view(), name="organizationwebtransaction-analytics"),
