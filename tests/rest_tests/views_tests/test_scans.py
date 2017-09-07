@@ -30,7 +30,7 @@ class TestScanConfigListView(
         :param query_string: The query string to include in the URL.
         :param login: Whether or not to log the requesting user in.
         :return: The HTTP response.
-                """
+        """
         if login:
             self.login(user=user)
         return self.get(query_string=query_string)
@@ -70,6 +70,33 @@ class TestScanConfigDetailView(
 
     _api_route = "/scan-configs/%s/"
     _url_parameters = None
+
+    def __create_default_scan_config(self):
+        """
+        Create and return a ScanConfig that is configured as default.
+        :return: A ScanConfig configured as a default ScanConfig.
+        """
+        to_return = rest.models.ScanConfig.objects.create()
+        to_return.is_default = True
+        to_return.save()
+        return to_return
+
+    def __send_delete_request(self, user="user_1", login=True, query_string=None, input_uuid="POPULATE"):
+        """
+        Send a delete request to the API endpoint and return the response.
+        :param user: The user to submit the request as.
+        :param login: Whether or not to log the user in prior to sending the request.
+        :param query_string: The query string to submit alongside the URL.
+        :param input_uuid: The UUID of the organization to delete.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        if input_uuid == "POPULATE":
+            order = self.get_scan_config_for_user(user=user)
+            input_uuid = str(order.uuid)
+        self._url_parameters = str(input_uuid)
+        return self.delete(query_string=query_string)
 
     def __send_retrieve_request(self, user="user_1", query_string=None, login=True, input_uuid="POPULATE"):
         """
@@ -315,6 +342,61 @@ class TestScanConfigDetailView(
             to_send["web_app_enum_user_agents"] = web_app_enum_user_agents
         return self.patch(query_string=query_string, data=to_send)
 
+    def test_delete_regular_user_fails(self):
+        """
+        Tests that attempting to delete a ScanConfig as a default user fails.
+        :return: None
+        """
+        self.assert_request_not_authorized(self.__send_delete_request(user="user_1"))
+
+    def test_delete_regular_user_is_default_fails(self):
+        """
+        Tests that attempting to delete a default ScanConfig as a regular user fails.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_delete_request(user="user_1", input_uuid=default_config.uuid)
+        default_config.delete()
+        self.assert_request_not_authorized(response)
+
+    def test_delete_used_config_admin_user_fails(self):
+        """
+        Tests that attempting to delete a ScanConfig that is associated with an order that has already been
+        placed as an admin user fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        scan_config.order.has_been_placed = True
+        scan_config.order.save()
+        response = self.__send_delete_request(input_uuid=str(scan_config.uuid), user="admin_1")
+        scan_config.order.has_been_placed = False
+        scan_config.order.save()
+        self.assert_request_not_authorized(response)
+
+    def test_delete_is_default_admin_user_succeeds(self):
+        """
+        Tests that attempting to delete a default ScanConfig as an administrative user succeeds.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        self.assert_request_succeeds(self.__send_delete_request(
+            user="admin_1",
+            input_uuid=default_config.uuid),
+            status_code=204,
+        )
+
+    def test_delete_is_default_admin_user_deletes(self):
+        """
+        Tests that attempting to delete a default ScanConfig as an administrative user successfully deletes
+        the ScanConfig.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        first_count = rest.models.ScanConfig.objects.count()
+        self.__send_delete_request(user="admin_1", input_uuid=default_config.uuid)
+        second_count = rest.models.ScanConfig.objects.count()
+        self.assertEqual(first_count, second_count + 1)
+
     def test_update_not_owned_regular_fails(self):
         """
         Tests that attempting to update a ScanConfig that you do not own as a non-admin user
@@ -345,6 +427,8 @@ class TestScanConfigDetailView(
         scan_config.order.has_been_placed = True
         scan_config.order.save()
         response = self.__send_update_request(input_uuid=str(scan_config.uuid), user="user_1")
+        scan_config.order.has_been_placed = False
+        scan_config.order.save()
         self.assert_request_not_authorized(response)
 
     @property
@@ -400,6 +484,16 @@ class TestDnsRecordTypesByScanConfigView(
         scan_config = self.get_scan_config_for_user()
         scan_config.dns_record_types.all().delete()
         super(TestDnsRecordTypesByScanConfigView, self).test_create_creates_object()
+
+    def __create_default_scan_config(self):
+        """
+        Create and return a ScanConfig that is configured as default.
+        :return: A ScanConfig configured as a default ScanConfig.
+        """
+        to_return = rest.models.ScanConfig.objects.create()
+        to_return.is_default = True
+        to_return.save()
+        return to_return
 
     def __send_create_request(
             self,
@@ -474,6 +568,63 @@ class TestDnsRecordTypesByScanConfigView(
         )
         self.assert_request_fails(response)
 
+    def test_regular_user_create_is_default_fails(self):
+        """
+        Tests to ensure that a regular user attempting to create a new child for a ScanConfig that is
+        marked as is_default fails.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_create_request(user="user_1", input_uuid=default_config.uuid, query_string="foo=bar")
+        default_config.delete()
+        self.assert_request_not_authorized(response)
+
+    def test_create_not_owned_fails(self):
+        """
+        Tests to ensure that a regular user attemping to create a new child for a ScanConfig that they
+        do not own fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_2")
+        self.assert_request_not_found(self.__send_create_request(user="user_1", input_uuid=scan_config.uuid))
+
+    def test_create_cant_be_modified_fails(self):
+        """
+        Tests to ensure that a regular user attempting to create a new child for a ScanConfig that is associated
+        with an order that has already been placed fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        scan_config.order.has_been_placed = True
+        scan_config.order.save()
+        response = self.__send_create_request(input_uuid=str(scan_config.uuid), user="user_1")
+        scan_config.order.has_been_placed = False
+        scan_config.order.save()
+        self.assert_request_not_authorized(response)
+
+    def test_admin_create_not_owned_succeeds(self):
+        """
+        Tests that attempting to create a new child as an admin for a ScanConfig that the user does not own
+        succeeds.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        self.assert_request_succeeds(
+            self.__send_create_request(user="admin_1", input_uuid=scan_config.uuid),
+            status_code=201,
+        )
+
+    def test_admin_create_is_default_succeeds(self):
+        """
+        Tests that attempting to create a new child for a ScanConfig that is marked as is_default as an
+        admin user succeeds.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_create_request(user="admin_1", input_uuid=default_config.uuid)
+        default_config.delete()
+        self.assert_request_succeeds(response, status_code=201)
+
     @property
     def create_method(self):
         return self.__send_create_request
@@ -518,6 +669,16 @@ class TestScanPortsByScanConfigView(
 
     _api_route = "/scan-configs/%s/scan-ports/"
     _url_parameters = None
+
+    def __create_default_scan_config(self):
+        """
+        Create and return a ScanConfig that is configured as default.
+        :return: A ScanConfig configured as a default ScanConfig.
+        """
+        to_return = rest.models.ScanConfig.objects.create()
+        to_return.is_default = True
+        to_return.save()
+        return to_return
 
     def __send_create_request(
             self,
@@ -588,6 +749,63 @@ class TestScanPortsByScanConfigView(
             protocol=scan_port.protocol,
         )
         self.assert_request_fails(response)
+
+    def test_regular_user_create_is_default_fails(self):
+        """
+        Tests to ensure that a regular user attempting to create a new child for a ScanConfig that is
+        marked as is_default fails.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_create_request(user="user_1", input_uuid=default_config.uuid, query_string="foo=bar")
+        default_config.delete()
+        self.assert_request_not_authorized(response)
+
+    def test_create_not_owned_fails(self):
+        """
+        Tests to ensure that a regular user attemping to create a new child for a ScanConfig that they
+        do not own fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_2")
+        self.assert_request_not_found(self.__send_create_request(user="user_1", input_uuid=scan_config.uuid))
+
+    def test_create_cant_be_modified_fails(self):
+        """
+        Tests to ensure that a regular user attempting to create a new child for a ScanConfig that is associated
+        with an order that has already been placed fails.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        scan_config.order.has_been_placed = True
+        scan_config.order.save()
+        response = self.__send_create_request(input_uuid=str(scan_config.uuid), user="user_1")
+        scan_config.order.has_been_placed = False
+        scan_config.order.save()
+        self.assert_request_not_authorized(response)
+
+    def test_admin_create_not_owned_succeeds(self):
+        """
+        Tests that attempting to create a new child as an admin for a ScanConfig that the user does not own
+        succeeds.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        self.assert_request_succeeds(
+            self.__send_create_request(user="admin_1", input_uuid=scan_config.uuid),
+            status_code=201,
+        )
+
+    def test_admin_create_is_default_succeeds(self):
+        """
+        Tests that attempting to create a new child for a ScanConfig that is marked as is_default as an
+        admin user succeeds.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_create_request(user="admin_1", input_uuid=default_config.uuid)
+        default_config.delete()
+        self.assert_request_succeeds(response, status_code=201)
 
     @property
     def create_method(self):

@@ -300,7 +300,7 @@ class ListChildMixin(BaseAPIViewMixin):
     def paginate_queryset(self, queryset):
         if not self.pagination_enabled:
             self.paginator.page_size = 10000
-        return super(ListMixin, self).paginate_queryset(queryset)
+        return super(ListChildMixin, self).paginate_queryset(queryset)
 
     # Protected Methods
 

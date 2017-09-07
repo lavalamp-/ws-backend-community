@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 
@@ -82,15 +83,8 @@ class DnsRecordTypeQuerysetMixin(object):
     def _get_user_queryset(self):
         return rest.models.DnsRecordType.objects\
             .filter(
-                scan_config__order__organization__auth_groups__users=self.request.user,
-                scan_config__order__organization__auth_groups__name="org_read",
+                Q(scan_config__user=self.request.user) | Q(scan_config__is_default=True)
             ).all()
-
-    def perform_destroy(self, instance):
-        if not instance.scan_config.can_be_modified:
-            raise PermissionDenied("The related scanning configuration cannot be modified at this time.")
-        else:
-            return super(DnsRecordTypeQuerysetMixin, self).perform_destroy(instance)
 
 
 class DnsRecordTypeListView(DnsRecordTypeQuerysetMixin, WsListAPIView):
@@ -108,3 +102,11 @@ class DnsRecordTypeDetailView(DnsRecordTypeQuerysetMixin, WsRetrieveDestroyAPIVi
     delete:
     Delete a specific DnsRecordType.
     """
+
+    def perform_destroy(self, instance):
+        if instance.scan_config.is_default and not self.request.user.is_superuser:
+            raise PermissionDenied()
+        elif not instance.scan_config.can_be_modified:
+            raise PermissionDenied("The related scanning configuration cannot be modified at this time.")
+        else:
+            return super(DnsRecordTypeQuerysetMixin, self).perform_destroy(instance)

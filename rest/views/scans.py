@@ -9,7 +9,7 @@ from rest_framework.generics import get_object_or_404
 import rest.models
 import rest.serializers
 import rest.responses
-from .base import WsListAPIView, WsRetrieveUpdateAPIView, WsListCreateChildAPIView
+from .base import WsListAPIView, WsRetrieveUpdateAPIView, WsListCreateChildAPIView, WsRetrieveUpdateDestroyAPIView
 
 
 class ScanConfigQuerysetMixin(object):
@@ -21,7 +21,9 @@ class ScanConfigQuerysetMixin(object):
     serializer_class = rest.serializers.ScanConfigSerializer
 
     def _get_user_queryset(self):
-        return self.request.user.scan_configs.all()
+        return rest.models.ScanConfig.objects.filter(
+            Q(user=self.request.user) | Q(is_default=True)
+        ).all()
 
     def _get_su_queryset(self):
         return rest.models.ScanConfig.objects.all()
@@ -33,7 +35,7 @@ class ScanConfigListView(ScanConfigQuerysetMixin, WsListAPIView):
     """
 
 
-class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveUpdateAPIView):
+class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveUpdateDestroyAPIView):
     """
     get:
     Get a specific scan configuration object.
@@ -43,16 +45,26 @@ class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveUpdateAPIView):
 
     def check_permissions(self, request):
         super(ScanConfigDetailView, self).check_permissions(request)
-        if (not self.scan_config.order or self.scan_config.order.user != request.user) \
-                and not request.user.is_superuser:
+        if not self.scan_config.is_default and \
+                (self.scan_config.order.user != request.user and not request.user.is_superuser):
             raise NotFound()
 
     def initial(self, request, *args, **kwargs):
         self._scan_config = None
         return super(ScanConfigDetailView, self).initial(request, *args, **kwargs)
 
+    def perform_destroy(self, instance):
+        if not self.scan_config.is_default:
+            raise PermissionDenied()
+        elif not self.request.user.is_superuser:
+            raise PermissionDenied()
+        else:
+            return super(ScanConfigDetailView, self).perform_destroy(instance)
+
     def perform_update(self, serializer):
-        if not self.scan_config.can_be_modified:
+        if self.scan_config.is_default and not self.request.user.is_superuser:
+            raise PermissionDenied()
+        elif not self.scan_config.can_be_modified:
             raise PermissionDenied("That scan configuration cannot be modified.")
         else:
             return super(ScanConfigDetailView, self).perform_update(serializer)
@@ -68,15 +80,29 @@ class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveUpdateAPIView):
         return self._scan_config
 
 
+class DefaultScanConfigListView(WsListAPIView):
+    """
+    This is a view for retrieving all of the default ScanConfig objects contained within the database.
+    """
+
+    pagination_enabled = False
+    serializer_class = rest.serializers.ScanConfigSerializer
+
+    def get_queryset(self):
+        return rest.models.ScanConfig.objects.filter(is_default=True).all()
+
+
 class BaseScanConfigListCreateChildAPIView(WsListCreateChildAPIView):
     """
     This is a base class for all views that intend to query or create children for a ScanConfig
     object.
     """
 
-    def check_object_permissions(self, request, obj):
-        super(BaseScanConfigListCreateChildAPIView, self).check_object_permissions(request, obj)
-        if (not self.parent_object.order or self.parent_object.order.user != request.user) \
+    def check_permissions(self, request):
+        super(BaseScanConfigListCreateChildAPIView, self).check_permissions(request)
+        if self.parent_object.is_default and not request.user.is_superuser:
+            raise PermissionDenied()
+        elif (not self.parent_object.order or self.parent_object.order.user != request.user) \
                 and not request.user.is_superuser:
             raise NotFound()
 
@@ -89,18 +115,6 @@ class BaseScanConfigListCreateChildAPIView(WsListCreateChildAPIView):
     @property
     def parent_class(self):
         return rest.models.ScanConfig
-
-
-class DefaultScanConfigListView(WsListAPIView):
-    """
-    This is a view for retrieving all of the default ScanConfig objects contained within the database.
-    """
-
-    pagination_enabled = False
-    serializer_class = rest.serializers.ScanConfigSerializer
-
-    def get_queryset(self):
-        return rest.models.ScanConfig.objects.filter(is_default=True).all()
 
 
 class DnsRecordTypesByScanConfigView(BaseScanConfigListCreateChildAPIView):
@@ -170,10 +184,7 @@ def check_scan_config_validity(request, pk=None):
         else:
             query = rest.models.ScanConfig.objects\
                 .filter(
-                    Q(
-                        order__organization__auth_groups__users=request.user,
-                        order__organization__auth_groups__name="org_read",
-                    ) | Q(is_default=True)
+                    Q(user=request.user) | Q(is_default=True)
                 )
         scan_config = query.get(pk=pk)
     except rest.models.ScanConfig.DoesNotExist:

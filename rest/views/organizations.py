@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 import django_filters
+from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
@@ -758,17 +759,9 @@ class ScanPortQuerysetMixin(object):
         return rest.models.ScanPort.objects.all()
 
     def _get_user_queryset(self):
-        return rest.models.ScanPort.objects\
-            .filter(
-                scan_config__order__organization__auth_groups__users=self.request.user,
-                scan_config__order__organization__auth_groups__name="org_read",
-            ).all()
-
-    def perform_destroy(self, instance):
-        if not instance.scan_config.can_be_modified:
-            raise PermissionDenied("The related scanning configuration cannot be modified at this time.")
-        else:
-            return super(ScanPortQuerysetMixin, self).perform_destroy(instance)
+        return rest.models.ScanPort.objects.filter(
+            Q(scan_config__user=self.request.user) | Q(scan_config__is_default=True)
+        ).all()
 
 
 class ScanPortListView(ScanPortQuerysetMixin, WsListAPIView):
@@ -786,3 +779,11 @@ class ScanPortDetailView(ScanPortQuerysetMixin, WsRetrieveDestroyAPIView):
     delete:
     Delete a specific ScanPort.
     """
+
+    def perform_destroy(self, instance):
+        if instance.scan_config.is_default and not self.request.user.is_superuser:
+            raise PermissionDenied()
+        elif not instance.scan_config.can_be_modified:
+            raise PermissionDenied("The related scanning configuration cannot be modified at this time.")
+        else:
+            return super(ScanPortDetailView, self).perform_destroy(instance)

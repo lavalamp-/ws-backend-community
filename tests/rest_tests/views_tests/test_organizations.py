@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from uuid import uuid4
 from django.db import IntegrityError
 from mock import MagicMock
+from django.db.models import Q
 
 import rest.models
 from lib import WsFaker
@@ -1011,11 +1012,9 @@ class TestScanPortListView(
         """
         response = self.__send_list_request(user="user_1")
         user = self.get_user(user="user_1")
-        total_count = rest.models.ScanPort.objects\
-            .filter(
-                scan_config__order__organization__auth_groups__users=user,
-                scan_config__order__organization__auth_groups__name="org_read",
-            ).count()
+        total_count = rest.models.ScanPort.objects.filter(
+            Q(scan_config__user=user) | Q(scan_config__is_default=True)
+        ).count()
         self.assertEqual(response.json()["count"], total_count)
 
     def test_admin_user_list(self):
@@ -1068,6 +1067,16 @@ class TestScanPortDetailView(
         scan_config = self.get_scan_config_for_user(user=user)
         return scan_config.scan_ports.create(**WsFaker.get_scan_port_kwargs())
 
+    def __create_default_scan_config(self):
+        """
+        Create and return a ScanConfig that is configured as default.
+        :return: A ScanConfig configured as a default ScanConfig.
+        """
+        to_return = rest.models.ScanConfig.objects.create()
+        to_return.is_default = True
+        to_return.save()
+        return to_return
+
     def __send_delete_request(self, user="user_1", login=True, query_string=None, input_uuid="POPULATE"):
         """
         Send a delete request to the API endpoint and return the response.
@@ -1101,6 +1110,74 @@ class TestScanPortDetailView(
             input_uuid = str(order.uuid)
         self._url_parameters = input_uuid
         return self.get(query_string=query_string)
+
+    def test_delete_regular_is_default_fails(self):
+        """
+        Tests that attempting to delete a ScanPort from an is_default ScanConfig as a regular user fails.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_delete_request(user="user_1", input_uuid=default_config.scan_ports.first().uuid)
+        default_config.delete()
+        self.assert_request_not_authorized(response)
+
+    def test_delete_admin_is_default_succeeds(self):
+        """
+        Tests that attempting to delete a ScanPort from an is_default ScanConfig as an admin user succeeds.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_delete_request(user="admin_1", input_uuid=default_config.scan_ports.first().uuid)
+        default_config.delete()
+        self.assert_request_succeeds(response, status_code=204)
+
+    def test_retrieve_regular_is_default_succeeds(self):
+        """
+        Tests that attempting to retrieve a ScanPort from an is_default ScanConfig as a regular user succeeds.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_retrieve_request(user="user_1", input_uuid=default_config.scan_ports.first().uuid)
+        default_config.delete()
+        self.assert_request_succeeds(response)
+
+    def test_retrieve_admin_is_default_succeeds(self):
+        """
+        Tests that attempting to retrieve a ScanPort from an is_default ScanConfig as an admin user succeeds.
+        :return: None
+        """
+        default_config = self.__create_default_scan_config()
+        response = self.__send_retrieve_request(user="admin_1", input_uuid=default_config.scan_ports.first().uuid)
+        default_config.delete()
+        self.assert_request_succeeds(response)
+
+    def test_regular_user_delete_cant_be_modified_fails(self):
+        """
+        Tests that attempting to delete a ScanPort from a ScanConfig that the requesting user owns as a regular
+        user fails when the ScanConfig cannot be modified.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        scan_config.order.has_been_placed = True
+        scan_config.order.save()
+        response = self.__send_delete_request(input_uuid=scan_config.scan_ports.first().uuid, user="user_1")
+        scan_config.order.has_been_placed = False
+        scan_config.order.save()
+        self.assert_request_not_authorized(response)
+
+    def test_admin_user_delete_cant_be_modified_fails(self):
+        """
+        Tests that attempting to delete a ScanPort from a ScanConfig that the requesting user owns as an admin
+        user fails when the ScanConfig cannot be modified.
+        :return: None
+        """
+        scan_config = self.get_scan_config_for_user(user="admin_1")
+        scan_config.order.has_been_placed = True
+        scan_config.order.save()
+        response = self.__send_delete_request(input_uuid=scan_config.scan_ports.first().uuid, user="admin_1")
+        scan_config.order.has_been_placed = False
+        scan_config.order.save()
+        self.assert_request_not_authorized(response)
 
     @property
     def custom_fields_field(self):

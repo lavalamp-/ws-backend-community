@@ -18,7 +18,7 @@ class PaginationSerializer(object):
             results=None,
             count=None,
             current_page=None,
-            page_size=None,
+            page_size=api_settings.PAGE_SIZE,
     ):
         self.results = results
         self.count = count

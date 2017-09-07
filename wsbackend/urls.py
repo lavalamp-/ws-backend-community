@@ -92,6 +92,7 @@ urlpatterns = [
     url(r'^admin/manage-users/enable-disable/?$', views.AdminManageUsersEnableDisableView.as_view()),
     url(r'^admin/manage-users/delete-user/?$', views.AdminManageUsersDeleteUserView.as_view()),
     url(r'^admin/manage-users/resend-verification-email/?$', views.AdminManageUsersResendVerificationEmailView.as_view()),
+    url(r'^admin/scan-configs/default/?$', views.AdminDefaultScanConfigListCreateView.as_view(), name="admindefaultscanconfig-list"),
 
     # Network URLs
 

@@ -11,12 +11,7 @@ from .auth import (
     WsCheckAuthTokenStatus
 )
 
-from .admin import (
-    AdminManageUsersView,
-    AdminManageUsersEnableDisableView,
-    AdminManageUsersDeleteUserView,
-    AdminManageUsersResendVerificationEmailView
-)
+from .admin import *
 
 from .dns import (
     DomainNameDetailView,
