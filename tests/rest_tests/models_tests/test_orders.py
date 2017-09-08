@@ -103,15 +103,6 @@ class OrderTestCase(BaseWebSightModelTestCase):
         new_order = self.create_instance(user=user, organization=org)
         self.assertEqual(new_order.scan_config.order, new_order)
 
-    def test_create_scan_config_organization(self):
-        """
-        Tests that creating an order associates the order with the proper organization.
-        :return: None
-        """
-        user, org = self.__get_default_user_and_org()
-        new_order = self.create_instance(user=user, organization=org)
-        self.assertEqual(new_order.scan_config.organization, org)
-
     def test_create_scan_config_user(self):
         """
         Tests that creating an order associates the order with the proper user.

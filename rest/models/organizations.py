@@ -32,6 +32,7 @@ class OrganizationManager(models.Manager):
         organization.scan_ports.set(self.__create_scan_ports())
         organization.org_config = self.__create_organization_config()
         organization.scan_config = ScanConfig.objects.create(organization=organization)
+        organization.save()
         return organization
 
     def __create_auth_groups(self):

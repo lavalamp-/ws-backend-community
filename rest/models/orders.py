@@ -30,11 +30,16 @@ class OrderManager(models.Manager):
         to_return = super(OrderManager, self).create(*args, **kwargs)
         organization = kwargs.get("organization", None)
         user = kwargs.get("user", None)
-        to_return.scan_config = ScanConfig.objects.create(
-            order=to_return,
-            organization=organization,
-            user=user,
-        )
+        if organization:
+            to_return.scan_config = organization.scan_config.duplicate()
+            to_return.scan_config.user = user
+            to_return.scan_config.save()
+        else:
+            to_return.scan_config = ScanConfig.objects.create(
+                order=to_return,
+                organization=organization,
+                user=user,
+            )
         return to_return
 
     def create_from_user_and_organization(self, user=None, organization=None):

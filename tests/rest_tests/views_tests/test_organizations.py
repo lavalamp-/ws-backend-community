@@ -1013,7 +1013,12 @@ class TestScanPortListView(
         response = self.__send_list_request(user="user_1")
         user = self.get_user(user="user_1")
         total_count = rest.models.ScanPort.objects.filter(
-            Q(scan_config__user=user) | Q(scan_config__is_default=True)
+            Q(scan_config__user=user) |
+            Q(scan_config__is_default=True) |
+            Q(
+                scan_config__organization__auth_groups__users=user,
+                scan_config__organization__auth_groups__name="org_read",
+            )
         ).count()
         self.assertEqual(response.json()["count"], total_count)
 
