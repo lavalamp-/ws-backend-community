@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from rest_framework import serializers
 from csv import reader, DictReader
 
+from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from rest.models import Organization, DomainName, Network, ScanPort
@@ -204,3 +205,11 @@ class ScanPortSerializer(WsBaseModelSerializer):
                 fields=("scan_config", "port_number", "protocol"),
             )
         ]
+
+
+class SetScanPortSerializer(serializers.Serializer):
+    """
+    This is a serializer for the request body to the set ScanConfig API handler.
+    """
+
+    scan_config = serializers.UUIDField(required=True)

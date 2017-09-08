@@ -1313,3 +1313,215 @@ class TestRetrieveOrganizationScanConfig(
         response = self.__send_request(user="user_1", input_uuid=org.uuid)
         org.delete()
         self.assert_request_not_found(response)
+
+
+class TestSetOrganizationScanConfig(
+    ParameterizedRouteMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for testing the set_organization_scan_config function APIView.
+    """
+
+    _api_route = "/organizations/%s/scan-config/set/"
+    _url_parameters = None
+
+    def __create_organization_for_user(self, user_string="user_1"):
+        user = self.get_user(user=user_string)
+        org = rest.models.Organization.objects.create(name="Name", description="Description")
+        org.add_admin_user(user)
+        org.save()
+        return org
+
+    def __send_set_request(
+            self,
+            user="user_1",
+            login=True,
+            query_string=None,
+            scan_config_uuid=None,
+            org_uuid=None,
+            include_scan_config_uuid=True,
+    ):
+        """
+        Send a request to the API endpoint and return the response.
+        :param user: A string depicting the user to send the request as.
+        :param login: Whether or not to log in before sending the request.
+        :param query_string: The query string to include in the request.
+        :param scan_config_uuid: The UUID of the ScanConfig to set the organization's ScanConfig to.
+        :param org_uuid: The UUID of the organization to set the ScanConfig of.
+        :param include_scan_config_uuid: Whether or not to include the ScanConfig UUID in the request.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        to_send = {}
+        if include_scan_config_uuid:
+            to_send["scan_config"] = str(scan_config_uuid)
+        self._url_parameters = str(org_uuid)
+        return self.post(query_string=query_string, data=to_send)
+
+    def test_regular_user_set_owned_config_success_status(self):
+        """
+        Tests that submitting a set request to a ScanConfig available to the requesting user succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = self.get_default_scan_config()
+        response = self.__send_set_request(user="user_1", org_uuid=org.uuid, scan_config_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_regular_user_set_owned_config_sets(self):
+        """
+        Tests that submitting a set request to the ScanConfig available to the requesting user successfully
+        sets the ScanConfig for the organization.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = self.get_default_scan_config()
+        response = self.__send_set_request(user="user_1", org_uuid=org.uuid, scan_config_uuid=scan_config.uuid)
+        org.delete()
+        self.assertEqual(response.json()["name"], scan_config.name)
+
+    def test_regular_user_not_owned_org_fails(self):
+        """
+        Tests that submitting a set request for an organization that the requesting regular user does not have
+        permissions for fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_2")
+        scan_config = self.get_default_scan_config()
+        response = self.__send_set_request(user="user_1", org_uuid=org.uuid, scan_config_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_not_found(response)
+
+    def test_regular_user_unknown_org_fails(self):
+        """
+        Tests that submitting a set request with a random organization UUID fails.
+        :return: None
+        """
+        scan_config = self.get_default_scan_config()
+        self.assert_request_not_found(self.__send_set_request(
+            user="user_1",
+            org_uuid=str(uuid4()),
+            scan_config_uuid=scan_config.uuid,
+        ))
+
+    def test_admin_user_not_owned_org_succeeds(self):
+        """
+        Tests that submitting a set request on behalf of an administrative user for an organization they do
+        not own succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = self.get_default_scan_config()
+        response = self.__send_set_request(user="admin_1", scan_config_uuid=scan_config.uuid, org_uuid=org.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_regular_user_not_admin_role_fails(self):
+        """
+        Tests that submitting a set request on behalf of a regular user that does not have administrative
+        permissions for the organization fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        user = self.get_user(user="user_1")
+        org.set_user_permissions(user=user, permission_level="scan")
+        scan_config = self.get_default_scan_config()
+        response = self.__send_set_request(user="user_1", org_uuid=org.uuid, scan_config_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_not_found(response)
+
+    def test_no_scan_config_uuid_fails(self):
+        """
+        Tests that submitting a request and omitting a ScanConfig UUID fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user()
+        response = self.__send_set_request(org_uuid=org.uuid, include_scan_config_uuid=False, query_string="FOO=BAR")
+        org.delete()
+        self.assert_request_fails(response)
+
+    def test_empty_scan_config_uuid_fails(self):
+        """
+        Tests that submitting a request with an empty ScanConfig UUID fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user()
+        response = self.__send_set_request(org_uuid=org.uuid, scan_config_uuid=None)
+        org.delete()
+        self.assert_request_fails(response)
+
+    def test_unknown_scan_config_uuid_fails(self):
+        """
+        Tests that submitting a request with a random UUID for the ScanConfig fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user()
+        response = self.__send_set_request(org_uuid=org.uuid, scan_config_uuid=str(uuid4()))
+        org.delete()
+        self.assert_request_not_found(response)
+
+    def test_set_scan_config_is_default_regular_user_succeeds(self):
+        """
+        Tests that submitting a request as a regular user to set from a ScanConfig that is_default succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = self.get_default_scan_config()
+        response = self.__send_set_request(user="user_1", org_uuid=org.uuid, scan_config_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_set_scan_config_is_owned_regular_user_succeeds(self):
+        """
+        Tests that submitting a request as a regular user to set from a ScanConfig that is attached to the
+        requesting user succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = self.get_scan_config_for_user(user="user_1")
+        response = self.__send_set_request(user="user_1", org_uuid=org.uuid, scan_config_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_set_scan_config_org_assoc_regular_user_succeeds(self):
+        """
+        Tests that submitting a request as a regular user to set from a ScanConfig that is associated with
+        an organization that the requesting user has read permissions on succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        response = self.__send_set_request(user="user_1", org_uuid=org.uuid, scan_config_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_set_scan_config_not_owned_regular_user_fails(self):
+        """
+        Tests that submitting a request as a regular user to set from a ScanConfig that they do not have
+        permissions for fails.
+        :return: None
+        """
+        user_org = self.__create_organization_for_user(user_string="user_1")
+        other_org = self.__create_organization_for_user(user_string="user_2")
+        scan_config = other_org.scan_config
+        response = self.__send_set_request(user="user_1", org_uuid=user_org.uuid, scan_config_uuid=scan_config.uuid)
+        user_org.delete()
+        other_org.delete()
+        self.assert_request_not_found(response)
+
+    def test_set_scan_config_not_owned_admin_user_succeeds(self):
+        """
+        Tests that submitting a request as an administrative user to set from a ScanConfig that they do not have
+        ownership of succeeds.
+        :return: None
+        """
+        user_org = self.__create_organization_for_user(user_string="user_1")
+        other_org = self.__create_organization_for_user(user_string="user_2")
+        scan_config = other_org.scan_config
+        response = self.__send_set_request(user="admin_1", org_uuid=user_org.uuid, scan_config_uuid=scan_config.uuid)
+        user_org.delete()
+        other_org.delete()
+        self.assert_request_succeeds(response)

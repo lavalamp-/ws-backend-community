@@ -31,6 +31,7 @@ from .organizations import (
     OrganizationNetworkUploadRangeSerializer,
     OrganizationDomainNameUploadRangeSerializer,
     ScanPortSerializer,
+    SetScanPortSerializer,
 )
 
 from .services import (

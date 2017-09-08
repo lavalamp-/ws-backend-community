@@ -817,3 +817,43 @@ def retrieve_organization_scan_config(request, pk=None):
     else:
         return_data = rest.serializers.ScanConfigSerializer(organization.scan_config)
         return Response(return_data.data)
+
+
+@api_view(["POST"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def set_organization_scan_config(request, pk=None):
+    """
+    Set the ScanConfig contents for the given organization.
+    :param request: The request received by this API handler.
+    :param pk: The primary key of the organization to retrieve the ScanConfig for.
+    :return: A response containing the ScanConfig associated with the given Organization.
+    """
+    if request.user.is_superuser:
+        query = rest.models.Organization.objects
+    else:
+        query = rest.models.Organization.objects.filter(
+            auth_groups__users=request.user,
+            auth_groups__name="org_admin",
+        )
+    try:
+        organization = query.get(pk=pk)
+    except rest.models.Organization.DoesNotExist:
+        raise NotFound()
+    serializer = rest.serializers.SetScanPortSerializer(data=request.POST)
+    serializer.is_valid(raise_exception=True)
+    config_uuid = serializer.data["scan_config"]
+    if request.user.is_superuser:
+        query = rest.models.ScanConfig.objects
+    else:
+        query = rest.models.ScanConfig.objects.filter(
+            Q(user=request.user) |
+            Q(is_default=True) |
+            Q(organization__auth_groups__users=request.user, organization__auth_groups__name="org_read")
+        )
+    try:
+        scan_config = query.get(pk=config_uuid)
+    except rest.models.ScanConfig.DoesNotExist:
+        raise NotFound("No scanning configuration was found for that UUID")
+    organization.set_scan_config(scan_config)
+    return Response(rest.serializers.ScanConfigSerializer(organization.scan_config).data)
