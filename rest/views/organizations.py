@@ -762,7 +762,12 @@ class ScanPortQuerysetMixin(object):
 
     def _get_user_queryset(self):
         return rest.models.ScanPort.objects.filter(
-            Q(scan_config__user=self.request.user) | Q(scan_config__is_default=True)
+            Q(scan_config__user=self.request.user) |
+            Q(scan_config__is_default=True) |
+            Q(
+                scan_config__organization__auth_groups__users=self.request.user,
+                scan_config__organization__auth_groups__name="org_read",
+            )
         ).all()
 
 
@@ -785,6 +790,12 @@ class ScanPortDetailView(ScanPortQuerysetMixin, WsRetrieveDestroyAPIView):
     def perform_destroy(self, instance):
         if instance.scan_config.is_default and not self.request.user.is_superuser:
             raise PermissionDenied()
+        elif hasattr(instance.scan_config, "organization"):
+            if self.request.user not in instance.scan_config.organization.admin_group.users.all() \
+                    and not self.request.user.is_superuser:
+                raise PermissionDenied(
+                    "You do not have sufficient permissions for the related organization to delete this object."
+                )
         elif not instance.scan_config.can_be_modified:
             raise PermissionDenied("The related scanning configuration cannot be modified at this time.")
         else:

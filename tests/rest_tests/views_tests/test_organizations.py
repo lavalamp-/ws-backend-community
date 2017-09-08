@@ -1077,6 +1077,13 @@ class TestScanPortDetailView(
         to_return.save()
         return to_return
 
+    def __create_organization_for_user(self, user_string="user_1"):
+        user = self.get_user(user=user_string)
+        org = rest.models.Organization.objects.create(name="Name", description="Description")
+        org.add_admin_user(user)
+        org.save()
+        return org
+
     def __send_delete_request(self, user="user_1", login=True, query_string=None, input_uuid="POPULATE"):
         """
         Send a delete request to the API endpoint and return the response.
@@ -1178,6 +1185,47 @@ class TestScanPortDetailView(
         scan_config.order.has_been_placed = False
         scan_config.order.save()
         self.assert_request_not_authorized(response)
+
+    def test_delete_as_org_admin_succeeds(self):
+        """
+        Tests that deleting an object from a ScanConfig related to an organization that the requesting
+        user has administrative permissions for succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        scan_port = scan_config.scan_ports.first()
+        response = self.__send_delete_request(input_uuid=scan_port.uuid, user="user_1")
+        org.delete()
+        self.assert_request_succeeds(response, status_code=204)
+
+    def test_delete_as_not_org_admin_fails(self):
+        """
+        Tests that deleting an object from a ScanConfig related to an organization that the requesting user
+        does not have administrative permissions for fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        user = self.get_user(user="user_1")
+        org.set_user_permissions(user=user, permission_level="write")
+        scan_config = org.scan_config
+        scan_port = scan_config.scan_ports.first()
+        response = self.__send_delete_request(input_uuid=scan_port.uuid, user="user_1")
+        org.delete()
+        self.assert_request_not_authorized(response)
+
+    def test_delete_as_not_org_admin_superuser_succeeds(self):
+        """
+        Tests that deleting an object from a ScanConfig related to an organization that the requesting user
+        does not have administrative permissions for succeeds when the requesting user is a superuser.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        scan_port = scan_config.scan_ports.first()
+        response = self.__send_delete_request(input_uuid=scan_port.uuid, user="admin_1")
+        org.delete()
+        self.assert_request_succeeds(response, status_code=204)
 
     @property
     def custom_fields_field(self):
