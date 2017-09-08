@@ -12,6 +12,7 @@ from django.db import models
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 import rest_framework.mixins
+from django.core.exceptions import ObjectDoesNotExist
 
 from .exception import FieldNotFound, OperationFailed
 from lib import RegexLib, get_export_type_wrapper_map, ValidationHelper
@@ -155,12 +156,15 @@ class ListMixin(BaseAPIViewMixin, generics.ListAPIView):
             for result in query_results:
                 to_add = {}
                 for field_name in self.queried_fields:
-                    value = getattr(result, field_name)
-                    if isinstance(value, uuid.UUID):
-                        value = str(value)
-                    elif isinstance(value, models.Model):
-                        value = str(value.uuid)
-                    to_add[field_name] = value
+                    try:
+                        value = getattr(result, field_name)
+                        if isinstance(value, uuid.UUID):
+                            value = str(value)
+                        elif isinstance(value, models.Model):
+                            value = str(value.uuid)
+                        to_add[field_name] = value
+                    except ObjectDoesNotExist:
+                        to_add[field_name] = None
                 results.append(to_add)
             return self.exporter_map[self.export_argument].get_django_response_from_dicts(results)
         else:
@@ -277,12 +281,15 @@ class ListChildMixin(BaseAPIViewMixin):
             for result in query_results:
                 to_add = {}
                 for field_name in self.queried_fields:
-                    value = getattr(result, field_name)
-                    if isinstance(value, uuid.UUID):
-                        value = str(value)
-                    elif isinstance(value, models.Model):
-                        value = str(value.uuid)
-                    to_add[field_name] = value
+                    try:
+                        value = getattr(result, field_name)
+                        if isinstance(value, uuid.UUID):
+                            value = str(value)
+                        elif isinstance(value, models.Model):
+                            value = str(value.uuid)
+                        to_add[field_name] = value
+                    except ObjectDoesNotExist:
+                        to_add[field_name] = None
                 results.append(to_add)
             return self.exporter_map[self.export_argument].get_django_response_from_dicts(results)
         else:

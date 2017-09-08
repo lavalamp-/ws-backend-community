@@ -22,7 +22,9 @@ class ScanConfigQuerysetMixin(object):
 
     def _get_user_queryset(self):
         return rest.models.ScanConfig.objects.filter(
-            Q(user=self.request.user) | Q(is_default=True)
+            Q(user=self.request.user) |
+            Q(is_default=True) |
+            Q(organization__auth_groups__users=self.request.user, organization__auth_groups__name="org_read")
         ).all()
 
     def _get_su_queryset(self):
@@ -43,11 +45,11 @@ class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveUpdateDestroyAPIVi
 
     _scan_config = None
 
-    def check_permissions(self, request):
-        super(ScanConfigDetailView, self).check_permissions(request)
-        if not self.scan_config.is_default and \
-                (self.scan_config.order.user != request.user and not request.user.is_superuser):
-            raise NotFound()
+    # def check_permissions(self, request):
+    #     super(ScanConfigDetailView, self).check_permissions(request)
+    #     if not self.scan_config.is_default and \
+    #             (self.scan_config.order.user != request.user and not request.user.is_superuser):
+    #         raise NotFound()
 
     def initial(self, request, *args, **kwargs):
         self._scan_config = None
@@ -64,6 +66,12 @@ class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveUpdateDestroyAPIVi
     def perform_update(self, serializer):
         if self.scan_config.is_default and not self.request.user.is_superuser:
             raise PermissionDenied()
+        elif hasattr(self.scan_config, "organization") \
+                and self.request.user not in self.scan_config.organization.admin_group.users.all() \
+                and not self.request.user.is_superuser:
+            raise PermissionDenied(
+                "You do not have administrative permissions for the scanning configuration's organization."
+            )
         elif not self.scan_config.can_be_modified:
             raise PermissionDenied("That scan configuration cannot be modified.")
         else:

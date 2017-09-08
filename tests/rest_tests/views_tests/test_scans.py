@@ -81,6 +81,13 @@ class TestScanConfigDetailView(
         to_return.save()
         return to_return
 
+    def __create_organization_for_user(self, user_string="user_1"):
+        user = self.get_user(user=user_string)
+        org = rest.models.Organization.objects.create(name="Name", description="Description")
+        org.add_admin_user(user)
+        org.save()
+        return org
+
     def __send_delete_request(self, user="user_1", login=True, query_string=None, input_uuid="POPULATE"):
         """
         Send a delete request to the API endpoint and return the response.
@@ -430,6 +437,43 @@ class TestScanConfigDetailView(
         scan_config.order.has_been_placed = False
         scan_config.order.save()
         self.assert_request_not_authorized(response)
+
+    def test_update_org_scan_config_admin_user_succeeds(self):
+        """
+        Tests that attempting to update an organization's ScanConfig as a regular user that has admin
+        privileges on the organization succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        response = self.__send_update_request(user="user_1", input_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
+
+    def test_update_org_scan_config_not_admin_user_fails(self):
+        """
+        Tests that attempting to update an organization's ScanConfig as a regular user that does not
+        have admin privileges on the organization fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        user = self.get_user(user="user_1")
+        org.set_user_permissions(user=user, permission_level="scan")
+        response = self.__send_update_request(user="user_1", input_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_not_authorized(response)
+
+    def test_update_org_scan_config_superuser_succeeds(self):
+        """
+        Tests that attempting to update an organization's ScanConfig as a superuser succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        response = self.__send_update_request(user="admin_1", input_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_succeeds(response)
 
     @property
     def custom_fields_field(self):

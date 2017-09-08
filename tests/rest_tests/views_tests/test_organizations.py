@@ -1360,6 +1360,13 @@ class TestSetOrganizationScanConfig(
         self._url_parameters = str(org_uuid)
         return self.post(query_string=query_string, data=to_send)
 
+    def test_requires_auth(self):
+        """
+        Tests that the API endpoint requires authentication.
+        :return: None
+        """
+        self.assert_request_requires_auth(self.__send_set_request(login=False))
+
     def test_regular_user_set_owned_config_success_status(self):
         """
         Tests that submitting a set request to a ScanConfig available to the requesting user succeeds.
