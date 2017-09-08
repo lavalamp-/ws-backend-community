@@ -539,6 +539,13 @@ class TestDnsRecordTypesByScanConfigView(
         to_return.save()
         return to_return
 
+    def __create_organization_for_user(self, user_string="user_1"):
+        user = self.get_user(user=user_string)
+        org = rest.models.Organization.objects.create(name="Name", description="Description")
+        org.add_admin_user(user)
+        org.save()
+        return org
+
     def __send_create_request(
             self,
             user="user_1",
@@ -669,6 +676,44 @@ class TestDnsRecordTypesByScanConfigView(
         default_config.delete()
         self.assert_request_succeeds(response, status_code=201)
 
+    def test_regular_user_create_admin_of_org_succeeds(self):
+        """
+        Tests that attempting to create a new child for a ScanConfig on behalf of a user that is in the
+        administrative group of the config's organization succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        response = self.__send_create_request(user="user_1", input_uuid=scan_config.uuid, query_string="FOO=BAR")
+        org.delete()
+        self.assert_request_succeeds(response, status_code=201)
+
+    def test_regular_user_create_not_admin_of_org_fails(self):
+        """
+        Tests that attempting to create a new child for a ScanConfig on behalf of a user that is not in
+        the administrative group of the config's organization fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        user = self.get_user(user="user_1")
+        org.set_user_permissions(user=user, permission_level="write")
+        scan_config = org.scan_config
+        response = self.__send_create_request(user="user_1", input_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_not_authorized(response)
+
+    def test_admin_user_create_not_admin_of_org_succeeds(self):
+        """
+        Tests that attempting to create a new child for a ScanConfig on behalf of a user that is not in
+        the administrative group of the config's organization as a superuser succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        response = self.__send_create_request(user="admin_1", input_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_succeeds(response, status_code=201)
+
     @property
     def create_method(self):
         return self.__send_create_request
@@ -723,6 +768,13 @@ class TestScanPortsByScanConfigView(
         to_return.is_default = True
         to_return.save()
         return to_return
+
+    def __create_organization_for_user(self, user_string="user_1"):
+        user = self.get_user(user=user_string)
+        org = rest.models.Organization.objects.create(name="Name", description="Description")
+        org.add_admin_user(user)
+        org.save()
+        return org
 
     def __send_create_request(
             self,
@@ -849,6 +901,44 @@ class TestScanPortsByScanConfigView(
         default_config = self.__create_default_scan_config()
         response = self.__send_create_request(user="admin_1", input_uuid=default_config.uuid)
         default_config.delete()
+        self.assert_request_succeeds(response, status_code=201)
+
+    def test_regular_user_create_admin_of_org_succeeds(self):
+        """
+        Tests that attempting to create a new child for a ScanConfig on behalf of a user that is in the
+        administrative group of the config's organization succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        response = self.__send_create_request(user="user_1", input_uuid=scan_config.uuid, query_string="FOO=BAR")
+        org.delete()
+        self.assert_request_succeeds(response, status_code=201)
+
+    def test_regular_user_create_not_admin_of_org_fails(self):
+        """
+        Tests that attempting to create a new child for a ScanConfig on behalf of a user that is not in
+        the administrative group of the config's organization fails.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        user = self.get_user(user="user_1")
+        org.set_user_permissions(user=user, permission_level="write")
+        scan_config = org.scan_config
+        response = self.__send_create_request(user="user_1", input_uuid=scan_config.uuid)
+        org.delete()
+        self.assert_request_not_authorized(response)
+
+    def test_admin_user_create_not_admin_of_org_succeeds(self):
+        """
+        Tests that attempting to create a new child for a ScanConfig on behalf of a user that is not in
+        the administrative group of the config's organization as a superuser succeeds.
+        :return: None
+        """
+        org = self.__create_organization_for_user(user_string="user_1")
+        scan_config = org.scan_config
+        response = self.__send_create_request(user="admin_1", input_uuid=scan_config.uuid)
+        org.delete()
         self.assert_request_succeeds(response, status_code=201)
 
     @property

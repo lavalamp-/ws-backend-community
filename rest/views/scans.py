@@ -45,12 +45,6 @@ class ScanConfigDetailView(ScanConfigQuerysetMixin, WsRetrieveUpdateDestroyAPIVi
 
     _scan_config = None
 
-    # def check_permissions(self, request):
-    #     super(ScanConfigDetailView, self).check_permissions(request)
-    #     if not self.scan_config.is_default and \
-    #             (self.scan_config.order.user != request.user and not request.user.is_superuser):
-    #         raise NotFound()
-
     def initial(self, request, *args, **kwargs):
         self._scan_config = None
         return super(ScanConfigDetailView, self).initial(request, *args, **kwargs)
@@ -110,6 +104,12 @@ class BaseScanConfigListCreateChildAPIView(WsListCreateChildAPIView):
         super(BaseScanConfigListCreateChildAPIView, self).check_permissions(request)
         if self.parent_object.is_default and not request.user.is_superuser:
             raise PermissionDenied()
+        elif hasattr(self.parent_object, "organization"):
+            if self.request.user not in self.parent_object.organization.admin_group.users.all() \
+                    and not self.request.user.is_superuser:
+                raise PermissionDenied(
+                    "You do not have administrative permissions for the scanning configuration's organization."
+                )
         elif (not self.parent_object.order or self.parent_object.order.user != request.user) \
                 and not request.user.is_superuser:
             raise NotFound()
