@@ -144,7 +144,7 @@ def inspect_tcp_service_for_ssl_support(
         "order_uuid": order_uuid,
     }
     collection_sigs = []
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if scan_config.ssl_enumerate_vulns:
         collection_sigs.append(enumerate_vulnerabilities_for_ssl_service.si(**task_kwargs))
     if scan_config.ssl_enumerate_cipher_suites:

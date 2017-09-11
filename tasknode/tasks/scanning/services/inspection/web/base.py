@@ -48,7 +48,7 @@ def inspect_http_service(
         "Now inspecting HTTP service residing on network service %s. Organization is %s."
         % (network_service_uuid, org_uuid)
     )
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if scan_config.web_app_enum_vhosts:
         task_sigs = []
         task_kwargs = {
@@ -97,7 +97,7 @@ def inspect_https_service(
         "Now inspecting HTTPS service residing on network service %s. Organization is %s."
         % (network_service_uuid, org_uuid)
     )
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if scan_config.web_app_enum_vhosts:
         task_sigs = []
         task_kwargs = {
@@ -120,6 +120,7 @@ def inspect_https_service(
             org_uuid=org_uuid,
             network_service_scan_uuid=network_service_scan_uuid,
             network_service_uuid=network_service_uuid,
+            order_uuid=order_uuid,
             use_ssl=True,
         ).apply_async()
 
@@ -217,7 +218,7 @@ def scan_web_service(
         "web_service_scan_uuid": web_service_scan.uuid,
         "order_uuid": order_uuid,
     }
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if scan_config.web_app_enum_user_agents:
         task_sigs.append(enumerate_user_agent_fingerprints_for_web_service.si(**task_kwargs))
     if scan_config.web_app_do_crawling:
@@ -307,7 +308,7 @@ def inspect_virtual_hosts_for_network_service(
         % (len(virtual_host_domains), network_service_uuid)
     )
     task_sigs = []
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     #TODO refactor this into invocations of scan_web_service
     for domain in virtual_host_domains:
         web_service = get_or_create_web_service_from_network_service(

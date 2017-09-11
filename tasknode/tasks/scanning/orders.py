@@ -29,7 +29,7 @@ def handle_placed_order(self, order_uuid=None):
         % (order_uuid,)
     )
     task_sigs = []
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if scan_config.scan_domain_names:
         domain_count = count_domains_for_order(db_session=self.db_session, order_uuid=order_uuid)
         logger.info(

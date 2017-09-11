@@ -266,7 +266,7 @@ def scan_domain_name(self, org_uuid=None, domain_uuid=None, order_uuid=None):
         "order_uuid": order_uuid,
     }
     initial_group = []
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if scan_config.dns_enumerate_subdomains:
         initial_group.append(enumerate_subdomains_for_domain.si(**task_kwargs))
     initial_group.append(gather_data_for_domain_name.si(**task_kwargs))
@@ -319,13 +319,14 @@ def scan_ip_addresses_for_domain_name_scan(
         )
         return
     task_sigs = []
+    domain = self.domain
     for ip_address in ip_addresses:
         ip_address_model = get_ip_address_for_organization(
             db_session=self.db_session,
             org_uuid=org_uuid,
             ip_address=ip_address,
         )
-        self.domain.ip_addresses.append(ip_address_model)
+        domain.ip_addresses.append(ip_address_model)
         task_sigs.append(scan_ip_address.si(
             org_uuid=org_uuid,
             ip_address_uuid=ip_address_model.uuid,
@@ -514,7 +515,7 @@ def resolve_domain_name_for_organization(
     domain_name = self.domain
     logger.info(
         "Now resolving domain %s (%s) on behalf of organization %s. Domain scan is %s."
-        % (domain_uuid, self.domain_name.name, org_uuid, domain_scan_uuid)
+        % (domain_uuid, domain_name.name, org_uuid, domain_scan_uuid)
     )
     record_set = self.inspector.get_record(record_type)
     if len(record_set) == 0:

@@ -141,7 +141,6 @@ class WebSightBaseTask(Task, TempFileMixin):
             % (self.__class__.__name__, exc, task_id, einfo)
         )
         self.clean_up()
-        self.__index_task_failure(einfo.traceback)
         super(WebSightBaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
@@ -175,7 +174,6 @@ class WebSightBaseTask(Task, TempFileMixin):
             % (self.__class__.__name__, retval, task_id)
         )
         self.clean_up()
-        self.__index_task_success()
         super(WebSightBaseTask, self).on_success(retval, task_id, args, kwargs)
 
     def wait_for_es(self, duration=None):
@@ -618,6 +616,18 @@ class ScanTask(DatabaseTask):
         :return: the UUID of the organization that this task is associated with.
         """
         return str(self.order.organization.uuid) if self.order is not None else None
+
+    @property
+    def scan_config(self):
+        """
+        Get the scanning configuration associated with the referenced order.
+        :return: the scanning configuration associated with the referenced order.
+        """
+        order = self.order
+        if order:
+            return order.scan_config[0]
+        else:
+            return None
 
 
 class DomainNameTask(ScanTask):

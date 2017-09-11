@@ -41,7 +41,7 @@ def zmap_scan_order(self, order_uuid=None):
     :return: None
     """
     port_tuples = get_ports_to_scan_for_scan_config(
-        config_uuid=self.order.scan_config.uuid,
+        config_uuid=self.scan_config.uuid,
         db_session=self.db_session,
     )
     logger.info(
@@ -122,7 +122,7 @@ def zmap_scan_order_for_port(
         file_path=whitelist_path,
     )
     output_path = self.get_temporary_file_path()
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     scanner = ZmapRunner.from_scan_config(scan_config)
     scanner.target_port = port
     scanner.set_scan_protocol(protocol)
@@ -204,7 +204,7 @@ def handle_live_zmap_service(
         discovered_by="network scan",
     )
     task_signatures = []
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if scan_config.scan_ip_addresses:
         task_signatures.append(scan_ip_address.si(
             org_uuid=org_uuid,

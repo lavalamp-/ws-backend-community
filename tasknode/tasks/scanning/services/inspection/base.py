@@ -100,7 +100,7 @@ def inspect_tcp_service_application(
         )
         return
     task_map = get_tcp_inspection_task_map()
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if "http" in service_names and "https" in service_names and not scan_config.web_app_include_http_on_https:
         service_names.remove("http")
     task_signatures = []

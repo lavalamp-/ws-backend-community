@@ -68,7 +68,7 @@ def scan_ip_address(
     }
     task_sigs = []
     collection_sigs = []
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if scan_config.ip_address_geolocate:
         collection_sigs.append(geolocate_ip_address.si(**task_kwargs))
     if scan_config.ip_address_reverse_hostname:
@@ -358,7 +358,7 @@ def scan_ip_address_for_network_services(
         % (ip_address_uuid,)
     )
     task_sigs = []
-    tcp_ports = get_tcp_ports_to_scan_for_scan_config(config_uuid=self.order.scan_config_id, db_session=self.db_session)
+    tcp_ports = get_tcp_ports_to_scan_for_scan_config(config_uuid=self.scan_config.uuid, db_session=self.db_session)
     if len(tcp_ports) > 0:
         task_sigs.append(scan_ip_address_for_tcp_network_services.si(
             org_uuid=org_uuid,
@@ -367,7 +367,7 @@ def scan_ip_address_for_network_services(
             ports=tcp_ports,
             order_uuid=order_uuid,
         ))
-    udp_ports = get_udp_ports_to_scan_for_scan_config(config_uuid=self.order.scan_config_id, db_session=self.db_session)
+    udp_ports = get_udp_ports_to_scan_for_scan_config(config_uuid=self.scan_config.uuid, db_session=self.db_session)
     if len(udp_ports) > 0:
         task_sigs.append(scan_ip_address_for_udp_network_services.si(
             org_uuid=org_uuid,

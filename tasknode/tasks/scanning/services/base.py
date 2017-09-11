@@ -62,7 +62,7 @@ def scan_network_service(
     )
     self.db_session.add(network_service_scan)
     self.db_session.commit()
-    scan_config = self.order.scan_config
+    scan_config = self.scan_config
     if check_liveness and scan_config.network_service_inspect_liveness:
         is_alive = self.inspector.check_if_open()
         if not is_alive:
