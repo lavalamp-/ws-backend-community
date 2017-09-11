@@ -8,7 +8,9 @@ from datetime import timedelta
 
 from rest_framework.exceptions import ValidationError
 
+from lib import JsonSerializableMixin
 from .base import BaseWsModel
+from .scans import ScanConfig
 from lib import ConfigManager, FilesystemHelper
 
 config = ConfigManager.instance()
@@ -29,6 +31,8 @@ class OrganizationManager(models.Manager):
         organization.auth_groups.set(self.__create_auth_groups())
         organization.scan_ports.set(self.__create_scan_ports())
         organization.org_config = self.__create_organization_config()
+        organization.scan_config = ScanConfig.objects.create(organization=organization)
+        organization.save()
         return organization
 
     def __create_auth_groups(self):
@@ -105,6 +109,13 @@ class Organization(BaseWsModel):
     scanning_status = models.CharField(max_length=64, default='off', choices=SCANNING_STATUS_TYPES, null=False, blank=False)
 
     # Foreign Keys
+
+    scan_config = models.OneToOneField(
+        ScanConfig,
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="organization",
+    )
 
     # Class Meta
 
@@ -208,6 +219,18 @@ class Organization(BaseWsModel):
         self.write_group.users.remove(user)
         self.admin_group.users.remove(user)
         self.scan_group.users.remove(user)
+
+    def set_scan_config(self, new_scan_config):
+        """
+        Set the contents of this organization's ScanConfig to the contents of the given ScanConfig.
+        :param new_scan_config: The ScanConfig to set this Organization's default ScanConfig's contents to.
+        :return: None
+        """
+        if self.scan_config:
+            self.scan_config.delete()
+        self.scan_config = new_scan_config.duplicate()
+        self.scan_config.is_default = False
+        self.scan_config.save()
 
     def set_user_permissions(self, user=None, permission_level=None):
         """
@@ -502,7 +525,7 @@ class OrganizationNetworkScan(BaseWsModel):
     )
 
 
-class ScanPort(BaseWsModel):
+class ScanPort(BaseWsModel, JsonSerializableMixin):
     """
     This is a class for representing the ports that are being monitored for a given organization.
     """
@@ -523,3 +546,31 @@ class ScanPort(BaseWsModel):
         null=True,
     )
 
+    scan_config = models.ForeignKey(
+        ScanConfig,
+        related_name="scan_ports",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    @staticmethod
+    def from_json(to_parse):
+        return ScanPort.objects.create(
+            port_number=to_parse["port_number"],
+            protocol=to_parse["protocol"],
+            added_by=to_parse["added_by"],
+            included=to_parse["included"],
+            scan_config=to_parse.get("scan_config", None),
+        )
+
+    def save(self, *args, **kwargs):
+        self.protocol = self.protocol.lower()
+        return super(ScanPort, self).save(*args, **kwargs)
+
+    def to_json(self):
+        return {
+            "port_number": self.port_number,
+            "protocol": self.protocol,
+            "added_by": self.added_by,
+            "included": self.included,
+        }

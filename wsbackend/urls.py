@@ -43,6 +43,8 @@ urlpatterns = [
     url(r'^organizations/(?P<pk>[-\w]+)/networks/?$', views.NetworksByOrganizationView.as_view(), name="orgnetworks-list"),
     url(r'^organizations/(?P<pk>[-\w]+)/domain-names/upload/?$', views.DomainsUploadAPIView.as_view(), name="orgdomainnames-upload"),
     url(r'^organizations/(?P<pk>[-\w]+)/domain-names/?$', views.DomainNamesByOrganizationView.as_view(), name="orgdomainnames-list"),
+    url(r'^organizations/(?P<pk>[-\w]+)/scan-config/set/?$', views.set_organization_scan_config, name="orgscanconfig-set"),
+    url(r'^organizations/(?P<pk>[-\w]+)/scan-config/?$', views.retrieve_organization_scan_config, name="orgscanconfig-details"),
     # url(r'^organizations/(?P<pk>[-\w]+)/es/web-tech-reports/analytics/?$', views.OrganizationWebTechReportAnalyticsAPIView.as_view(), name="organizationwebtechreport-analytics"),
     # url(r'^organizations/(?P<pk>[-\w]+)/es/web-tech-reports/?$', views.OrganizationWebTechReportListAPIView.as_view(), name="organizationwebtechreport-list"),
     # url(r'^organizations/(?P<pk>[-\w]+)/es/web-transactions/analytics/?$', views.OrganizationWebTransactionAnalyticsAPIView.as_view(), name="organizationwebtransaction-analytics"),
@@ -92,6 +94,7 @@ urlpatterns = [
     url(r'^admin/manage-users/enable-disable/?$', views.AdminManageUsersEnableDisableView.as_view()),
     url(r'^admin/manage-users/delete-user/?$', views.AdminManageUsersDeleteUserView.as_view()),
     url(r'^admin/manage-users/resend-verification-email/?$', views.AdminManageUsersResendVerificationEmailView.as_view()),
+    url(r'^admin/scan-configs/default/?$', views.AdminDefaultScanConfigListCreateView.as_view(), name="admindefaultscanconfig-list"),
 
     # Network URLs
 
@@ -100,9 +103,22 @@ urlpatterns = [
 
     # Domain Name URLs
 
+    url(r'^dns-record-types/(?P<pk>[-\w]+)/?$', views.DnsRecordTypeDetailView.as_view(), name="dnsrecordtype-detail"),
+    url(r'^dns-record-types/?$', views.DnsRecordTypeListView.as_view(), name="dnsrecordtype-list"),
     url(r'^domain-names/(?P<pk>[-\w]+)/es/report/?$', views.DomainNameReportDetailAPIView.as_view(), name="domainreport-detail"),
     url(r'^domain-names/(?P<pk>[-\w]+)/?$', views.DomainNameDetailView.as_view(), name="domain-detail"),
     url(r'^domain-names/?$', views.DomainNameListView.as_view(), name="domain-list"),
+
+    # Scan Config URLs
+
+    url(r'^scan-ports/(?P<pk>[-\w]+)/?$', views.ScanPortDetailView.as_view(), name="scanport-detail"),
+    url(r'^scan-ports/?$', views.ScanPortListView.as_view(), name="scanport-list"),
+    url(r'^scan-configs/default/?$', views.DefaultScanConfigListView.as_view(), name="defaultscanconfig-list"),
+    url(r'^scan-configs/(?P<pk>[-\w]+)/is-valid/?$', views.check_scan_config_validity, name="scanconfig-check-validity"),
+    url(r'^scan-configs/(?P<pk>[-\w]+)/dns-record-types/?$', views.DnsRecordTypesByScanConfigView.as_view(), name="scanconfigdnsrecordtypes-list"),
+    url(r'^scan-configs/(?P<pk>[-\w]+)/scan-ports/?$', views.ScanPortsByScanConfigView.as_view(), name="scanconfigscanports-list"),
+    url(r'^scan-configs/(?P<pk>[-\w]+)/?$', views.ScanConfigDetailView.as_view(), name="scan-config-detail"),
+    url(r'^scan-configs/?$', views.ScanConfigListView.as_view(), name="scan-config-list"),
 
     # Account URLs
 

@@ -5,7 +5,7 @@ import logging
 import json
 
 from .config import ConfigManager
-from .filesystem import FilesystemHelper
+from .filesystem import FilesystemHelper, FileHelper
 
 logger = logging.getLogger(__name__)
 config = ConfigManager.instance()
@@ -19,6 +19,7 @@ def bootstrap_all_database_models():
     """
     bootstrap_nmap_configs()
     bootstrap_zmap_configs()
+    bootstrap_scan_configs()
 
 
 def bootstrap_data_stores():
@@ -96,3 +97,26 @@ def bootstrap_nmap_configs():
         session.commit()
     session.close()
     logger.debug("Completed bootstrapping of NmapConfig objects.")
+
+
+def bootstrap_scan_configs():
+    """
+    Ensure all of the default ScanConfig objects are currently in the database.
+    :return: None
+    """
+    import rest.models
+    default_scans = FileHelper.get_default_scan_configs()
+    for default_scan in default_scans:
+        try:
+            rest.models.ScanConfig.objects.filter(name=default_scan["name"]).get()
+            logger.debug(
+                "ScanConfig with name of %s already exists."
+                % (default_scan["name"],)
+            )
+        except rest.models.ScanConfig.DoesNotExist:
+            new_config = rest.models.ScanConfig.from_json(default_scan)
+            new_config.save()
+            logger.debug(
+                "Added ScanConfig with name of %s to database."
+                % (default_scan["name"],)
+            )

@@ -15,7 +15,7 @@ from wselasticsearch.ops import get_supported_ssl_version_for_service, update_we
     update_web_service_scan_not_latest, get_virtual_hosts_from_network_service_scan
 from .crawling import crawl_web_service
 from .imaging import screenshot_web_service
-from .analysis import analyze_web_service_scan, create_report_for_web_service_scan
+from .analysis import create_report_for_web_service_scan
 from .fingerprinting import enumerate_user_agent_fingerprints_for_web_service
 from wselasticsearch.ops import get_all_domains_for_ip_address
 from lib.sqlalchemy.ops import get_latest_web_service_scan_uuid, check_web_service_scanning_status, \
@@ -27,8 +27,15 @@ logger = get_task_logger(__name__)
 config = ConfigManager.instance()
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def inspect_http_service(self, org_uuid=None, network_service_scan_uuid=None, network_service_uuid=None):
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
+def inspect_http_service(
+        self,
+        org_uuid=None,
+        network_service_scan_uuid=None,
+        network_service_uuid=None,
+        order_uuid=None,
+):
     """
     Inspect the HTTP service running on the given network service on behalf of the given
     organization and network service scan.
@@ -41,31 +48,43 @@ def inspect_http_service(self, org_uuid=None, network_service_scan_uuid=None, ne
         "Now inspecting HTTP service residing on network service %s. Organization is %s."
         % (network_service_uuid, org_uuid)
     )
-    populate_and_scan_web_services_from_network_service_scan.si(
-        org_uuid=org_uuid,
-        network_service_scan_uuid=network_service_scan_uuid,
-        network_service_uuid=network_service_uuid,
-        use_ssl=False,
-    ).apply_async()
-    # task_sigs = []
-    # task_kwargs = {
-    #     "org_uuid": org_uuid,
-    #     "network_service_scan_uuid": network_service_scan_uuid,
-    #     "service_uuid": network_service_uuid,
-    #     "use_ssl": False,
-    # }
-    # task_sigs.append(discover_virtual_hosts_for_web_service.si(**task_kwargs))
-    # task_sigs.append(inspect_virtual_hosts_for_network_service.si(**task_kwargs))
-    # logger.info(
-    #     "Now kicking off %s tasks to inspect HTTP service at %s. Organization is %s."
-    #     % (len(task_sigs), network_service_uuid, org_uuid)
-    # )
-    # canvas_sig = chain(task_sigs)
-    # self.finish_after(signature=canvas_sig)
+    scan_config = self.scan_config
+    if scan_config.web_app_enum_vhosts:
+        task_sigs = []
+        task_kwargs = {
+            "org_uuid": org_uuid,
+            "network_service_scan_uuid": network_service_scan_uuid,
+            "network_service_uuid": network_service_uuid,
+            "use_ssl": False,
+            "order_uuid": order_uuid,
+        }
+        task_sigs.append(discover_virtual_hosts_for_web_service.si(**task_kwargs))
+        task_sigs.append(inspect_virtual_hosts_for_network_service.si(**task_kwargs))
+        logger.info(
+            "Now kicking off %s tasks to inspect HTTP service at %s. Organization is %s."
+            % (len(task_sigs), network_service_uuid, org_uuid)
+        )
+        canvas_sig = chain(task_sigs)
+        self.finish_after(signature=canvas_sig)
+    else:
+        populate_and_scan_web_services_from_network_service_scan.si(
+            org_uuid=org_uuid,
+            network_service_scan_uuid=network_service_scan_uuid,
+            network_service_uuid=network_service_uuid,
+            use_ssl=False,
+            order_uuid=order_uuid,
+        ).apply_async()
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def inspect_https_service(self, org_uuid=None, network_service_scan_uuid=None, network_service_uuid=None):
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
+def inspect_https_service(
+        self,
+        org_uuid=None,
+        network_service_scan_uuid=None,
+        network_service_uuid=None,
+        order_uuid=None,
+):
     """
     Inspect the HTTPS service running on the given network service on behalf of the given
     organization and network service scan.
@@ -78,29 +97,35 @@ def inspect_https_service(self, org_uuid=None, network_service_scan_uuid=None, n
         "Now inspecting HTTPS service residing on network service %s. Organization is %s."
         % (network_service_uuid, org_uuid)
     )
-    populate_and_scan_web_services_from_network_service_scan.si(
-        org_uuid=org_uuid,
-        network_service_scan_uuid=network_service_scan_uuid,
-        network_service_uuid=network_service_uuid,
-        use_ssl=True,
-    ).apply_async()
-    # task_sigs = []
-    # task_kwargs = {
-    #     "org_uuid": org_uuid,
-    #     "network_service_scan_uuid": network_service_scan_uuid,
-    #     "service_uuid": network_service_uuid,
-    #     "use_ssl": True,
-    # }
-    # task_sigs.append(discover_virtual_hosts_for_web_service.si(**task_kwargs))
-    # task_sigs.append(inspect_virtual_hosts_for_network_service.si(**task_kwargs))
-    # logger.info(
-    #     "Now kicking off %s tasks to inspect HTTPS service at %s. Organization is %s."
-    #     % (len(task_sigs), network_service_uuid, org_uuid)
-    # )
-    # canvas_sig = chain(task_sigs)
-    # self.finish_after(signature=canvas_sig)
+    scan_config = self.scan_config
+    if scan_config.web_app_enum_vhosts:
+        task_sigs = []
+        task_kwargs = {
+            "org_uuid": org_uuid,
+            "network_service_scan_uuid": network_service_scan_uuid,
+            "network_service_uuid": network_service_uuid,
+            "use_ssl": True,
+            "order_uuid": order_uuid,
+        }
+        task_sigs.append(discover_virtual_hosts_for_web_service.si(**task_kwargs))
+        task_sigs.append(inspect_virtual_hosts_for_network_service.si(**task_kwargs))
+        logger.info(
+            "Now kicking off %s tasks to inspect HTTPS service at %s. Organization is %s."
+            % (len(task_sigs), network_service_uuid, org_uuid)
+        )
+        canvas_sig = chain(task_sigs)
+        self.finish_after(signature=canvas_sig)
+    else:
+        populate_and_scan_web_services_from_network_service_scan.si(
+            org_uuid=org_uuid,
+            network_service_scan_uuid=network_service_scan_uuid,
+            network_service_uuid=network_service_uuid,
+            order_uuid=order_uuid,
+            use_ssl=True,
+        ).apply_async()
 
 
+#USED
 @websight_app.task(bind=True, base=NetworkServiceTask)
 def populate_and_scan_web_services_from_network_service_scan(
         self,
@@ -108,8 +133,7 @@ def populate_and_scan_web_services_from_network_service_scan(
         network_service_scan_uuid=None,
         network_service_uuid=None,
         use_ssl=None,
-        do_crawling=False,
-        take_screenshots=True,
+        order_uuid=None,
 ):
     """
     Populate all of the relevant web services as found through the given network service scan
@@ -118,8 +142,6 @@ def populate_and_scan_web_services_from_network_service_scan(
     :param network_service_scan_uuid: The UUID of the network service scan that invoked this task.
     :param network_service_uuid: The UUID of the network service that was scanned.
     :param use_ssl: Whether the web services created from this task should be marked as HTTPS or not.
-    :param do_crawling: Whether or not to perform crawling.
-    :param take_screenshots: Whether or not to take screenshots.
     :return: None
     """
     logger.info(
@@ -144,8 +166,7 @@ def populate_and_scan_web_services_from_network_service_scan(
         task_sigs.append(scan_web_service.si(
             org_uuid=org_uuid,
             web_service_uuid=web_service.uuid,
-            do_crawling=do_crawling,
-            take_screenshots=take_screenshots,
+            order_uuid=order_uuid,
         ))
     if len(task_sigs) == 0:
         logger.info(
@@ -155,14 +176,18 @@ def populate_and_scan_web_services_from_network_service_scan(
     group(task_sigs).apply_async()
 
 
+#USED
 @websight_app.task(bind=True, base=WebServiceTask)
-def scan_web_service(self, org_uuid=None, web_service_uuid=None, do_crawling=True, take_screenshots=True):
+def scan_web_service(
+        self,
+        org_uuid=None,
+        web_service_uuid=None,
+        order_uuid=None,
+):
     """
     Scan the given web service and collect all data relevant to the Web Sight platform for the endpoint.
     :param org_uuid: The UUID of the organization that owns the web service.
     :param web_service_uuid: The UUID of the web service.
-    :param do_crawling: Whether or not to perform crawling.
-    :param take_screenshots: Whether or not to take screenshots.
     :return: None
     """
     logger.info(
@@ -191,12 +216,16 @@ def scan_web_service(self, org_uuid=None, web_service_uuid=None, do_crawling=Tru
         "org_uuid": org_uuid,
         "web_service_uuid": web_service_uuid,
         "web_service_scan_uuid": web_service_scan.uuid,
+        "order_uuid": order_uuid,
     }
-    if do_crawling:
+    scan_config = self.scan_config
+    if scan_config.web_app_enum_user_agents:
+        task_sigs.append(enumerate_user_agent_fingerprints_for_web_service.si(**task_kwargs))
+    if scan_config.web_app_do_crawling:
         task_sigs.append(crawl_web_service.si(**task_kwargs))
     else:
         task_sigs.append(retrieve_landing_resource_for_web_service.si(**task_kwargs))
-    if take_screenshots:
+    if scan_config.web_app_take_screenshot:
         task_sigs.append(screenshot_web_service.si(**task_kwargs))
     task_sigs.append(create_report_for_web_service_scan.si(**task_kwargs))
     task_sigs.append(apply_flags_to_web_service_scan.si(**task_kwargs))
@@ -205,6 +234,7 @@ def scan_web_service(self, org_uuid=None, web_service_uuid=None, do_crawling=Tru
     scanning_status_sig = update_web_service_scanning_status.si(
         web_service_uuid=web_service_uuid,
         scanning_status=False,
+        order_uuid=order_uuid,
     )
     task_sigs.append(scanning_status_sig)
     logger.info(
@@ -215,8 +245,15 @@ def scan_web_service(self, org_uuid=None, web_service_uuid=None, do_crawling=Tru
     self.finish_after(signature=canvas_sig)
 
 
+#USED
 @websight_app.task(bind=True, base=WebServiceTask)
-def retrieve_landing_resource_for_web_service(self, org_uuid=None, web_service_uuid=None, web_service_scan_uuid=None):
+def retrieve_landing_resource_for_web_service(
+        self,
+        org_uuid=None,
+        web_service_uuid=None,
+        web_service_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Retrieve the resource at the landing URL for the given web service.
     :param org_uuid: The UUID of the organization to crawl the web service on behalf of.
@@ -230,22 +267,22 @@ def retrieve_landing_resource_for_web_service(self, org_uuid=None, web_service_u
     )
     response = self.inspector.get(path="/")
     es_model = response.get_web_resource_model(web_service_scan=self.web_service_scan, site_url=self.web_service_url)
-    bleargh = es_model.save(org_uuid)
-    with open("pure_fuckery", "a+") as f:
-        f.write("[%s] %s %s %s %s %s %s %s\n" % (self.id, es_model, es_model.to_es_dict(), bleargh, org_uuid, web_service_scan_uuid, web_service_uuid, response))
+    es_model.save(org_uuid)
     logger.info(
         "Retrieved landing resource for web service %s and organization %s."
         % (web_service_uuid, org_uuid)
     )
 
 
-@websight_app.task(bind=True, base=ServiceTask)
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
 def inspect_virtual_hosts_for_network_service(
         self,
         org_uuid=None,
         network_service_scan_uuid=None,
-        service_uuid=None,
+        network_service_uuid=None,
         use_ssl=None,
+        order_uuid=None,
 ):
     """
     Perform inspection for all of the virtual hosts associated with the given network service as discovered
@@ -253,27 +290,29 @@ def inspect_virtual_hosts_for_network_service(
     :param org_uuid: The UUID of the organization to inspect virtual hosts on behalf of.
     :param network_service_scan_uuid: The UUID of the network service scan that this task is being
     invoked on behalf of.
-    :param service_uuid: The UUID of the network service where the virtual hosts reside.
+    :param network_service_uuid: The UUID of the network service where the virtual hosts reside.
     :param use_ssl: Whether or not to interact with the remote service over SSL.
     :return: None
     """
     logger.info(
         "Now beginning inspection of virtual hosts found at network service %s for organization %s."
-        % (service_uuid, org_uuid)
+        % (network_service_uuid, org_uuid)
     )
-    ip_address, port, protocol = self.get_endpoint_information(service_uuid)
+    ip_address, port, protocol = self.get_endpoint_information()
     virtual_host_domains = get_virtual_hosts_from_network_service_scan(
         scan_uuid=network_service_scan_uuid,
         org_uuid=org_uuid,
     )
     logger.info(
         "A total of %s virtual hosts were found for network service %s."
-        % (len(virtual_host_domains), service_uuid)
+        % (len(virtual_host_domains), network_service_uuid)
     )
     task_sigs = []
+    scan_config = self.scan_config
+    #TODO refactor this into invocations of scan_web_service
     for domain in virtual_host_domains:
         web_service = get_or_create_web_service_from_network_service(
-            network_service_uuid=service_uuid,
+            network_service_uuid=network_service_uuid,
             db_session=self.db_session,
             host_name=domain,
             ip_address=ip_address,
@@ -290,24 +329,44 @@ def inspect_virtual_hosts_for_network_service(
             "org_uuid": org_uuid,
             "web_service_scan_uuid": web_service_scan.uuid,
             "web_service_uuid": web_service.uuid,
+            "order_uuid": order_uuid,
         }
-        web_scan_task_sigs.append(enumerate_user_agent_fingerprints_for_web_service.si(**task_kwargs))
-        web_scan_task_sigs.append(crawl_web_service.si(**task_kwargs))
-        web_scan_task_sigs.append(screenshot_web_service.si(**task_kwargs))
-        web_scan_task_sigs.append(analyze_web_service_scan.si(**task_kwargs))
+        if scan_config.web_app_enum_user_agents:
+            web_scan_task_sigs.append(enumerate_user_agent_fingerprints_for_web_service.si(**task_kwargs))
+        if scan_config.web_app_do_crawling:
+            web_scan_task_sigs.append(crawl_web_service.si(**task_kwargs))
+        else:
+            web_scan_task_sigs.append(retrieve_landing_resource_for_web_service.si(**task_kwargs))
+        if scan_config.web_app_take_screenshot:
+            web_scan_task_sigs.append(screenshot_web_service.si(**task_kwargs))
+        web_scan_task_sigs.append(create_report_for_web_service_scan.si(**task_kwargs))
+        web_scan_task_sigs.append(apply_flags_to_web_service_scan.si(**task_kwargs))
         web_scan_task_sigs.append(update_web_service_scan_elasticsearch.si(**task_kwargs))
         web_scan_task_sigs.append(update_web_service_scan_completed.si(**task_kwargs))
+        scanning_status_sig = update_web_service_scanning_status.si(
+            web_service_uuid=web_service.uuid,
+            scanning_status=False,
+            order_uuid=order_uuid,
+        )
+        web_scan_task_sigs.append(scanning_status_sig)
         task_sigs.append(chain(web_scan_task_sigs))
     logger.info(
         "Now kicking off scans to analyze %s virtual hosts associated with network service %s."
-        % (len(task_sigs), service_uuid)
+        % (len(task_sigs), network_service_uuid)
     )
     canvas_sig = group(task_sigs)
     canvas_sig.apply_async()
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def update_web_service_scan_elasticsearch(self, org_uuid=None, web_service_scan_uuid=None, web_service_uuid=None):
+#USED
+@websight_app.task(bind=True, base=WebServiceTask)
+def update_web_service_scan_elasticsearch(
+        self,
+        org_uuid=None,
+        web_service_scan_uuid=None,
+        web_service_uuid=None,
+        order_uuid=None,
+):
     """
     Update Elasticsearch so that all of the Elasticsearch documents collected by this web service scan
     are marked as being part of the most recent scan, and update all of the documents collected by the
@@ -321,24 +380,23 @@ def update_web_service_scan_elasticsearch(self, org_uuid=None, web_service_scan_
         "Now updating web service %s to show that scan %s is most recent in Elasticsearch. Organization is %s."
         % (web_service_uuid, web_service_scan_uuid, org_uuid)
     )
-    logger.info(
-        "Sleeping for %s seconds to wait for Elasticsearch to index before updating web service scan data."
-        % (5,)
-    )
-    time.sleep(5)
+    self.wait_for_es(duration=5)
     last_scan_uuid = get_latest_web_service_scan_uuid(db_session=self.db_session, web_service_uuid=web_service_uuid)
     update_web_service_scan_latest(org_uuid=org_uuid, scan_uuid=web_service_scan_uuid)
     if last_scan_uuid is not None:
-        logger.info(
-            "Last scan for web service %s was %s. Updating Elasticsearch now to reflect."
-            % (web_service_uuid, last_scan_uuid)
-        )
-        time.sleep(5)
+        self.wait_for_es(duration=5)
         update_web_service_scan_not_latest(scan_uuid=last_scan_uuid, org_uuid=org_uuid)
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def update_web_service_scan_completed(self, org_uuid=None, web_service_scan_uuid=None, web_service_uuid=None):
+#USED
+@websight_app.task(bind=True, base=WebServiceTask)
+def update_web_service_scan_completed(
+        self,
+        org_uuid=None,
+        web_service_scan_uuid=None,
+        web_service_uuid=None,
+        order_uuid=None,
+):
     """
     Update the referenced web service scan and mark it as having been completed.
     :param org_uuid: The UUID of the organization that owns the scan.
@@ -357,8 +415,15 @@ def update_web_service_scan_completed(self, org_uuid=None, web_service_scan_uuid
     )
 
 
-@websight_app.task(bind=True, base=DatabaseTask)
-def update_web_service_scanning_status(self, org_uuid=None, web_service_uuid=None, scanning_status=None):
+#USED
+@websight_app.task(bind=True, base=WebServiceTask)
+def update_web_service_scanning_status(
+        self,
+        org_uuid=None,
+        web_service_uuid=None,
+        scanning_status=None,
+        order_uuid=None,
+):
     """
     Update the current scanning status of the given web service.
     :param org_uuid: The UUID of the organization that owns the web service.
@@ -378,8 +443,15 @@ def update_web_service_scanning_status(self, org_uuid=None, web_service_uuid=Non
     self.db_session.commit()
 
 
+#USED
 @websight_app.task(bind=True, base=WebServiceTask)
-def apply_flags_to_web_service_scan(self, org_uuid=None, web_service_uuid=None, web_service_scan_uuid=None):
+def apply_flags_to_web_service_scan(
+        self,
+        org_uuid=None,
+        web_service_uuid=None,
+        web_service_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Apply all of the relevant flags to the data collected during the given web service scan.
     :param org_uuid: The UUID of the organization that flags are being applied for.
@@ -407,11 +479,13 @@ def apply_flags_to_web_service_scan(self, org_uuid=None, web_service_uuid=None, 
             web_service_scan_uuid=web_service_scan_uuid,
             flag_uuid=flag.uuid,
             flag_type=flag_type,
+            order_uuid=order_uuid,
         ))
     canvas_sig = chain(task_sigs)
     self.finish_after(signature=canvas_sig)
 
 
+#USED
 @websight_app.task(bind=True, base=WebServiceTask)
 def apply_flag_to_web_service_scan(
         self,
@@ -420,6 +494,7 @@ def apply_flag_to_web_service_scan(
         web_service_scan_uuid=None,
         flag_uuid=None,
         flag_type=None,
+        order_uuid=None,
 ):
     """
     Apply the given flag to the data collected during the given web service scan.

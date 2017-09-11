@@ -5,208 +5,41 @@ from celery import chain
 from celery import group
 from celery.utils.log import get_task_logger
 
-from lib.inspection import PortInspector, IpAddressScanInspector
-from lib.sqlalchemy.ops.exception import NoResultFoundError
-from ..base import DatabaseTask, IpAddressTask
+from lib.inspection import IpAddressScanInspector
+from ..base import IpAddressTask
 from ...app import websight_app
-from lib.sqlalchemy import get_ports_to_scan_for_organization, get_containing_network_uuid_for_organization, \
-    create_network_for_organization, get_or_create_ip_address_from_org_network, get_address_from_ip_address, \
-    get_or_create_network_service_from_org_ip, create_new_network_service_scan, check_ip_address_scanning_status, \
-    IpAddress, create_ip_address_scan_for_ip, get_tcp_scan_ports_for_org, get_udp_scan_ports_for_org, \
+from lib.sqlalchemy import get_or_create_network_service_from_org_ip, check_ip_address_scanning_status, \
+    create_ip_address_scan_for_ip, \
     update_ip_address_scan_completed as update_ip_address_scan_completed_op, \
     update_ip_address_scanning_status as update_ip_address_scanning_status_op, DefaultFlag, \
-    get_all_ip_flags_for_organization
-from wselasticsearch.models import DomainServiceLivenessModel, IpReverseHostnameModel, IpPortScanModel, \
+    get_all_ip_flags_for_organization, get_tcp_ports_to_scan_for_scan_config, get_udp_ports_to_scan_for_scan_config
+from wselasticsearch.models import IpReverseHostnameModel, IpPortScanModel, \
     IpDomainHistoryModel
 from wselasticsearch.query import BulkElasticsearchQuery
 from wselasticsearch.ops import get_open_ports_from_ip_address_scan, update_ip_address_scan_latest_state, \
     update_not_ip_address_scan_latest_state
 from lib import DatetimeHelper, enumerate_domains_for_ip_address, ConfigManager
-from .services import network_service_inspection_pass, scan_network_service
-from .monitoring import initialize_network_service_monitoring
+from .services import scan_network_service
 from wselasticsearch.flags import DataFlagger
 
 logger = get_task_logger(__name__)
 config = ConfigManager.instance()
 
 
-@websight_app.task(bind=True, base=DatabaseTask)
-def create_ip_address_from_domain_resolution(
-        self,
-        org_uuid=None,
-        ip_address=None,
-        domain_uuid=None,
-        domain_scan_uuid=None,
-        scan_ip=True,
-):
-    """
-    Create a new IpAddress record in the Web Sight database and associate it with a network owned
-    by the given organization. Continue on with scanning if scan_ip is True.
-    :param org_uuid: The UUID of the organization to add the IpAddress to.
-    :param ip_address: The IP address to add.
-    :param domain_uuid: The UUID of the domain that was resolved, resulting in the creation of this
-    IP address.
-    :param domain_scan_uuid: The UUID of the domain name scan that resulted in this task.
-    :param scan_ip: Whether or not to continue on and scan for network services on the IP address.
-    :return: None
-    """
-    logger.info(
-        "Now ensuring that IP address %s exists in relation to organization %s. Domain scan is %s."
-        % (ip_address, org_uuid, domain_scan_uuid)
-    )
-    try:
-        network_uuid = get_containing_network_uuid_for_organization(
-            org_uuid=org_uuid,
-            input_ip_address=ip_address,
-            db_session=self.db_session,
-        )
-    except NoResultFoundError:
-        network = create_network_for_organization(address=ip_address, mask_length=24, org_uuid=org_uuid)
-        self.db_session.add(network)
-        self.commit_session()
-        network_uuid = network.uuid
-    ip_address_model = get_or_create_ip_address_from_org_network(
-        network_uuid=network_uuid,
-        address=ip_address,
-        address_type="ipv4",
-        db_session=self.db_session,
-    )
-    logger.info(
-        "IP address of %s is associated with network %s and has UUID %s."
-        % (ip_address, network_uuid, ip_address_model.uuid)
-    )
-    if scan_ip:
-        logger.info(
-            "Now continuing on with scanning IP address at %s for domain scan %s."
-            % (ip_address, domain_scan_uuid)
-        )
-        scan_ip_address_for_services_from_domain.si(
-            org_uuid=org_uuid,
-            ip_address_uuid=ip_address_model.uuid,
-            domain_uuid=domain_uuid,
-            domain_scan_uuid=domain_scan_uuid,
-        ).apply_async()
-
-
-@websight_app.task(bind=True, base=DatabaseTask)
-def scan_ip_address_for_services_from_domain(
-        self,
-        org_uuid=None,
-        ip_address_uuid=None,
-        domain_uuid=None,
-        domain_scan_uuid=None,
-):
-    """
-    Check to see what network services are exposed by the given endpoint as a result of a
-    DNS record lookup.
-    :param org_uuid: The organization to scan the endpoint on behalf of.
-    :param ip_address_uuid: The UUID of the IP address to scan.
-    :param domain_uuid: The UUID of the domain that resulted in this scan.
-    :param domain_scan_uuid: The UUID of the domain name scan that resulted in this scan.
-    :return: None
-    """
-    logger.info(
-        "Now checking to see what open network services reside on IP %s for domain %s. Organization is "
-        "%s, scan is %s."
-        % (ip_address_uuid, domain_uuid, org_uuid, domain_scan_uuid)
-    )
-    scan_ports = get_ports_to_scan_for_organization(org_uuid=org_uuid, db_session=self.db_session)
-    task_sigs = []
-    for port, protocol in scan_ports:
-        task_sigs.append(scan_ip_address_for_service_from_domain.si(
-            org_uuid=org_uuid,
-            ip_address_uuid=ip_address_uuid,
-            port=port,
-            protocol=protocol,
-            domain_uuid=domain_uuid,
-            domain_scan_uuid=domain_scan_uuid,
-        ))
-    logger.info(
-        "Now kicking off %s tasks to check for network services on IP %s for domain %s. Scan is %s."
-        % (len(task_sigs), ip_address_uuid, domain_uuid, domain_scan_uuid)
-    )
-    canvas_sig = group(task_sigs)
-    self.finish_after(signature=canvas_sig)
-
-
-@websight_app.task(bind=True, base=DatabaseTask)
-def scan_ip_address_for_service_from_domain(
-        self,
-        org_uuid=None,
-        ip_address_uuid=None,
-        port=None,
-        protocol=None,
-        domain_uuid=None,
-        domain_scan_uuid=None,
-):
-    """
-    Check to see if the given network service port is currently open and listening at the given IP
-    address as a result of resolving IP addresses for the given domain.
-    :param org_uuid: The organization to scan the endpoint on behalf of.
-    :param ip_address_uuid: The UUID of the IP address to scan.
-    :param port: The port number to check.
-    :param protocol: The networking protocol to use to connect to the endpoint.
-    :param domain_uuid: The UUID of the domain name that resulted in this scan.
-    :param domain_scan_uuid: The UUID of the domain name scan that this task is a part of.
-    :return: None
-    """
-    ip_address = get_address_from_ip_address(ip_address_uuid=ip_address_uuid, db_session=self.db_session)
-    logger.info(
-        "Now checking to see if service at %s:%s (%s) is alive for domain %s, scan %s, organization %s."
-        % (ip_address, port, protocol, domain_uuid, domain_scan_uuid, org_uuid)
-    )
-    inspector = PortInspector(address=ip_address, port=port, protocol=protocol)
-    is_open = inspector.check_if_open()
-    logger.info(
-        "Service at %s:%s (%s) %s open!"
-        % (ip_address, port, protocol, "is" if is_open else "is not")
-    )
-    liveness_model = DomainServiceLivenessModel.from_database_model_uuid(
-        uuid=domain_scan_uuid,
-        db_session=self.db_session,
-        is_alive=is_open,
-        checked_at=DatetimeHelper.now(),
-    )
-    liveness_model.save(org_uuid)
-    if not is_open:
-        logger.info(
-            "Service at %s:%s (%s) was not open, therefore not continuing with inspection."
-            % (ip_address, port, protocol)
-        )
-        return
-    logger.info(
-        "Service at %s:%s (%s) was open! Setting up a single pass of network service monitoring."
-        % (ip_address, port, protocol)
-    )
-    network_service_model = get_or_create_network_service_from_org_ip(
-        ip_uuid=ip_address_uuid,
-        port=port,
-        protocol=protocol,
-        db_session=self.db_session,
-        discovered_by="domain scan",
-    )
-    network_service_inspection_pass.si(
-        service_uuid=network_service_model.uuid,
-        org_uuid=org_uuid,
-        schedule_again=False,
-    ).apply_async()
-
-
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
 def scan_ip_address(
         self,
         org_uuid=None,
         ip_address_uuid=None,
         scan_network_services=True,
-        inspect_network_services=True,
+        order_uuid=None,
 ):
     """
     Scan the given IP address for all IP-relevant data supported by Web Sight.
     :param org_uuid: The UUID of the organization to perform the scan on behalf of.
     :param ip_address_uuid: The UUID of the IP address to collect data for.
     :param scan_network_services: Whether or not to scan the IP address for open network services.
-    :param inspect_network_services: Whether or not to inspect any network services that are identified
-    as open on the IP address.
     :return: None
     """
     logger.info(
@@ -231,18 +64,25 @@ def scan_ip_address(
         "org_uuid": org_uuid,
         "ip_address_uuid": ip_address_uuid,
         "ip_address_scan_uuid": ip_scan.uuid,
+        "order_uuid": order_uuid,
     }
     task_sigs = []
     collection_sigs = []
-    # collection_sigs.append(geolocate_ip_address.si(**task_kwargs))
-    collection_sigs.append(get_reverse_hostnames_for_ip_address.si(**task_kwargs))
-    collection_sigs.append(get_historic_dns_data_for_ip_address.si(**task_kwargs))
-    # collection_sigs.append(get_as_data_for_ip_address.si(**task_kwargs))
-    # collection_sigs.append(get_whois_data_for_ip_address.si(**task_kwargs))
+    scan_config = self.scan_config
+    if scan_config.ip_address_geolocate:
+        collection_sigs.append(geolocate_ip_address.si(**task_kwargs))
+    if scan_config.ip_address_reverse_hostname:
+        collection_sigs.append(get_reverse_hostnames_for_ip_address.si(**task_kwargs))
+    if scan_config.ip_address_historic_dns:
+        collection_sigs.append(get_historic_dns_data_for_ip_address.si(**task_kwargs))
+    if scan_config.ip_address_as_data:
+        collection_sigs.append(get_as_data_for_ip_address.si(**task_kwargs))
+    if scan_config.ip_address_whois_data:
+        collection_sigs.append(get_whois_data_for_ip_address.si(**task_kwargs))
     if scan_network_services:
         network_service_sigs = []
         network_service_sigs.append(scan_ip_address_for_network_services.si(**task_kwargs))
-        if inspect_network_services:
+        if scan_config.scan_network_services:
             network_service_sigs.append(inspect_network_services_from_ip_address.si(**task_kwargs))
         if len(network_service_sigs) > 1:
             collection_sigs.append(chain(network_service_sigs))
@@ -266,8 +106,15 @@ def scan_ip_address(
     self.finish_after(signature=canvas_sig)
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def geolocate_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def geolocate_ip_address(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Perform geolocation of the given IP address.
     :param org_uuid: The UUID of the organization to perform geolocation on behalf of.
@@ -291,8 +138,15 @@ def geolocate_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_address_s
     )
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def get_reverse_hostnames_for_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def get_reverse_hostnames_for_ip_address(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Perform a reverse hostname lookup for the given IP address.
     :param org_uuid: The UUID of the organization to perform hostname lookup on behalf of.
@@ -322,8 +176,15 @@ def get_reverse_hostnames_for_ip_address(self, org_uuid=None, ip_address_uuid=No
     )
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def get_historic_dns_data_for_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def get_historic_dns_data_for_ip_address(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Get historic DNS data related to the given IP address.
     :param org_uuid: The UUID of the organization to perform data retrieval on behalf of.
@@ -340,6 +201,7 @@ def get_historic_dns_data_for_ip_address(self, org_uuid=None, ip_address_uuid=No
         "org_uuid": org_uuid,
         "ip_address_uuid": ip_address_uuid,
         "ip_address_scan_uuid": ip_address_scan_uuid,
+        "order_uuid": order_uuid,
     }
     task_sigs.append(get_historic_dns_data_for_ip_address_from_dnsdb.si(**task_kwargs))
     if len(task_sigs) > 1:
@@ -349,8 +211,15 @@ def get_historic_dns_data_for_ip_address(self, org_uuid=None, ip_address_uuid=No
     self.finish_after(signature=collection_sig)
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def get_historic_dns_data_for_ip_address_from_dnsdb(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def get_historic_dns_data_for_ip_address_from_dnsdb(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Get historic DNS data related to the given IP address from DNS DB.
     :param org_uuid: The UUID of the organization to perform data retrieval on behalf of.
@@ -378,8 +247,15 @@ def get_historic_dns_data_for_ip_address_from_dnsdb(self, org_uuid=None, ip_addr
     history_model.save(org_uuid)
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def get_as_data_for_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def get_as_data_for_ip_address(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Retrieve data about the AS block where the given IP address resides.
     :param org_uuid: The UUID of the organization to perform data retrieval on behalf of.
@@ -393,8 +269,15 @@ def get_as_data_for_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_add
     )
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def get_whois_data_for_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def get_whois_data_for_ip_address(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Retrieve WHOIS data for the given IP address.
     :param org_uuid: The UUID of the organization to perform data retrieval on behalf of.
@@ -411,6 +294,7 @@ def get_whois_data_for_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_
         "org_uuid": org_uuid,
         "ip_address_uuid": ip_address_uuid,
         "ip_address_scan_uuid": ip_address_scan_uuid,
+        "order_uuid": order_uuid,
     }
     task_sigs.append(get_arin_whois_data_for_ip_address.si(**task_kwargs))
     if len(task_sigs) > 1:
@@ -420,8 +304,15 @@ def get_whois_data_for_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_
     self.finish_after(signature=collection_sig)
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def get_arin_whois_data_for_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def get_arin_whois_data_for_ip_address(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Retrieve ARIN WHOIS data for the given IP address.
     :param org_uuid: The UUID of the organization to perform data retrieval on behalf of.
@@ -446,8 +337,15 @@ def get_arin_whois_data_for_ip_address(self, org_uuid=None, ip_address_uuid=None
     )
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def scan_ip_address_for_network_services(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def scan_ip_address_for_network_services(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Scan the given IP address to determine what network services are live on the host.
     :param org_uuid: The UUID of the organization to perform data retrieval on behalf of.
@@ -460,21 +358,23 @@ def scan_ip_address_for_network_services(self, org_uuid=None, ip_address_uuid=No
         % (ip_address_uuid,)
     )
     task_sigs = []
-    tcp_ports = get_tcp_scan_ports_for_org(org_uuid=org_uuid, db_session=self.db_session)
+    tcp_ports = get_tcp_ports_to_scan_for_scan_config(config_uuid=self.scan_config.uuid, db_session=self.db_session)
     if len(tcp_ports) > 0:
         task_sigs.append(scan_ip_address_for_tcp_network_services.si(
             org_uuid=org_uuid,
             ip_address_uuid=ip_address_uuid,
             ip_address_scan_uuid=ip_address_scan_uuid,
             ports=tcp_ports,
+            order_uuid=order_uuid,
         ))
-    udp_ports = get_udp_scan_ports_for_org(org_uuid=org_uuid, db_session=self.db_session)
+    udp_ports = get_udp_ports_to_scan_for_scan_config(config_uuid=self.scan_config.uuid, db_session=self.db_session)
     if len(udp_ports) > 0:
         task_sigs.append(scan_ip_address_for_udp_network_services.si(
             org_uuid=org_uuid,
             ip_address_uuid=ip_address_uuid,
             ip_address_scan_uuid=ip_address_scan_uuid,
             ports=udp_ports,
+            order_uuid=order_uuid,
         ))
     if len(task_sigs) == 0:
         logger.info(
@@ -489,6 +389,7 @@ def scan_ip_address_for_network_services(self, org_uuid=None, ip_address_uuid=No
     self.finish_after(signature=scanning_sig)
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
 def scan_ip_address_for_tcp_network_services(
         self,
@@ -496,6 +397,7 @@ def scan_ip_address_for_tcp_network_services(
         ip_address_uuid=None,
         ip_address_scan_uuid=None,
         ports=None,
+        order_uuid=None,
 ):
     """
     Scan the given IP address for TCP network services.
@@ -533,6 +435,7 @@ def scan_ip_address_for_tcp_network_services(
     )
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
 def scan_ip_address_for_udp_network_services(
         self,
@@ -540,6 +443,7 @@ def scan_ip_address_for_udp_network_services(
         ip_address_uuid=None,
         ip_address_scan_uuid=None,
         ports=None,
+        order_uuid=None,
 ):
     """
     Scan the given IP address for UDP network services.
@@ -577,8 +481,15 @@ def scan_ip_address_for_udp_network_services(
     )
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def inspect_network_services_from_ip_address(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def inspect_network_services_from_ip_address(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Kick off all of the necessary tasks to inspect the live network services associated with the given IP
     address.
@@ -607,6 +518,7 @@ def inspect_network_services_from_ip_address(self, org_uuid=None, ip_address_uui
             network_service_uuid=network_service.uuid,
             check_liveness=False,
             liveness_cause="ip address scan",
+            order_uuid=order_uuid,
         ))
     if len(task_sigs) == 0:
         logger.info(
@@ -617,8 +529,15 @@ def inspect_network_services_from_ip_address(self, org_uuid=None, ip_address_uui
     group(task_sigs).apply_async()
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def create_report_for_ip_address_scan(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def create_report_for_ip_address_scan(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Create an Elasticsearch report for the data gathered during the given IP address scan.
     :param org_uuid: The UUID of the organization to create the report on behalf of.
@@ -636,8 +555,15 @@ def create_report_for_ip_address_scan(self, org_uuid=None, ip_address_uuid=None,
     report.save(org_uuid)
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def update_ip_address_scan_elasticsearch(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def update_ip_address_scan_elasticsearch(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Update Elasticsearch to reflect that all of the data associated with the given IP address scan is the
     most recent data collected for the given IP address.
@@ -665,8 +591,15 @@ def update_ip_address_scan_elasticsearch(self, org_uuid=None, ip_address_uuid=No
     )
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def update_ip_address_scan_completed(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def update_ip_address_scan_completed(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Update the given IP address scan to indicate that the scan has completed.
     :param org_uuid: The UUID of the organization that owns the IP address scan.
@@ -686,8 +619,14 @@ def update_ip_address_scan_completed(self, org_uuid=None, ip_address_uuid=None, 
     )
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def update_ip_address_scanning_status(self, ip_address_uuid=None, scanning_status=None):
+def update_ip_address_scanning_status(
+        self,
+        ip_address_uuid=None,
+        scanning_status=None,
+        order_uuid=None,
+):
     """
     Update the given IP address to set its current scanning status to the given value.
     :param ip_address_uuid: The UUID of the IP address to update.
@@ -706,8 +645,15 @@ def update_ip_address_scanning_status(self, ip_address_uuid=None, scanning_statu
     self.db_session.commit()
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
-def apply_flags_to_ip_address_scan(self, org_uuid=None, ip_address_uuid=None, ip_address_scan_uuid=None):
+def apply_flags_to_ip_address_scan(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Apply all of the relevant flags to the data collected during the given IP address scan.
     :param org_uuid: The UUID of the organization that flags are being applied for.
@@ -735,11 +681,13 @@ def apply_flags_to_ip_address_scan(self, org_uuid=None, ip_address_uuid=None, ip
             ip_address_scan_uuid=ip_address_scan_uuid,
             flag_uuid=flag.uuid,
             flag_type=flag_type,
+            order_uuid=order_uuid,
         ))
     canvas_sig = chain(task_sigs)
     self.finish_after(signature=canvas_sig)
 
 
+#USED
 @websight_app.task(bind=True, base=IpAddressTask)
 def apply_flag_to_ip_address_scan(
         self,
@@ -748,6 +696,7 @@ def apply_flag_to_ip_address_scan(
         ip_address_scan_uuid=None,
         flag_uuid=None,
         flag_type=None,
+        order_uuid=None,
 ):
     """
     Apply the given flag to data collected during the given IP address scan.

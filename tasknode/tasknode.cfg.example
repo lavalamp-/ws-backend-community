@@ -89,6 +89,7 @@ files_fingerprints = fingerprints.csv
 files_user_agents = user_agents.csv
 files_tlds = tlds.txt
 files_extended_validation_oids = extended_validation_oids.csv
+files_default_scan_configs = default_scan_configs.json
 
 [Filesystem]
 

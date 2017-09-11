@@ -13,47 +13,14 @@ from lib.inspection import SslSupportInspector
 logger = get_task_logger(__name__)
 
 
-@websight_app.task(bind=True, base=ServiceTask)
-def analyze_network_service_scan(self, org_uuid=None, network_service_scan_uuid=None):
-    """
-    Analyze the results of the given network service scan.
-    :param org_uuid: The UUID of the organization to analyze the network service scan on behalf of.
-    :param network_service_scan_uuid: The UUID of the network service scan to analyze the results
-    of.
-    :return: None
-    """
-    logger.info(
-        "Now starting to analyze the results of network service scan %s. Organization is %s."
-        % (network_service_scan_uuid, org_uuid)
-    )
-    self.wait_for_es()
-    task_sigs = []
-    task_kwargs = {
-        "network_service_scan_uuid": network_service_scan_uuid,
-        "org_uuid": org_uuid,
-    }
-    if does_network_service_scan_support_ssl(network_service_scan_uuid=network_service_scan_uuid, org_uuid=org_uuid):
-        task_sigs.append(create_ssl_support_report_for_network_service_scan.si(**task_kwargs))
-    if len(task_sigs) == 0:
-        logger.info(
-            "No analysis tasks to kick off for analysis of network service scan %s."
-            % (network_service_scan_uuid,)
-        )
-        return
-    canvas_sig = group(task_sigs)
-    logger.info(
-        "Now kicking off %s tasks to analyze the results of network service scan %s."
-        % (len(task_sigs), network_service_scan_uuid)
-    )
-    self.finish_after(signature=canvas_sig)
-
-
+#USED
 @websight_app.task(bind=True, base=NetworkServiceTask)
 def create_report_for_network_service_scan(
         self,
         org_uuid=None,
         network_service_uuid=None,
         network_service_scan_uuid=None,
+        order_uuid=None,
 ):
     """
     Create a network service report reflecting the data gathered during the given network service scan.
@@ -68,12 +35,14 @@ def create_report_for_network_service_scan(
     )
 
 
-@websight_app.task(bind=True, base=ServiceTask)
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
 def create_ssl_support_report_for_network_service_scan(
         self,
         org_uuid=None,
         network_service_uuid=None,
         network_service_scan_uuid=None,
+        order_uuid=None,
 ):
     """
     Create an SslSupportReportModel based on the results of information gathered during the given

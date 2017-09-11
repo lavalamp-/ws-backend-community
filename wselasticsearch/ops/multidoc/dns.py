@@ -22,6 +22,7 @@ def get_all_domain_names_for_organization(org_uuid):
     return list(set(to_return))
 
 
+#TESTME
 def update_domain_name_scan_latest_state(scan_uuid=None, latest_state=None, org_uuid=None):
     """
     Update all of the Elasticsearch documents associated with the given domain name scan to
@@ -37,6 +38,7 @@ def update_domain_name_scan_latest_state(scan_uuid=None, latest_state=None, org_
     return query.update_by_query(org_uuid)
 
 
+#TESTME
 def update_not_domain_name_scan_latest_state(
         scan_uuid=None,
         latest_state=None,

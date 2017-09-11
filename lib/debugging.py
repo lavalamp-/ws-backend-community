@@ -111,16 +111,17 @@ def perform_network_service_inspection(
     :param protocol: The protocol to use to connect to the remote service.
     :return: None
     """
-    from tasknode.tasks import perform_network_service_inspection
-    from wselasticsearch import bootstrap_index_model_mappings
-    org_uuid = org_uuid if org_uuid is not None else str(uuid4())
-    scan_uuid = scan_uuid if scan_uuid is not None else str(uuid4())
-    bootstrap_index_model_mappings(index=org_uuid, delete_first=True)
-    task_sig = perform_network_service_inspection.si(
-        org_uuid=org_uuid,
-        scan_uuid=scan_uuid,
-        port=port,
-        protocol=protocol,
-        ip_address=ip_address,
-    )
-    task_sig.apply_async()
+    pass
+    # from tasknode.tasks import perform_network_service_inspection
+    # from wselasticsearch import bootstrap_index_model_mappings
+    # org_uuid = org_uuid if org_uuid is not None else str(uuid4())
+    # scan_uuid = scan_uuid if scan_uuid is not None else str(uuid4())
+    # bootstrap_index_model_mappings(index=org_uuid, delete_first=True)
+    # task_sig = perform_network_service_inspection.si(
+    #     org_uuid=org_uuid,
+    #     scan_uuid=scan_uuid,
+    #     port=port,
+    #     protocol=protocol,
+    #     ip_address=ip_address,
+    # )
+    # task_sig.apply_async()

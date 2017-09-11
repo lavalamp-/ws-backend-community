@@ -8,7 +8,7 @@ import time
 from netaddr import IPNetwork
 from lib import ConfigManager
 
-from lib import WsFaker, RandomHelper, FilesystemHelper, WsIntrospectionHelper
+from lib import WsFaker, RandomHelper, FilesystemHelper, WsIntrospectionHelper, bootstrap_all_database_models
 from wselasticsearch.helper import ElasticsearchHelper
 from .data import WsTestData
 from rest.models import WsUser, Organization, Order
@@ -16,6 +16,7 @@ from wselasticsearch import bootstrap_index_model_mappings
 from wselasticsearch.query import BulkElasticsearchQuery
 from wselasticsearch.models import SslSupportReportModel, WebServiceReportModel, HttpTransactionModel, \
     DomainNameReportModel, HttpScreenshotModel
+import rest.models
 
 config = ConfigManager.instance()
 
@@ -267,6 +268,7 @@ class WebSightDiscoverRunner(DiscoverRunner):
         """
         for user_string, user_kwargs in WsTestData.USERS.iteritems():
             self.__populate_user(user_string=user_string, user_kwargs=user_kwargs)
+        bootstrap_all_database_models()
 
     def __populate_domain_name_scans_for_domain_name(self, domain_name=None, user_string=None, count=2):
         """

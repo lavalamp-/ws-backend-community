@@ -18,23 +18,24 @@ class PaginationSerializer(object):
             results=None,
             count=None,
             current_page=None,
+            page_size=api_settings.PAGE_SIZE,
     ):
         self.results = results
         self.count = count
         self.current_page = current_page
+        self.page_size = page_size
 
     def to_response_dict(self):
         """
         Return a Python dictionary which should be used in Django response objects.
         :return: A Python dictionary which should be used in Django response objects.
         """
-        page_size = api_settings.PAGE_SIZE
-        last_page = max(1, int(math.ceil(self.count/float(page_size))))
+        last_page = max(1, int(math.ceil(self.count/float(self.page_size))))
         return {
             "count": self.count,
             "first_page": 1,
             "last_page": last_page,
-            "page_size": api_settings.PAGE_SIZE,
+            "page_size": self.page_size,
             "current_page": self.current_page,
             "results": self.results,
         }
@@ -50,5 +51,6 @@ class WebSightPagination(pagination.PageNumberPagination):
             results=data,
             count=self.page.paginator.count,
             current_page=self.page.number,
+            page_size=self.page_size,
         )
         return Response(serializer.to_response_dict())

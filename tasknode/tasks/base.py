@@ -2,21 +2,18 @@
 from __future__ import absolute_import
 
 import time
-from base64 import b64encode
 from uuid import uuid4
 from celery import Task
 from celery.exceptions import Ignore
 from celery.canvas import group, chord, chain, Signature
 from celery.utils.log import get_task_logger
-from celery.utils import cached_property
-from datetime import datetime
 
 from lib import ConfigManager, RedisHelper, TempFileMixin
 from lib.sqlalchemy import get_sa_session, get_endpoint_information_for_org_network_service, IpAddress, IpAddressScan, \
-    NetworkService, NetworkServiceScan, WebService, WebServiceScan
+    NetworkService, NetworkServiceScan, WebService, WebServiceScan, Order, DomainName, DomainNameScan, Network, \
+    OrganizationNetworkScan
 from lib.parsing import UrlWrapper
 from tasknode import websight_app
-from wselasticsearch.models import TaskResultModel
 
 logger = get_task_logger(__name__)
 config = ConfigManager.instance()
@@ -144,7 +141,6 @@ class WebSightBaseTask(Task, TempFileMixin):
             % (self.__class__.__name__, exc, task_id, einfo)
         )
         self.clean_up()
-        self.__index_task_failure(einfo.traceback)
         super(WebSightBaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
@@ -178,7 +174,6 @@ class WebSightBaseTask(Task, TempFileMixin):
             % (self.__class__.__name__, retval, task_id)
         )
         self.clean_up()
-        self.__index_task_success()
         super(WebSightBaseTask, self).on_success(retval, task_id, args, kwargs)
 
     def wait_for_es(self, duration=None):
@@ -362,41 +357,6 @@ class WebSightBaseTask(Task, TempFileMixin):
         signature = self._wait_for_tag_task.s(**kwargs)
         signature.options.update(options)
         return signature
-
-    def __index_task_failure(self, traceback=None):
-        """
-        Index a TaskResultModel document to indicate that this task failed.
-        :param traceback: The error traceback that resulted in this task failing.
-        :return: None
-        """
-        pass
-        # task_result = TaskResultModel(
-        #     name=self.name,
-        #     start_time=self.start_time,
-        #     end_time=datetime.now(),
-        #     uuid=self.id,
-        #     successful=False,
-        #     traceback=b64encode(traceback),
-        # )
-        # task_result.save(config.task_default_index)
-        # logger.warning("Task failure indexed successfully.")
-
-    def __index_task_success(self):
-        """
-        Index a TaskResultModel document to indicate that this task completed successfully.
-        :return: None
-        """
-        pass
-        # task_result = TaskResultModel(
-        #     name=self.name,
-        #     start_time=self.start_time,
-        #     end_time=datetime.now(),
-        #     uuid=self.id,
-        #     successful=True,
-        #     traceback=None,
-        # )
-        # task_result.save(config.task_default_index)
-        # logger.debug("Task success indexed successfully.")
 
     # Properties
 
@@ -615,22 +575,170 @@ class DatabaseTask(WebSightBaseTask):
     # Representation and Comparison
 
 
-class ServiceTask(DatabaseTask):
+class ScanTask(DatabaseTask):
+    """
+    This is a base task type for all tasks that are invoked as the result of a scan.
+    """
+
+    abstract = True
+
+    @property
+    def order(self):
+        """
+        Get the order that this task is associated with.
+        :return: the order that this task is associated with.
+        """
+        if self.order_uuid:
+            return Order.by_uuid(uuid=self.order_uuid, db_session=self.db_session)
+        else:
+            return None
+
+    @property
+    def order_uuid(self):
+        """
+        Get the UUID of the order that this task is associated with.
+        :return: The UUID of the order that this task is associated with.
+        """
+        return self.task_kwargs.get("order_uuid", None)
+
+    @property
+    def organization(self):
+        """
+        Get the organization that this scanning task is associated with.
+        :return: the organization that this scanning task is associated with.
+        """
+        return self.order.organization if self.order is not None else None
+
+    @property
+    def org_uuid(self):
+        """
+        Get the UUID of the organization that this task is associated with.
+        :return: the UUID of the organization that this task is associated with.
+        """
+        return str(self.order.organization.uuid) if self.order is not None else None
+
+    @property
+    def scan_config(self):
+        """
+        Get the scanning configuration associated with the referenced order.
+        :return: the scanning configuration associated with the referenced order.
+        """
+        order = self.order
+        if order:
+            return order.scan_config[0]
+        else:
+            return None
+
+
+class DomainNameTask(ScanTask):
+    """
+    This is a base task type for all tasks that are intended to investigate a domain name.
+    """
+
+    abstract = True
+
+    @property
+    def domain(self):
+        """
+        Get the DomainName object that this task is associated with.
+        :return: the DomainName object that this task is associated with.
+        """
+        if self.domain_uuid:
+            return DomainName.by_uuid(uuid=self.domain_uuid, db_session=self.db_session)
+        else:
+            return None
+
+    @property
+    def domain_scan(self):
+        """
+        Get the DomainNameScan object that this task is associated with.
+        :return: the DomainNameScan object that this task is associated with.
+        """
+        if self.domain_scan_uuid:
+            return DomainNameScan.by_uuid(uuid=self.domain_scan_uuid, db_session=self.db_session)
+        else:
+            return None
+
+    @property
+    def domain_scan_uuid(self):
+        """
+        Get the UUID of the domain name scan that this task is associated with.
+        :return: the UUID of the domain name scan that this task is associated with.
+        """
+        return self.task_kwargs.get("domain_scan_uuid", None)
+
+    @property
+    def domain_uuid(self):
+        """
+        Get the UUID of the domain name that this task is associated with.
+        :return: the UUID of the domain name that this task is associated with.
+        """
+        return self.task_kwargs.get("domain_uuid", None)
+
+    @property
+    def inspector(self):
+        """
+        Get a domain name inspector that is configured to investigate the associated domain
+        name.
+        :return: A domain name inspector that is configured to investigate the associated domain
+        name.
+        """
+        from lib.inspection import DomainInspector
+        return DomainInspector(self.domain.name)
+
+
+class NetworkTask(ScanTask):
+    """
+    This is a base task type for all tasks that are intended to investigate a network.
+    """
+
+    abstract = True
+
+    @property
+    def network(self):
+        """
+        Get the network that this task is associated with.
+        :return: The network that this task is associated with.
+        """
+        if self.network_uuid:
+            return Network.by_uuid(uuid=self.network_uuid, db_session=self.db_session)
+        else:
+            return None
+
+    @property
+    def network_scan(self):
+        """
+        Get the NetworkScan that this task is associated with.
+        :return: the NetworkScan that this task is associated with.
+        """
+        if self.network_scan_uuid:
+            return OrganizationNetworkScan.by_uuid(uuid=self.network_scan_uuid, db_session=self.db_session)
+        else:
+            return None
+
+    @property
+    def network_scan_uuid(self):
+        """
+        Get the UUID of the network scan that this task is associated with.
+        :return: the UUID of the network scan that this task is associated with.
+        """
+        return self.task_kwargs.get("network_scan_uuid", None)
+
+    @property
+    def network_uuid(self):
+        """
+        Get the UUID of the network that this task is associated with.
+        :return: the UUID of the network that this task is associated with.
+        """
+        return self.task_kwargs.get("network_uuid", None)
+
+
+class ServiceTask(ScanTask):
     """
     This is a base task type for all tasks that are intended to investigate a network service.
     """
 
-    # Class Members
-
     abstract = True
-
-    # Instantiation
-
-    # Static Methods
-
-    # Class Methods
-
-    # Public Methods
 
     def get_endpoint_information(self, service_uuid):
         """
@@ -644,16 +752,8 @@ class ServiceTask(DatabaseTask):
             db_session=self.db_session,
         )
 
-    # Protected Methods
 
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison
-
-
-class WebServiceTask(DatabaseTask):
+class WebServiceTask(ScanTask):
     """
     This is a base task type for all tasks that are intended to investigate a web service.
     """
@@ -728,7 +828,7 @@ class WebServiceTask(DatabaseTask):
         return self.task_kwargs.get("web_service_uuid", None)
 
 
-class IpAddressTask(DatabaseTask):
+class IpAddressTask(ScanTask):
     """
     This is a base task type for all tasks that are intended to investigate an IP address.
     """
@@ -785,12 +885,23 @@ class IpAddressTask(DatabaseTask):
         return self.task_kwargs.get("ip_address_uuid", None)
 
 
-class NetworkServiceTask(DatabaseTask):
+class NetworkServiceTask(ScanTask):
     """
     This is a base task type for all tasks that are intended to investigate a network service.
     """
 
     abstract = True
+
+    def get_endpoint_information(self):
+        """
+        Get a tuple containing the IP address, port, and protocol associated with the remote service.
+        :return: A tuple containing (1) the IP address, (2) the port, and (3) the protocol associated
+        with the given service.
+        """
+        return get_endpoint_information_for_org_network_service(
+            service_uuid=self.network_service_uuid,
+            db_session=self.db_session,
+        )
 
     @property
     def inspector(self):

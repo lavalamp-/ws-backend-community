@@ -41,6 +41,7 @@ def does_network_service_scan_support_ssl(network_service_scan_uuid=None, org_uu
     return ssl_version is not None
 
 
+#TESTME
 def get_fingerprint_data_for_network_service_scan(scan_uuid=None, org_uuid=None, over_ssl=None):
     """
     Get a list of tuples containing (1) the response code, (2) whether or not the response had content,
@@ -102,6 +103,7 @@ def get_network_service_scan_uuid_from_ssl_report_id(org_uuid=None, report_id=No
     return response.network_service_scan_uuid
 
 
+#TESTME
 def get_successful_fingerprints_for_service(
         org_uuid=None,
         scan_uuid=None,
@@ -142,6 +144,7 @@ def get_supported_ssl_versions_for_service(org_uuid=None, scan_uuid=None):
     return response.get_field_from_results("pyopenssl_protocol")
 
 
+#TESTME
 def get_supported_ssl_version_for_service(org_uuid=None, scan_uuid=None):
     """
     Get a supported SSL version for the given network service, scan, and organization.
@@ -157,6 +160,7 @@ def get_supported_ssl_version_for_service(org_uuid=None, scan_uuid=None):
     return supported_versions[0] if len(supported_versions) > 0 else None
 
 
+#TESTME
 def get_virtual_hosts_from_network_service_scan(scan_uuid=None, org_uuid=None):
     """
     Get a list of all of the virtual hosts discovered during the given network service scan.

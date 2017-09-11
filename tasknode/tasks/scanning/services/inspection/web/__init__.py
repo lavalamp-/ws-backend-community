@@ -2,7 +2,6 @@
 from __future__ import absolute_import
 
 from .analysis import (
-    analyze_web_service_scan,
     create_report_for_web_service_scan,
     update_web_service_report_for_organization,
     update_latest_web_service_reports_for_organization,

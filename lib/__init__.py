@@ -24,6 +24,7 @@ from .bootstrap import (
     bootstrap_data_stores,
     bootstrap_django_models,
     bootstrap_nmap_configs,
+    bootstrap_scan_configs,
     bootstrap_zmap_configs,
 )
 
@@ -62,6 +63,7 @@ from .exception import (
 from .export import *
 
 from .filesystem import (
+    FileHelper,
     FilesystemHelper,
     PathHelper,
 )
@@ -92,6 +94,7 @@ from .mixin import (
     CrawlableMixin,
     DictableMixin,
     ElasticsearchableMixin,
+    JsonSerializableMixin,
     ScrapyItemizableMixin,
     TempFileMixin,
 )

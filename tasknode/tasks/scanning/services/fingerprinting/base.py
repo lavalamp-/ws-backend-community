@@ -33,8 +33,15 @@ def get_tcp_ssl_service_fingerprinting_tasks():
     ]
 
 
+#USED
 @websight_app.task(bind=True, base=NetworkServiceTask)
-def fingerprint_network_service(self, org_uuid=None, network_service_uuid=None, network_service_scan_uuid=None):
+def fingerprint_network_service(
+        self,
+        org_uuid=None,
+        network_service_uuid=None,
+        network_service_scan_uuid=None,
+        order_uuid=None,
+):
     """
     Perform fingerprinting of the given network service.
     :param org_uuid: The UUID of the organization that owns the network service.
@@ -50,8 +57,9 @@ def fingerprint_network_service(self, org_uuid=None, network_service_uuid=None, 
     if self.is_tcp_service:
         task_sig = fingerprint_tcp_service.si(
             org_uuid=org_uuid,
-            service_uuid=network_service_uuid,
-            scan_uuid=network_service_scan_uuid,
+            network_service_uuid=network_service_uuid,
+            network_service_scan_uuid=network_service_scan_uuid,
+            order_uuid=order_uuid,
         )
         self.finish_after(signature=task_sig)
     elif self.is_udp_service:
@@ -61,26 +69,28 @@ def fingerprint_network_service(self, org_uuid=None, network_service_uuid=None, 
         return
 
 
-@websight_app.task(bind=True, base=ServiceTask)
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
 def fingerprint_tcp_service(
         self,
         org_uuid=None,
-        service_uuid=None,
-        scan_uuid=None,
+        network_service_uuid=None,
+        network_service_scan_uuid=None,
+        order_uuid=None,
 ):
     """
     Perform fingerprinting of the given TCP network service.
     :param org_uuid: The UUID of the organization to check the service on behalf of.
-    :param service_uuid: The UUID of the network service to fingerprint.
+    :param network_service_uuid: The UUID of the network service to fingerprint.
     if the network service is found to be alive.
-    :param scan_uuid: The UUID of the network service scan that this service fingerprinting is associated
+    :param network_service_scan_uuid: The UUID of the network service scan that this service fingerprinting is associated
     with.
     :return: None
     """
-    ip_address, port, protocol = self.get_endpoint_information(service_uuid)
+    ip_address, port, protocol = self.get_endpoint_information()
     logger.debug(
         "Now performing TCP network service inspection for %s:%s for organization %s. Scan is %s."
-        % (ip_address, port, org_uuid, scan_uuid)
+        % (ip_address, port, org_uuid, network_service_scan_uuid)
     )
     task_sigs = []
     fingerprinting_sigs = []
@@ -89,12 +99,13 @@ def fingerprint_tcp_service(
             org_uuid=org_uuid,
             ip_address=ip_address,
             port=port,
-            scan_uuid=scan_uuid,
-            service_uuid=service_uuid,
+            network_service_scan_uuid=network_service_scan_uuid,
+            network_service_uuid=network_service_uuid,
+            order_uuid=order_uuid,
         ))
     supported_ssl_version = get_supported_ssl_version_for_service(
         org_uuid=org_uuid,
-        scan_uuid=scan_uuid,
+        scan_uuid=network_service_scan_uuid,
     )
     if supported_ssl_version is not None:
         for fingerprinting_task in get_tcp_ssl_service_fingerprinting_tasks():
@@ -102,9 +113,10 @@ def fingerprint_tcp_service(
                 org_uuid=org_uuid,
                 ip_address=ip_address,
                 port=port,
-                scan_uuid=scan_uuid,
+                network_service_scan_uuid=network_service_scan_uuid,
                 ssl_version=supported_ssl_version,
-                service_uuid=service_uuid,
+                network_service_uuid=network_service_uuid,
+                order_uuid=order_uuid,
             ))
     task_sigs.append(group(fingerprinting_sigs))
     canvas_sig = chain(task_sigs)

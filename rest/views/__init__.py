@@ -11,16 +11,13 @@ from .auth import (
     WsCheckAuthTokenStatus
 )
 
-from .admin import (
-    AdminManageUsersView,
-    AdminManageUsersEnableDisableView,
-    AdminManageUsersDeleteUserView,
-    AdminManageUsersResendVerificationEmailView
-)
+from .admin import *
 
 from .dns import (
     DomainNameDetailView,
     DomainNameListView,
+    DnsRecordTypeDetailView,
+    DnsRecordTypeListView,
 )
 
 from .elasticsearch import *
@@ -47,7 +44,20 @@ from .organizations import (
     OrganizationListView,
     OrganizationUserAdminAPIView,
     organization_permissions,
+    retrieve_organization_scan_config,
+    ScanPortDetailView,
+    ScanPortListView,
+    set_organization_scan_config,
     upload_networks_file,
+)
+
+from .scans import (
+    check_scan_config_validity,
+    DefaultScanConfigListView,
+    DnsRecordTypesByScanConfigView,
+    ScanConfigDetailView,
+    ScanConfigListView,
+    ScanPortsByScanConfigView,
 )
 
 from .swagger import (

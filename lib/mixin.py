@@ -368,3 +368,24 @@ class ScrapyItemizableMixin(object):
         """
         return False
 
+
+class JsonSerializableMixin(object):
+    """
+    This is a mixin class for providing functionality that enables an object to be serialized to/from JSON.
+    """
+
+    @staticmethod
+    def from_json(to_parse):
+        """
+        Create an instance of this object based on the contents of the given JSON dictionary.
+        :param to_parse: The JSON dictionary to parse.
+        :return: The newly-created object.
+        """
+        raise NotImplementedError("Subclasses must implement this!")
+
+    def to_json(self):
+        """
+        Get a JSON dictionary representing the internal state of this object.
+        :return: A JSON dictionary representing the internal state of this object.
+        """
+        raise NotImplementedError("Subclasses must implement this!")

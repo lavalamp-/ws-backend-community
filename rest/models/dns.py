@@ -3,9 +3,11 @@ from __future__ import absolute_import
 
 from django.db import models
 
+from lib import JsonSerializableMixin
 from .base import BaseWsModel
 from .organizations import Organization
 from .networks import IpAddress
+from .scans import ScanConfig
 
 
 class DomainName(BaseWsModel):
@@ -71,3 +73,49 @@ class DomainNameScan(BaseWsModel):
         on_delete=models.CASCADE,
         null=False,
     )
+
+
+class DnsRecordType(BaseWsModel, JsonSerializableMixin):
+    """
+    This is a class for representing a DNS record type.
+    """
+
+    # Columns
+
+    record_type = models.CharField(
+        max_length=16,
+        null=False,
+        help_text="The DNS record type.",
+    )
+
+    # Foreign Keys
+
+    scan_config = models.ForeignKey(
+        ScanConfig,
+        related_name="dns_record_types",
+        on_delete=models.CASCADE,
+        null=False,
+    )
+
+    @staticmethod
+    def from_json(to_parse):
+        return DnsRecordType.objects.create(
+            record_type=to_parse["record_type"],
+            scan_config=to_parse.get("scan_config", None),
+        )
+
+    def save(self, *args, **kwargs):
+        self.record_type = self.record_type.upper()
+        return super(DnsRecordType, self).save(*args, **kwargs)
+
+    def to_json(self):
+        return {
+            "record_type": self.record_type,
+        }
+
+    def __repr__(self):
+        return "<%s - %s (%s)>" % (
+            self.__class__.__name__,
+            self.uuid,
+            self.record_type,
+        )

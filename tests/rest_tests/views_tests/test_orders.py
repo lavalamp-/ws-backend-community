@@ -4,12 +4,14 @@ from __future__ import absolute_import
 from uuid import uuid4
 from mock import MagicMock
 from django.utils import timezone
+from mock import MagicMock
 
 from ..mixin import ListTestCaseMixin, ParameterizedRouteMixin, ExporterTestCaseMixin, RetrieveTestCaseMixin, \
-    PresentableTestCaseMixin, ExporterCustomFieldsMixin, CustomFieldsMixin
+    PresentableTestCaseMixin, ExporterCustomFieldsMixin, CustomFieldsMixin, UpdateTestCaseMixin
 from ..base import WsDjangoViewTestCase
 from tasknode.tasks import handle_placed_order, send_emails_for_placed_order
-from rest.models import Order, Receipt
+from rest.models import Order, Receipt, ScanConfig
+import rest.models
 
 
 class TestOrderListView(
@@ -115,134 +117,149 @@ class TestOrderDetailView(
         return rest.models.Order
 
 
-class TestPlaceOrder(
+class TestPlaceOrderView(
     ParameterizedRouteMixin,
     WsDjangoViewTestCase,
 ):
     """
-    This is a test case for testing the place_order function APIView.
+    This is a test case for testing the place_order API handler.
     """
 
     _api_route = "/orders/%s/place/"
     _url_parameters = None
-    _original_delay_method = None
-    _original_place_method = None
-    _original_send_method = None
-    _original_get_receipt_method = None
+    _orig_handle_placed_order = None
+    _orig_send_emails_for_placed_order = None
 
     def setUp(self):
         """
-        Set up this test case by mocking out handle_placed_order.delay and Order.place_order.
+        Set this test case up by stubbing out the calls to async methods.
         :return: None
         """
-        super(TestPlaceOrder, self).setUp()
-        self._original_delay_method = handle_placed_order.delay
+        super(TestPlaceOrderView, self).setUp()
+        self._orig_handle_placed_order = handle_placed_order.delay
         handle_placed_order.delay = MagicMock()
-        self._original_place_method = Order.place_order
-        Order.place_order = MagicMock()
-        self._original_send_method = send_emails_for_placed_order.delay
+        self._orig_send_emails_for_placed_order = send_emails_for_placed_order.delay
         send_emails_for_placed_order.delay = MagicMock()
-        self._original_get_receipt_method = Order.get_receipt_description
-        Order.get_receipt_description = MagicMock()
 
     def tearDown(self):
         """
-        Tear down this test case by returning handle_placed_order.delay and Order.place_order to their original
-        methods.
+        Tear down this test case by replacing the stubbed out methods.
         :return: None
         """
-        handle_placed_order.delay = self._original_delay_method
-        Order.place_order = self._original_place_method
-        send_emails_for_placed_order.delay = self._original_send_method
-        Order.get_receipt_description = self._original_get_receipt_method
-        super(TestPlaceOrder, self).tearDown()
+        handle_placed_order.delay = self._orig_handle_placed_order
+        send_emails_for_placed_order.delay = self._orig_send_emails_for_placed_order
+        super(TestPlaceOrderView, self).tearDown()
 
-    def __send_place_request(self, user="user_1", query_string=None, login=True, input_uuid="POPULATE"):
+    def __create_order_for_user(self, user="user_1"):
         """
-        Send an HTTP request to the configured API endpoint and return the response.
-        :param user: The user to send the request as.
-        :param query_string: The query string to include in the URL.
-        :param login: Whether or not to log in before sending the request.
+        Create and return an Order that can be used for testing purposes for the given user.
+        :param user: The user to create the order for.
+        :return: None
+        """
+        user_obj = self.get_user(user=user)
+        org = self.get_organization_for_user(user=user)
+        return rest.models.Order.objects.create_from_user_and_organization(
+            user=user_obj,
+            organization=org,
+        )
+
+    def __send_place_order_request_for_user(self, input_uuid=None, user="user_1", login=True):
+        """
+        Send an HTTP request to the remote endpoint to invoke an order placement.
         :param input_uuid: The UUID of the order to place.
+        :param user: The user to submit the request on behalf of.
+        :param login: Whether or not to log in.
         :return: The HTTP response.
         """
         if login:
             self.login(user=user)
-        if input_uuid == "POPULATE":
-            order = self.get_order_for_user(user=user)
+        if input_uuid is None:
+            order = self.__create_order_for_user(user=user)
             input_uuid = str(order.uuid)
         self._url_parameters = input_uuid
-        return self.put(query_string=query_string)
+        return self.put()
 
-    def test_unknown_uuid_fails(self):
+    def test_place_unknown_uuid_fails(self):
         """
-        Tests that submitting a request to the API endpoint with an unknown UUID fails.
+        Tests that sending a request to the endpoint with an unknown UUID fails.
         :return: None
         """
-        self.assert_request_fails(self.send(input_uuid=str(uuid4())), fail_status=404)
+        response = self.__send_place_order_request_for_user(input_uuid=str(uuid4()))
+        self.assert_request_not_found(response)
 
-    def test_no_scan_privileges_fails(self):
+    def test_no_auth_fails(self):
         """
-        Tests that submitting a request on behalf of a user that does not have scan privileges fails.
+        Tests that sending a request to the endpoint without any authentication fails.
         :return: None
         """
-        order = self.get_order_for_user(user="user_1")
-        scan_user = order.organization.scan_group.users.first()
-        order.organization.scan_group.users.remove(scan_user)
-        response = self.send(user="user_1")
-        order.organization.scan_group.users.add(scan_user)
+        response = self.__send_place_order_request_for_user(login=False)
+        self.assert_request_requires_auth(response)
+
+    def test_no_scan_privs_fails(self):
+        """
+        Tests that sending an order to this endpoint for an order that the requesting user does
+        not own (as a regular user) fails.
+        :return: None
+        """
+        order = self.__create_order_for_user(user="user_1")
+        user = self.get_user(user="user_1")
+        order.organization.scan_group.users.remove(user)
+        response = self.__send_place_order_request_for_user(input_uuid=str(order.uuid))
+        order.organization.scan_group.users.add(user)
         self.assert_request_not_authorized(response)
 
-    def test_calls_place_order(self):
+    def test_no_scan_privs_admin_succeeds(self):
         """
-        Tests that submitting a request correctly calls place_order.
+        Tests that sending a request to this endpoint for an order that the requesting user does not
+        own (as an admin user) succeeds.
         :return: None
         """
-        self.send()
-        self.assertTrue(Order.place_order.called)
+        order = self.__create_order_for_user(user="user_1")
+        response = self.__send_place_order_request_for_user(input_uuid=str(order.uuid), user="admin_1")
+        self.assert_request_succeeds(response, status_code=204)
 
-    def test_place_order_false_fails(self):
+    def test_order_not_ready_fails(self):
         """
-        Tests that submitting a request that results in a False-y value being returned by place_order fails.
+        Tests that sending a request to this endpoint for an order that is not ready to be placed fails.
         :return: None
         """
-        Order.place_order.return_value = False
-        self.assert_request_fails(self.send())
+        order = self.__create_order_for_user()
+        order.scan_config.delete()
+        order.scan_config = None
+        order.save()
+        response = self.__send_place_order_request_for_user(input_uuid=str(order.uuid))
+        self.assert_request_not_authorized(response)
+
+    def test_order_is_placed(self):
+        """
+        Tests that sending a request to this endpoint successfully marks the order as having been placed.
+        :return: None
+        """
+        order = self.__create_order_for_user()
+        self.__send_place_order_request_for_user(input_uuid=str(order.uuid))
+        order.refresh_from_db()
+        self.assertTrue(order.has_been_placed)
+
+    def test_send_emails(self):
+        """
+        Tests that a successful request calls send_emails_for_placed_order.delay.
+        :return: None
+        """
+        self.__send_place_order_request_for_user()
+        self.assertTrue(send_emails_for_placed_order.delay.called)
+
+    def test_handle_placed_order(self):
+        """
+        Tests that a successful request calls handle_placed_order.delay.
+        :return: None
+        """
+        self.__send_place_order_request_for_user()
+        self.assertTrue(handle_placed_order.delay.called)
 
     def test_success_status(self):
         """
-        Tests to check that a successful placement request returns the expected HTTP status code.
+        Tests that a successful request to this endpoint returns the expected HTTP status code.
         :return: None
         """
-        response = self.send()
-        self.assertEqual(response.status_code, 204)
-
-    def test_success_handle_placed_called(self):
-        """
-        Tests to check that a successful placement request calls handle_placed_order.delay.
-        :return: None
-        """
-        self.send()
-        self.assertTrue(handle_placed_order.delay.called)
-
-    def test_success_handle_placed_called_with(self):
-        """
-        Tests to check that a successful placement request calls handle_placed_order.delay with the expected
-        arguments.
-        :return: None
-        """
-        order = self.get_order_for_user(user="user_1")
-        self.send(user="user_1")
-        handle_placed_order.delay.assert_called_with(order_uuid=unicode(order.uuid))
-
-    def test_success_calls_send_emails(self):
-        """
-        Tests to check that a successful placement request calls send_emails_for_placed_order.delay.
-        :return: None
-        """
-        self.send()
-        self.assertTrue(send_emails_for_placed_order.delay.called)
-
-    @property
-    def send_method(self):
-        return self.__send_place_request
+        response = self.__send_place_order_request_for_user()
+        self.assert_request_succeeds(response, status_code=204)

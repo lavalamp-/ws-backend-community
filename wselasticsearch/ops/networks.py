@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from ..query import IpPortScanQuery, IpAddressScanMultidocQuery
 
 
+#TESTME
 def get_open_ports_from_ip_address_scan(ip_address_scan_uuid=None, org_uuid=None):
     """
     Get a list of tuples containing (1) the port number and (2) the protocol for all of the network
@@ -24,6 +25,7 @@ def get_open_ports_from_ip_address_scan(ip_address_scan_uuid=None, org_uuid=None
     return list(to_return)
 
 
+#TESTME
 def update_ip_address_scan_latest_state(scan_uuid=None, latest_state=None, org_uuid=None):
     """
     Update all of the Elasticsearch documents associated with the given IP address scan to
@@ -39,6 +41,7 @@ def update_ip_address_scan_latest_state(scan_uuid=None, latest_state=None, org_u
     return query.update_by_query(org_uuid)
 
 
+#TESTME
 def update_not_ip_address_scan_latest_state(
         scan_uuid=None,
         latest_state=None,

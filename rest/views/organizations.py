@@ -2,10 +2,13 @@
 from __future__ import absolute_import
 
 import django_filters
+from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
+from rest_framework.permissions import IsAuthenticated
 
 from lib import FilesystemHelper, get_storage_helper
 from rest.responses import DomainsUploadResponse
@@ -17,7 +20,8 @@ from rest.serializers import OrganizationSerializer, OrganizationNetworkUploadRa
     OrganizationDomainNameUploadRangeSerializer, NetworkSerializer, DomainNameSerializer
 from wselasticsearch.models import UserUploadModel
 from .base import WsListCreateChildAPIView, WsListCreateAPIView, \
-    WsRetrieveUpdateDestroyAPIView, WsListChildAPIView, BaseWsAPIView
+    WsRetrieveUpdateDestroyAPIView, WsListChildAPIView, BaseWsAPIView, WsListAPIView, \
+    WsRetrieveDestroyAPIView
 from rest_framework.response import Response
 from lib.parsing import NetworksCsvWrapper, DomainsTextFileWrapper, CidrRangeWrapper
 from .exception import OperationNotAllowed
@@ -25,6 +29,7 @@ from lib import ConfigManager
 from lib.smtp import SmtpEmailHelper
 import rest.filters
 import rest.serializers
+import rest.models
 
 config = ConfigManager.instance()
 
@@ -743,3 +748,123 @@ class OrganizationUserAdminAPIView(BaseOrganizationAdminAPIView):
     # Properties
 
     # Representation and Comparison
+
+
+class ScanPortQuerysetMixin(object):
+    """
+    This is a mixin class that provides the queryset retrieval methods for querying ScanPort objects.
+    """
+
+    serializer_class = rest.serializers.ScanPortSerializer
+
+    def _get_su_queryset(self):
+        return rest.models.ScanPort.objects.all()
+
+    def _get_user_queryset(self):
+        return rest.models.ScanPort.objects.filter(
+            Q(scan_config__user=self.request.user) |
+            Q(scan_config__is_default=True) |
+            Q(
+                scan_config__organization__auth_groups__users=self.request.user,
+                scan_config__organization__auth_groups__name="org_read",
+            )
+        ).all()
+
+
+class ScanPortListView(ScanPortQuerysetMixin, WsListAPIView):
+    """
+    get:
+    Get all ScanPort objects associated with the requesting user.
+    """
+
+
+class ScanPortDetailView(ScanPortQuerysetMixin, WsRetrieveDestroyAPIView):
+    """
+    get:
+    Get a specific ScanPort.
+
+    delete:
+    Delete a specific ScanPort.
+    """
+
+    def perform_destroy(self, instance):
+        if instance.scan_config.is_default and not self.request.user.is_superuser:
+            raise PermissionDenied()
+        elif hasattr(instance.scan_config, "organization"):
+            if self.request.user not in instance.scan_config.organization.admin_group.users.all() \
+                    and not self.request.user.is_superuser:
+                raise PermissionDenied(
+                    "You do not have sufficient permissions for the related organization to delete this object."
+                )
+        elif not instance.scan_config.can_be_modified:
+            raise PermissionDenied("The related scanning configuration cannot be modified at this time.")
+        else:
+            return super(ScanPortDetailView, self).perform_destroy(instance)
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def retrieve_organization_scan_config(request, pk=None):
+    """
+    Retrieve the ScanConfig associated with the referenced organization.
+    :param request: The request received by this API handler.
+    :param pk: The primary key of the organization to retrieve the ScanConfig for.
+    :return: A response containing the ScanConfig associated with the given Organization.
+    """
+    if request.user.is_superuser:
+        query = rest.models.Organization.objects
+    else:
+        query = rest.models.Organization.objects.filter(
+            auth_groups__users=request.user,
+            auth_groups__name="org_read",
+        )
+    try:
+        organization = query.get(pk=pk)
+    except rest.models.Organization.DoesNotExist:
+        raise NotFound()
+    if not organization.scan_config:
+        raise NotFound()
+    else:
+        return_data = rest.serializers.ScanConfigSerializer(organization.scan_config)
+        return Response(return_data.data)
+
+
+@api_view(["POST"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def set_organization_scan_config(request, pk=None):
+    """
+    Set the ScanConfig contents for the given organization.
+    :param request: The request received by this API handler.
+    :param pk: The primary key of the organization to retrieve the ScanConfig for.
+    :return: A response containing the ScanConfig associated with the given Organization.
+    """
+    if request.user.is_superuser:
+        query = rest.models.Organization.objects
+    else:
+        query = rest.models.Organization.objects.filter(
+            auth_groups__users=request.user,
+            auth_groups__name="org_admin",
+        )
+    try:
+        organization = query.get(pk=pk)
+    except rest.models.Organization.DoesNotExist:
+        raise NotFound()
+    serializer = rest.serializers.SetScanPortSerializer(data=request.POST)
+    serializer.is_valid(raise_exception=True)
+    config_uuid = serializer.data["scan_config"]
+    if request.user.is_superuser:
+        query = rest.models.ScanConfig.objects
+    else:
+        query = rest.models.ScanConfig.objects.filter(
+            Q(user=request.user) |
+            Q(is_default=True) |
+            Q(organization__auth_groups__users=request.user, organization__auth_groups__name="org_read")
+        )
+    try:
+        scan_config = query.get(pk=config_uuid)
+    except rest.models.ScanConfig.DoesNotExist:
+        raise NotFound("No scanning configuration was found for that UUID")
+    organization.set_scan_config(scan_config)
+    return Response(rest.serializers.ScanConfigSerializer(organization.scan_config).data)

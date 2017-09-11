@@ -46,6 +46,18 @@ class ZmapRunner(BaseNetworkScannerRunner, ElasticsearchableMixin):
         return to_return
 
     @classmethod
+    def from_scan_config(cls, scan_config):
+        """
+        Create and return an instance of this tool runner based on the settings associated with
+        the given ScanConfig.
+        :param scan_config: The ScanConfig to create a ZmapRunner based off of.
+        :return: The newly-created ZmapRunner.
+        """
+        to_return = ZmapRunner()
+        to_return.bandwidth = scan_config.network_scan_bandwidth
+        return to_return
+
+    @classmethod
     def get_configuration_class(cls):
         return ZmapConfig
 

@@ -5,7 +5,9 @@ from django.test import TestCase, Client
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from rest.models import WsUser, Organization, Network, DomainName, Order
+from rest.models import WsUser, Organization, Network, DomainName, Order, ScanConfig, DnsRecordType, \
+    ScanPort
+import rest.models
 from ..data import WsTestData
 from .mixin import ParameterizedRouteMixin, PaginatedTestCaseMixin
 
@@ -14,6 +16,21 @@ class WsDjangoTestCase(TestCase):
     """
     This is a base class for all test cases used to testing the Web Sight Django API.
     """
+
+    def get_default_scan_config(self):
+        """
+        Get one of the default ScanConfig objects found in the database.
+        :return: A default ScanConfig object.
+        """
+        return rest.models.ScanConfig.objects.filter(is_default=True).first()
+
+    def get_dns_record_type_for_user(self, user="user_1"):
+        """
+        Get the DnsRecordType to use for testing purposes for the given user.
+        :param user: The user to retrieve the DnsRecordType for.
+        :return: The DnsRecordType associated with the given user.
+        """
+        return self.get_scan_config_for_user(user=user).dns_record_types.first()
 
     def get_domain_name_for_user(self, user="user_1"):
         """
@@ -101,6 +118,12 @@ class WsDjangoTestCase(TestCase):
             return self.get_order_for_user(user=user)
         elif object_class == Organization:
             return self.get_organization_for_user(user=user)
+        elif object_class == ScanConfig:
+            return self.get_scan_config_for_user(user=user)
+        elif object_class == DnsRecordType:
+            return self.get_dns_record_type_for_user(user=user)
+        elif object_class == ScanPort:
+            return self.get_scan_port_for_user(user=user)
         else:
             raise TypeError(
                 "No mapping to retrieve object of type %s for user %s."
@@ -124,6 +147,22 @@ class WsDjangoTestCase(TestCase):
         """
         user = self.get_user(user=user)
         return user.organizations[0]
+
+    def get_scan_config_for_user(self, user="user_1"):
+        """
+        Get the ScanConfig object to use for testing purposes for the given user.
+        :param user: The user to retrieve the ScanConfig for.
+        :return: The ScanConfig associated with the given user.,
+        """
+        return self.get_order_for_user(user=user).scan_config
+
+    def get_scan_port_for_user(self, user="user_1"):
+        """
+        Get the ScanPort object to use for testing purposes for the given user.
+        :param user: The user to retrieve the ScanPort for.
+        :return: The ScanPort associated with the given user.
+        """
+        return self.get_scan_config_for_user(user=user).scan_ports.first()
 
     def get_user(self, user="user_1"):
         """
@@ -194,6 +233,31 @@ class WsDjangoViewTestCase(WsDjangoTestCase):
         :return: None
         """
         self.assertEqual(response.status_code, 403)
+
+    def assert_request_not_found(self, response):
+        """
+        Assert that the given response failed and returned a 404 not found.
+        :param response: The response to check.
+        :return: None
+        """
+        self.assertEqual(response.status_code, 404)
+
+    def assert_request_requires_auth(self, response):
+        """
+        Assert that the given response failed and returned a 401 not authorized.
+        :param response: The response to check.
+        :return: None
+        """
+        self.assertEqual(response.status_code, 401)
+
+    def assert_request_succeeds(self, response, status_code=200):
+        """
+        Assert that the given response indicates the request was successful.
+        :param response: The response to check.
+        :param status_code: The HTTP status code that indicates success.
+        :return: None
+        """
+        self.assertEqual(response.status_code, status_code)
 
     def delete(self, query_string=None, **kwargs):
         """

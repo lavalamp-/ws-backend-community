@@ -3,9 +3,10 @@ from __future__ import absolute_import
 from rest_framework import serializers
 from csv import reader, DictReader
 
+from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from rest.models import Organization, DomainName, Network
+from rest.models import Organization, DomainName, Network, ScanPort
 from rest.lib.exception import WsRestNonFieldException
 from django.db import IntegrityError
 from .base import WsBaseModelSerializer
@@ -145,3 +146,70 @@ class OrganizationDomainNameUploadRangeSerializer(serializers.Serializer):
             raise WsRestNonFieldException('No Organization with that uuid found.')
 
         return attrs
+
+
+class ScanPortSerializer(WsBaseModelSerializer):
+    """
+    This is a serializer class for serializing data related to ScanPort models.
+    """
+
+    def validate_port_number(self, value):
+        """
+        Validate that the contents of value are valid for use as a port number.
+        :param value: The value to validate.
+        :return: The value.
+        """
+        value = int(value)
+        if value < 0 or value > 65535:
+            raise serializers.ValidationError(
+                "%s is not a valid port number (must be in range 0-65,535)."
+                % (value,)
+            )
+        return value
+
+    def validate_protocol(self, value):
+        """
+        Validate that the contents of value are valid for use as a protocol.
+        :param value: The value to validate.
+        :return: None
+        """
+        value = value.lower()
+        if value not in ["tcp", "udp"]:
+            raise serializers.ValidationError(
+                "%s is not a valid protocol. Must be one of [TCP, UDP]."
+                % (value,)
+            )
+        return value
+
+    class Meta:
+        model = ScanPort
+        fields = (
+            "port_number",
+            "protocol",
+            "added_by",
+            "included",
+            "created",
+            "uuid",
+            "scan_config",
+            "organization",
+        )
+        read_only_fields = (
+            "added_by",
+            "included",
+            "created",
+            "uuid",
+        )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ScanPort.objects.all(),
+                fields=("scan_config", "port_number", "protocol"),
+            )
+        ]
+
+
+class SetScanPortSerializer(serializers.Serializer):
+    """
+    This is a serializer for the request body to the set ScanConfig API handler.
+    """
+
+    scan_config = serializers.UUIDField(required=True)

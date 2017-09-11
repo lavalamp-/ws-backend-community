@@ -12,6 +12,7 @@ from django.db import models
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 import rest_framework.mixins
+from django.core.exceptions import ObjectDoesNotExist
 
 from .exception import FieldNotFound, OperationFailed
 from lib import RegexLib, get_export_type_wrapper_map, ValidationHelper
@@ -143,6 +144,7 @@ class ListMixin(BaseAPIViewMixin, generics.ListAPIView):
 
     _exporter_map = None
     _export_argument = None
+    pagination_enabled = True
 
     def list(self, request, *args, **kwargs):
         if self.has_presentation_argument:
@@ -154,12 +156,15 @@ class ListMixin(BaseAPIViewMixin, generics.ListAPIView):
             for result in query_results:
                 to_add = {}
                 for field_name in self.queried_fields:
-                    value = getattr(result, field_name)
-                    if isinstance(value, uuid.UUID):
-                        value = str(value)
-                    elif isinstance(value, models.Model):
-                        value = str(value.uuid)
-                    to_add[field_name] = value
+                    try:
+                        value = getattr(result, field_name)
+                        if isinstance(value, uuid.UUID):
+                            value = str(value)
+                        elif isinstance(value, models.Model):
+                            value = str(value.uuid)
+                        to_add[field_name] = value
+                    except ObjectDoesNotExist:
+                        to_add[field_name] = None
                 results.append(to_add)
             return self.exporter_map[self.export_argument].get_django_response_from_dicts(results)
         else:
@@ -180,6 +185,11 @@ class ListMixin(BaseAPIViewMixin, generics.ListAPIView):
         :return: None
         """
         ValidationHelper.validate_in(to_check=self.export_argument, contained_by=self.exporter_map_keys)
+
+    def paginate_queryset(self, queryset):
+        if not self.pagination_enabled:
+            self.paginator.page_size = 10000
+        return super(ListMixin, self).paginate_queryset(queryset)
 
     @property
     def export_argument(self):
@@ -239,6 +249,7 @@ class ListChildMixin(BaseAPIViewMixin):
     _parent_object = None
     _exporter_map = None
     _export_argument = None
+    pagination_enabled = True
 
     # Instantiation
 
@@ -270,12 +281,15 @@ class ListChildMixin(BaseAPIViewMixin):
             for result in query_results:
                 to_add = {}
                 for field_name in self.queried_fields:
-                    value = getattr(result, field_name)
-                    if isinstance(value, uuid.UUID):
-                        value = str(value)
-                    elif isinstance(value, models.Model):
-                        value = str(value.uuid)
-                    to_add[field_name] = value
+                    try:
+                        value = getattr(result, field_name)
+                        if isinstance(value, uuid.UUID):
+                            value = str(value)
+                        elif isinstance(value, models.Model):
+                            value = str(value.uuid)
+                        to_add[field_name] = value
+                    except ObjectDoesNotExist:
+                        to_add[field_name] = None
                 results.append(to_add)
             return self.exporter_map[self.export_argument].get_django_response_from_dicts(results)
         else:
@@ -289,6 +303,11 @@ class ListChildMixin(BaseAPIViewMixin):
             else:
                 to_return.data["sortable_fields"] = []
             return to_return
+
+    def paginate_queryset(self, queryset):
+        if not self.pagination_enabled:
+            self.paginator.page_size = 10000
+        return super(ListChildMixin, self).paginate_queryset(queryset)
 
     # Protected Methods
 
@@ -425,14 +444,11 @@ class ListCreateChildMixin(ListChildMixin):
 
     # Public Methods
 
-    def perform_create(self, serializer):
-        """
-        Handle the creation of the child object.
-        :param serializer: The serializer to create the object from.
-        :return: None
-        """
-        parent_mapping = self._get_parent_mapping()
-        serializer.save(**parent_mapping)
+    def get_serializer(self, *args, **kwargs):
+        if "data" in kwargs:
+            mapping = self._get_parent_mapping()
+            kwargs["data"][mapping.keys()[0]] = mapping[mapping.keys()[0]].uuid
+        return super(ListCreateChildMixin, self).get_serializer(*args, **kwargs)
 
     # Protected Methods
 

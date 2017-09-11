@@ -11,6 +11,7 @@ from .base import update_model_instance, is_unique_constraint_exception
 config = ConfigManager.instance()
 
 
+#TESTME
 def check_web_service_scanning_status(db_session=None, web_service_uuid=None, update_status=True):
     """
     Check to see whether or not the given web service is currently being scanned. If it is not, then modify
@@ -100,6 +101,7 @@ def create_new_web_service_report(web_service_uuid=None, db_session=None):
     return new_report
 
 
+#TESTME
 def create_new_web_service_scan(web_service_uuid=None, db_session=None):
     """
     Create a new WebServiceScan, populate it, and return it.
@@ -116,6 +118,7 @@ def create_new_web_service_scan(web_service_uuid=None, db_session=None):
     return new_scan
 
 
+#TESTME
 def get_endpoint_information_for_web_service(web_service_uuid=None, db_session=None):
     """
     Get a tuple containing (1) the IP address, (2) the port, (3) the hostname for the given web
@@ -166,6 +169,7 @@ def get_last_completed_web_service_scan(db_session=None, web_service_uuid=None):
         .first()
 
 
+#TESTME
 def get_latest_web_service_scan_uuid(db_session=None, web_service_uuid=None):
     """
     Get the UUID of the last WebServiceScan to be run for the given web service.
@@ -219,6 +223,7 @@ def get_org_uuid_from_web_service_scan(db_session=None, web_scan_uuid=None):
     return result[0]
 
 
+#TESTME
 def get_or_create_web_service_from_network_service(
         network_service_uuid=None,
         db_session=None,
@@ -378,6 +383,7 @@ def update_web_service_scan(scan_uuid=None, db_session=None, update_dict=None):
     )
 
 
+#TESTME
 def update_web_service_scan_completed(scan_uuid=None, db_session=None):
     """
     Update the given WebServiceScan to reflect that scanning has concluded.
@@ -391,6 +397,7 @@ def update_web_service_scan_completed(scan_uuid=None, db_session=None):
     update_web_service_scan(scan_uuid=scan_uuid, update_dict=update_dict, db_session=db_session)
 
 
+#TESTME
 def update_web_service_scanning_status(status=None, web_service_uuid=None, db_session=None):
     """
     Update the given web service scan to reflect the given scanning status.

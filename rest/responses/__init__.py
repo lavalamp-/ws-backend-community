@@ -17,6 +17,10 @@ from .presentation import (
     WsPresentationResponse,
 )
 
+from .scans import (
+    WsScanConfigValidityResponse,
+)
+
 from .uploads import (
     DomainsUploadResponse,
     NetworksUploadResponse,

@@ -4,10 +4,10 @@ from __future__ import absolute_import
 import django_filters
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.response import Response
 
-from .base import WsListAPIView, WsRetrieveAPIView
+from .base import WsListAPIView, WsRetrieveAPIView, WsRetrieveUpdateAPIView
 from .exception import OperationNotAllowed, OperationFailed
 import rest.models
 import rest.serializers
@@ -56,11 +56,9 @@ def place_order(request, pk=None):
     if not request.user.is_superuser:
         if not order.organization.can_user_scan(request.user):
             raise PermissionDenied("You do not have sufficient privileges to start scans for that organization.")
-    elif order.has_been_placed:
-        raise PermissionDenied("That order has already been placed.")
-    order_placed = order.place_order()
-    if not order_placed:
-        raise OperationFailed("An issue was encountered when attempting to place your order. Please try again.")
+    if not order.is_ready_to_place:
+        raise PermissionDenied(order.get_ready_errors())
+    order.place_order()
     order.save()
     send_emails_for_placed_order.delay(
         order_uuid=unicode(order.uuid),

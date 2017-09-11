@@ -93,7 +93,7 @@ class ExporterTestCaseMixin(object):
         :return: None
         """
         query_string = self.get_export_query_string_for_type("xlsx")
-        response = self.send(query_string=query_string)
+        response = self.send(user=self.auth_user, query_string=query_string)
         self.assertEqual(response.status_code, 200)
 
     def test_export_xlsx_contains_disposition(self):
@@ -103,7 +103,7 @@ class ExporterTestCaseMixin(object):
         :return: None
         """
         query_string = self.get_export_query_string_for_type("xlsx")
-        response = self.send(query_string=query_string)
+        response = self.send(user=self.auth_user, query_string=query_string)
         self.assertTrue(response.has_header("Content-Disposition"))
 
     def test_export_xlsx_content_type(self):
@@ -113,7 +113,7 @@ class ExporterTestCaseMixin(object):
         :return: None
         """
         query_string = self.get_export_query_string_for_type("xlsx")
-        response = self.send(query_string=query_string)
+        response = self.send(user=self.auth_user, query_string=query_string)
         content_type = response._headers["content-type"][1]
         self.assertEqual(ExcelExporter.get_content_type(), content_type)
 
@@ -123,7 +123,7 @@ class ExporterTestCaseMixin(object):
         :return: None
         """
         query_string = self.get_export_query_string_for_type("csv")
-        response = self.send(query_string=query_string)
+        response = self.send(user=self.auth_user, query_string=query_string)
         self.assertEqual(response.status_code, 200)
 
     def test_export_csv_contains_disposition(self):
@@ -132,7 +132,7 @@ class ExporterTestCaseMixin(object):
         :return: None
         """
         query_string = self.get_export_query_string_for_type("csv")
-        response = self.send(query_string=query_string)
+        response = self.send(user=self.auth_user, query_string=query_string)
         self.assertTrue(response.has_header("Content-Disposition"))
 
     def test_export_csv_content_type(self):
@@ -141,9 +141,17 @@ class ExporterTestCaseMixin(object):
         :return: None
         """
         query_string = self.get_export_query_string_for_type("csv")
-        response = self.send(query_string=query_string)
+        response = self.send(user=self.auth_user, query_string=query_string)
         content_type = response._headers["content-type"][1]
         self.assertEqual(CsvExporter.get_content_type(), content_type)
+
+    @property
+    def auth_user(self):
+        """
+        Get a string depicting the user to send requests as by default.
+        :return: a string depicting the user to send requests as by default.
+        """
+        return "user_1"
 
 
 class RelatedTestCaseMixin(object):
@@ -157,7 +165,7 @@ class RelatedTestCaseMixin(object):
         Tests to ensure that the response contains at least one object.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         content = response.json()
         self.assertGreater(len(content["results"]), 0)
 
@@ -166,9 +174,17 @@ class RelatedTestCaseMixin(object):
         Tests to ensure that all of the data objects returned in a response contain the type field.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         content = response.json()
         self.assertTrue(all(["type" in x for x in content["results"]]))
+
+    @property
+    def auth_user(self):
+        """
+        Get a string depicting the user to send requests as by default.
+        :return: a string depicting the user to send requests as by default.
+        """
+        return "user_1"
 
 
 class PaginatedTestCaseMixin(object):
@@ -183,7 +199,7 @@ class PaginatedTestCaseMixin(object):
         key.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertIn("count", response.json())
 
     def test_response_count_int(self):
@@ -191,7 +207,7 @@ class PaginatedTestCaseMixin(object):
         Tests to ensure that the count value returned in the response contains an integer.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["count"], int))
 
     def test_response_count_matches_results(self):
@@ -200,7 +216,7 @@ class PaginatedTestCaseMixin(object):
         the response.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         content = response.json()
         if content["count"] <= api_settings.PAGE_SIZE:
             self.assertEqual(content["count"], len(content["results"]))
@@ -211,7 +227,7 @@ class PaginatedTestCaseMixin(object):
         results key.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertIn("results", response.json())
 
     def test_response_results_list(self):
@@ -219,7 +235,7 @@ class PaginatedTestCaseMixin(object):
         Tests to ensure that the results value in the response contains a list.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["results"], list))
 
     def test_response_contains_current_page(self):
@@ -228,7 +244,7 @@ class PaginatedTestCaseMixin(object):
         current_page key.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertIn("current_page", response.json())
 
     def test_response_current_page_int(self):
@@ -237,7 +253,7 @@ class PaginatedTestCaseMixin(object):
         integer.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["current_page"], int))
 
     def test_response_contains_page_size(self):
@@ -246,7 +262,7 @@ class PaginatedTestCaseMixin(object):
         key.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertIn("page_size", response.json())
 
     def test_response_page_size_int(self):
@@ -255,7 +271,7 @@ class PaginatedTestCaseMixin(object):
         integer.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["page_size"], int))
 
     def test_response_contains_first_page(self):
@@ -264,7 +280,7 @@ class PaginatedTestCaseMixin(object):
         key.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertIn("first_page", response.json())
 
     def test_response_first_page_int(self):
@@ -272,7 +288,7 @@ class PaginatedTestCaseMixin(object):
         Tests to ensure that the first_page value returned by the remote endpoint contains an integer.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["first_page"], int))
 
     def test_response_contains_last_page(self):
@@ -280,7 +296,7 @@ class PaginatedTestCaseMixin(object):
         Tests to ensure that the response returned by the remote endpoint contains the last_page key.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertIn("last_page", response.json())
 
     def test_response_last_page_int(self):
@@ -288,8 +304,16 @@ class PaginatedTestCaseMixin(object):
         Tests to ensure that the last_page value returned by the remote endpoint contains an integer.
         :return: None
         """
-        response = self.send()
+        response = self.send(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["last_page"], int))
+
+    @property
+    def auth_user(self):
+        """
+        Get a string depicting the user to send requests as by default.
+        :return: a string depicting the user to send requests as by default.
+        """
+        return "user_1"
 
 
 class ListTestCaseMixin(PaginatedTestCaseMixin):
@@ -330,16 +354,16 @@ class CreateTestCaseMixin(object):
         Tests to ensure that a successful creation request returns the expected HTTP status code.
         :return: None
         """
-        response = self.send_create_request()
+        response = self.send_create_request(user=self.auth_user)
         self.assertEqual(response.status_code, self.create_success_status)
 
-    def test_create_regular_success_status(self):
+    def test_create_auth_user_success_status(self):
         """
-        Tests to ensure that a successful creation request by a regular user returns the expected HTTP status
+        Tests to ensure that a successful creation request by self.auth_user user returns the expected HTTP status
         code.
         :return: None
         """
-        response = self.send_create_request(user="user_1")
+        response = self.send_create_request(user=self.auth_user)
         self.assertEqual(response.status_code, self.create_success_status)
 
     def test_create_admin_success_status(self):
@@ -357,7 +381,7 @@ class CreateTestCaseMixin(object):
         :return: None
         """
         first_count = self.created_object_class.objects.count()
-        self.send_create_request()
+        self.send_create_request(user=self.auth_user)
         second_count = self.created_object_class.objects.count()
         self.assertEqual(first_count + 1, second_count)
 
@@ -384,6 +408,14 @@ class CreateTestCaseMixin(object):
         :return: None
         """
         self.assertEqual(response.status_code, self.create_success_status)
+
+    @property
+    def auth_user(self):
+        """
+        Get a string depicting the user to send requests as by default.
+        :return: a string depicting the user to send requests as by default.
+        """
+        return "user_1"
 
     @property
     def create_method(self):
@@ -421,9 +453,9 @@ class CreateForUserTestCaseMixin(CreateTestCaseMixin):
         Tests to ensure that the newly-created object is owned by the expected user.
         :return: None
         """
-        self.send_create_request(user="user_1")
+        self.send_create_request(user=self.auth_user)
         created = self.get_last_created_of_class()
-        user = self.get_user(user="user_1")
+        user = self.get_user(user=self.auth_user)
         self.assertEqual(created.user, user)
 
 
@@ -547,9 +579,9 @@ class DeleteTestCaseMixin(object):
         Tests to ensure that a delete request successfully deletes the object from the database.
         :return: None
         """
-        model_instance = self.create_delete_object_for_user()
+        model_instance = self.create_delete_object_for_user(user=self.auth_user)
         first_count = self.deleted_object_class.objects.count()
-        self.send_delete_request(input_uuid=model_instance.uuid)
+        self.send_delete_request(user=self.auth_user, input_uuid=model_instance.uuid)
         second_count = self.deleted_object_class.objects.count()
         self.assertEqual(first_count, second_count + 1)
 
@@ -693,7 +725,7 @@ class UpdateTestCaseMixin(object):
         Tests that a successful update request returns the expected status code.
         :return: None
         """
-        self.assert_update_success(self.send_update_request())
+        self.assert_update_success(self.send_update_request(user=self.auth_user))
 
     def test_update_regular_success(self):
         """
@@ -714,7 +746,7 @@ class UpdateTestCaseMixin(object):
         Tests that an update request to update an object based on a random UUID fails.
         :return: None
         """
-        self.assert_update_fails(self.send_update_request(input_uuid=str(uuid4())), status_code=404)
+        self.assert_update_fails(self.send_update_request(user=self.auth_user, input_uuid=str(uuid4())), status_code=404)
 
     def test_update_regular_not_owned_fails(self):
         """
@@ -771,6 +803,14 @@ class UpdateTestCaseMixin(object):
         return self.update_method(*args, **kwargs)
 
     @property
+    def auth_user(self):
+        """
+        Get a string depicting the user to send requests as by default.
+        :return: a string depicting the user to send requests as by default.
+        """
+        return "user_1"
+
+    @property
     def updated_model_class(self):
         """
         Get the class for the model object that is being updated through the referenced APIView.
@@ -809,7 +849,7 @@ class PresentableTestCaseMixin(object):
         fields.
         :return: None
         """
-        response = self.send_presentation_request()
+        response = self.send_presentation_request(user=self.auth_user)
         self.assertTrue("fields" in response.json())
         
     def test_presentation_returns_fields_list(self):
@@ -817,7 +857,7 @@ class PresentableTestCaseMixin(object):
         Tests that submitting a presentation request returns a response with a list of fields.
         :return: None
         """
-        response = self.send_presentation_request()
+        response = self.send_presentation_request(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["fields"], list))
 
     def test_presentation_returns_fields_length(self):
@@ -826,7 +866,7 @@ class PresentableTestCaseMixin(object):
         not empty.
         :return: None
         """
-        response = self.send_presentation_request()
+        response = self.send_presentation_request(user=self.auth_user)
         self.assertTrue(len(response.json()["fields"]) > 0)
 
     def test_presentation_returns_sortable_fields(self):
@@ -835,7 +875,7 @@ class PresentableTestCaseMixin(object):
         sortable fields.
         :return: None
         """
-        response = self.send_presentation_request()
+        response = self.send_presentation_request(user=self.auth_user)
         self.assertTrue("sortable_fields" in response.json())
 
     def test_presentation_returns_sortable_fields_list(self):
@@ -843,7 +883,7 @@ class PresentableTestCaseMixin(object):
         Tests that submitting a presentation request returns a response with a list of sortable fields.
         :return: None
         """
-        response = self.send_presentation_request()
+        response = self.send_presentation_request(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["sortable_fields"], list))
 
     def test_presentation_returns_filter_fields(self):
@@ -852,7 +892,7 @@ class PresentableTestCaseMixin(object):
         filter fields.
         :return: None
         """
-        response = self.send_presentation_request()
+        response = self.send_presentation_request(user=self.auth_user)
         self.assertTrue("filter_fields" in response.json())
 
     def test_presentation_returns_filter_fields_list(self):
@@ -860,7 +900,7 @@ class PresentableTestCaseMixin(object):
         Tests that submitting a presentation request returns a response with a list of filterable fields.
         :return: None
         """
-        response = self.send_presentation_request()
+        response = self.send_presentation_request(user=self.auth_user)
         self.assertTrue(isinstance(response.json()["filter_fields"], list))
 
     def test_presentation_response_keys(self):
@@ -868,7 +908,7 @@ class PresentableTestCaseMixin(object):
         Tests that submitting a presentation request returns a response with only the expected keys.
         :return: None
         """
-        response = self.send_presentation_request()
+        response = self.send_presentation_request(user=self.auth_user)
         content = response.json()
         for expected_field in self.presentation_fields:
             content.pop(expected_field)
@@ -891,6 +931,14 @@ class PresentableTestCaseMixin(object):
             query_string = settings.PRESENTATION_PARAM
         kwargs["query_string"] = query_string
         return self.presentation_method(*args, **kwargs)
+
+    @property
+    def auth_user(self):
+        """
+        Get a string depicting the user to send requests as by default.
+        :return: a string depicting the user to send requests as by default.
+        """
+        return "user_1"
 
     @property
     def presentation_method(self):
@@ -936,7 +984,7 @@ class CustomFieldsMixin(object):
         Tests that submitting a request with a field included returns a response with the expected field.
         :return: None
         """
-        response = self.send_custom_fields_request(include_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, include_fields=[self.custom_fields_field])
         data_object = self.__get_object_from_response(response)
         self.assertTrue(self.custom_fields_field in data_object)
 
@@ -946,7 +994,7 @@ class CustomFieldsMixin(object):
         specified for inclusion.
         :return: None
         """
-        response = self.send_custom_fields_request(include_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, include_fields=[self.custom_fields_field])
         data_object = self.__get_object_from_response(response)
         object_keys = data_object.keys()
         object_keys.remove(self.custom_fields_field)
@@ -960,7 +1008,7 @@ class CustomFieldsMixin(object):
         Tests that submitting a request with no fields included raises an error.
         :return: None
         """
-        response = self.send_custom_fields_request(include_fields=[])
+        response = self.send_custom_fields_request(user=self.auth_user, include_fields=[])
         self._assert_custom_fields_request_failed(response)
 
     def test_custom_fields_include_fields_unknown_fails(self):
@@ -968,7 +1016,7 @@ class CustomFieldsMixin(object):
         Tests that submitting a request with a random include field raises an error.
         :return: None
         """
-        response = self.send_custom_fields_request(include_fields=["asd123asd123"])
+        response = self.send_custom_fields_request(user=self.auth_user, include_fields=["asd123asd123"])
         self._assert_custom_fields_request_failed(response)
 
     def test_custom_fields_exclude_success(self):
@@ -977,7 +1025,7 @@ class CustomFieldsMixin(object):
         excluded.
         :return: None
         """
-        response = self.send_custom_fields_request(exclude_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, exclude_fields=[self.custom_fields_field])
         data_object = self.__get_object_from_response(response)
         self.assertFalse(self.custom_fields_field in data_object)
 
@@ -986,7 +1034,7 @@ class CustomFieldsMixin(object):
         Tests that submitting a request with a random unknown field excluded returns a successful response.
         :return: None
         """
-        response = self.send_custom_fields_request(exclude_fields=["asd123asd123"])
+        response = self.send_custom_fields_request(user=self.auth_user, exclude_fields=["asd123asd123"])
         self.assertEqual(response.status_code, 200)
 
     def test_custom_fields_include_priority(self):
@@ -996,6 +1044,7 @@ class CustomFieldsMixin(object):
         :return: None
         """
         response = self.send_custom_fields_request(
+            user=self.auth_user,
             include_fields=[self.custom_fields_field],
             exclude_fields=[self.custom_fields_field],
         )
@@ -1024,6 +1073,14 @@ class CustomFieldsMixin(object):
         return self.custom_fields_method(*args, **kwargs)
 
     @property
+    def auth_user(self):
+        """
+        Get a string depicting the user to send requests as by default.
+        :return: a string depicting the user to send requests as by default.
+        """
+        return "user_1"
+
+    @property
     def custom_fields_method(self):
         """
         Get the method that should be invoked to send a request to the API to test field inclusion.
@@ -1048,6 +1105,42 @@ class CustomFieldsMixin(object):
         raise NotImplementedError("Subclasses must implement this!")
 
 
+class AdminOnlyMixin(object):
+    """
+    This is a test case mixin class that tests to make sure that functionality is only available to administrative
+    users.
+    """
+
+    def test_admin_user_request_succeeds(self):
+        """
+        Tests to ensure that a request submitted by an admin user is successful.
+        :return: None
+        """
+        self.assert_request_succeeds(self.admin_test_method(user="admin_1"))
+
+    def test_non_admin_user_request_fails(self):
+        """
+        Tests to ensure that a request submitted by a regular user is not successful.
+        :return: None
+        """
+        self.assert_request_not_authorized(self.admin_test_method(user="user_1"))
+
+    def test_no_authentication_request_fails(self):
+        """
+        Tests to ensure that a request submitted without authentication is not successful.
+        :return: None
+        """
+        self.assert_request_requires_auth(self.admin_test_method(login=False))
+
+    @property
+    def admin_test_method(self):
+        """
+        Get the method that should be invoked to test if administrative users only can access the handler.
+        :return: the method that should be invoked to test if administrative users only can access the handler.
+        """
+        raise NotImplementedError("Subclasses must implement this!")
+
+
 class ExporterCustomFieldsMixin(CustomFieldsMixin):
     """
     This is a test case mixin class that extends the standard custom fields testing and augments the tests
@@ -1059,7 +1152,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         Tests that exporting a CSV file and specifying fields to include returns a successful status code.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="csv", include_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="csv", include_fields=[self.custom_fields_field])
         self.assertEqual(response.status_code, 200)
 
     def test_custom_fields_export_csv_empty_includes_fails(self):
@@ -1067,7 +1160,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         Tests that exporting a CSV file and specifying no fields to include returns an error.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="csv", include_fields=[])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="csv", include_fields=[])
         self._assert_custom_fields_request_failed(response)
 
     def test_custom_fields_export_csv_includes_field(self):
@@ -1076,7 +1169,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         the expected field.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="csv", include_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="csv", include_fields=[self.custom_fields_field])
         first_line = response.content.split("\n")[0].strip()
         self.assertTrue(self.custom_fields_field in first_line)
 
@@ -1086,7 +1179,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         expected field.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="csv", include_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="csv", include_fields=[self.custom_fields_field])
         first_line = response.content.split("\n")[0].strip()
         fields = [x.strip() for x in first_line.split(",")]
         fields.remove(self.custom_fields_field)
@@ -1100,7 +1193,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         Tests that exporting a CSV file and specifying fields to exclude returns a successful status code.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="csv", exclude_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="csv", exclude_fields=[self.custom_fields_field])
         self.assertEqual(response.status_code, 200)
 
     def test_custom_fields_export_csv_exclude_fields(self):
@@ -1109,7 +1202,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         include those fields.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="csv", exclude_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="csv", exclude_fields=[self.custom_fields_field])
         first_line = response.content.split("\n")[0].strip()
         self.assertFalse(self.custom_fields_field in first_line)
 
@@ -1118,7 +1211,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         Tests that exporting an Excel sheet and specifying fields to include returns a successful status code.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="xlsx", include_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="xlsx", include_fields=[self.custom_fields_field])
         self.assertEqual(response.status_code, 200)
 
     def test_custom_fields_export_excel_includes_fails(self):
@@ -1126,7 +1219,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         Tests that exporting an Excel sheet and specifying no fields to include returns an error.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="xlsx", include_fields=[])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="xlsx", include_fields=[])
         self._assert_custom_fields_request_failed(response)
 
     def test_custom_fields_export_excel_excludes_success(self):
@@ -1134,7 +1227,7 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
         Tests that exporting an Excel sheet and specifying fields to exclude returns a successful status code.
         :return: None
         """
-        response = self.send_custom_fields_request(export_type="xlsx", exclude_fields=[self.custom_fields_field])
+        response = self.send_custom_fields_request(user=self.auth_user, export_type="xlsx", exclude_fields=[self.custom_fields_field])
         self.assertEqual(response.status_code, 200)
 
     def send_custom_fields_request(self, export_type=None, *args, **kwargs):
