@@ -439,6 +439,28 @@ def get_udp_scan_ports_for_org(org_uuid=None, db_session=None):
     return [x[0] for x in results]
 
 
+#TESTME
+def get_user_tuples_for_organization(org_uuid=None, db_session=None):
+    """
+    Get a list of tuples containing (1) the first name and (2) the email address for all users associated with
+    the given organization.
+    :param org_uuid: The UUID of the organization to get the users for.
+    :param db_session: A SQLAlchemy session.
+    :return: A list of tuples containing (1) the first name and (2) the email address for all users
+    associated with the given organization.
+    """
+    org_uuid = ConversionHelper.string_to_unicode(org_uuid)
+    auth_group = db_session.query(WsAuthGroup) \
+        .join(Organization, WsAuthGroup.organization_id == Organization.uuid) \
+        .filter(Organization.uuid == org_uuid) \
+        .filter(WsAuthGroup.name == u"org_read") \
+        .one()
+    to_return = []
+    for user in auth_group.users:
+        to_return.append((user.first_name, user.email))
+    return to_return
+
+
 def update_network_scan(scan_uuid=None, update_dict=None, db_session=None):
     """
     Update the referenced NetworkScan via the contents of the given dictionary.

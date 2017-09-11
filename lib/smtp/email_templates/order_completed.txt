@@ -1,0 +1,9 @@
+Dear [USER_NAME],
+
+The recent scan for the organization [ORG_NAME] ([ORDER_UUID]) has completed. You can view the results of the scan at the following URL:
+
+[DOMAIN_REPLACE]topography/[ORG_UUID]
+
+Regards,
+
+The Web Sight Robot

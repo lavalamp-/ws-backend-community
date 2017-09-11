@@ -73,6 +73,9 @@ class WebSightBaseTask(Task, TempFileMixin):
         headers = kwargs.get("headers", {})
         retries = kwargs.get("retries", 0)
 
+        task_args, task_kwargs = args
+        tags.extend(self.__get_tags_from_task_kwargs(task_kwargs))
+
         try:
             del kwargs["chord"]["options"]["producer"]
         except (TypeError, KeyError):
@@ -338,6 +341,19 @@ class WebSightBaseTask(Task, TempFileMixin):
         to_return.update(
             {'queue': queue} if queue else (self.request.delivery_info or {})
         )
+        return to_return
+
+    def __get_tags_from_task_kwargs(self, task_kwargs):
+        """
+        Get a list of strings representing the tags that should be associated with a task's invocation via
+        apply_async from the given keyword arguments that were supplied to the task signature.
+        :param task_kwargs: The keyword arguments supplied to the task signature.
+        :return: A list of strings representing the tags that should be associated with a task's invocation via
+        apply_async from the given keyword arguments that were supplied to the task signature.
+        """
+        to_return = []
+        if "order_uuid" in task_kwargs:
+            to_return.append(task_kwargs["order_uuid"])
         return to_return
 
     def __get_wait_on_tag_request(self, tag=None, check_interval=config.celery_retry_delay):

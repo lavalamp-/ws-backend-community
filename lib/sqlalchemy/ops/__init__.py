@@ -89,6 +89,7 @@ from .organizations import (
     get_ports_to_scan_for_organization,
     get_tcp_scan_ports_for_org,
     get_udp_scan_ports_for_org,
+    get_user_tuples_for_organization,
     update_network_scan,
     update_network_scan_completed,
     update_org_ip_address,

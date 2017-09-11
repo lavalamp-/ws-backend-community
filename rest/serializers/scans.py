@@ -68,6 +68,9 @@ class ScanConfigSerializer(WsBaseModelSerializer):
             "created",
             "organization",
             "user",
+            "completion_web_hook_url",
+            "completion_email_org_users",
+            "completion_email_order_user",
         )
         read_only_fields = (
             "is_default",

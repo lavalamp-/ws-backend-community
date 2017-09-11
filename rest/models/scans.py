@@ -293,6 +293,25 @@ class ScanConfig(BaseWsModel, JsonSerializableMixin):
         help_text="Whether or not to gather information about user agent responses for a web application.",
     )
 
+    # Completion
+
+    completion_web_hook_url = models.URLField(
+        null=True,
+        help_text="A URL to send an HTTP GET request to once an order has completed.",
+    )
+    completion_email_org_users = models.BooleanField(
+        null=False,
+        default=True,
+        help_text="Whether or not to send an email to all of the users associated with the organization that this "
+                  "ScanConfig is associated with when an order has finished.",
+    )
+    completion_email_order_user = models.BooleanField(
+        null=False,
+        default=False,
+        help_text="Whether or not to send an email to the user that created the related order once the order "
+                  "has finished.",
+    )
+
     # Foreign Keys
 
     order = models.OneToOneField(
