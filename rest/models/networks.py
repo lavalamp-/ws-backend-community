@@ -16,7 +16,7 @@ class Network(BaseWsModel):
 
     address = models.CharField(max_length=64, help_text="The network's base IP address.")
     mask_length = models.IntegerField(help_text="The CIDR mask length.")
-    name = models.CharField(max_length=32, help_text="A name to associate with the network.")
+    name = models.CharField(max_length=32, help_text="A name to associate with the network.", null=True)
     scanning_enabled = models.BooleanField(
         default=True,
         help_text="Whether or not to include this network in scans.",
@@ -42,7 +42,6 @@ class Network(BaseWsModel):
     class Meta:
         unique_together = (
             ("address", "mask_length", "organization"),
-            ("name", "organization"),
             ("cidr_range", "organization"),
         )
 

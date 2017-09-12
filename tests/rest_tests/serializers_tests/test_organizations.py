@@ -49,4 +49,4 @@ class ScanPortSerializerTestCase(BaseWebSightSerializerTestCase):
 
     @property
     def serializer(self):
-        return rest.serializers.ScanPortSerializer
+        return rest.serializers.ScanPortRelatedSerializer

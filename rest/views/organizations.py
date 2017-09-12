@@ -10,9 +10,8 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 
-from lib import FilesystemHelper, get_storage_helper
-from rest.responses import DomainsUploadResponse
-from rest.responses import NetworksUploadResponse
+from lib import FilesystemHelper, get_storage_helper, RegexLib
+from rest.responses import DomainsUploadResponse, NetworksUploadResponse, WsQuickScanResponse
 from tasknode.tasks import initialize_organization, handle_organization_deletion, process_dns_text_file, \
     send_emails_for_org_user_invite
 from rest.models import Organization, Network, OrganizationConfig, WsAuthGroup, WsUser, DomainName, ScanPort
@@ -30,6 +29,7 @@ from lib.smtp import SmtpEmailHelper
 import rest.filters
 import rest.serializers
 import rest.models
+from tasknode.tasks import handle_placed_order, send_emails_for_placed_order
 
 config = ConfigManager.instance()
 
@@ -755,7 +755,7 @@ class ScanPortQuerysetMixin(object):
     This is a mixin class that provides the queryset retrieval methods for querying ScanPort objects.
     """
 
-    serializer_class = rest.serializers.ScanPortSerializer
+    serializer_class = rest.serializers.ScanPortRelatedSerializer
 
     def _get_su_queryset(self):
         return rest.models.ScanPort.objects.all()
@@ -854,17 +854,158 @@ def set_organization_scan_config(request, pk=None):
     serializer = rest.serializers.SetScanPortSerializer(data=request.POST)
     serializer.is_valid(raise_exception=True)
     config_uuid = serializer.data["scan_config"]
-    if request.user.is_superuser:
-        query = rest.models.ScanConfig.objects
-    else:
-        query = rest.models.ScanConfig.objects.filter(
-            Q(user=request.user) |
-            Q(is_default=True) |
-            Q(organization__auth_groups__users=request.user, organization__auth_groups__name="org_read")
-        )
     try:
-        scan_config = query.get(pk=config_uuid)
+        scan_config = rest.models.ScanConfig.objects.get_config_for_user(
+            user=request.user,
+            config_uuid=config_uuid,
+        )
     except rest.models.ScanConfig.DoesNotExist:
         raise NotFound("No scanning configuration was found for that UUID")
     organization.set_scan_config(scan_config)
     return Response(rest.serializers.ScanConfigSerializer(organization.scan_config).data)
+
+
+@api_view(["POST"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def quick_scan_organization(request, pk=None):
+    """
+    Perform a quick scan of the given organization based on the contents of the request submitted
+    to the endpoint.
+    :param request: The request received by this API handler.
+    :param pk: The primary key of the organization to start a scan for.
+    :return: A response containing [WHAT].
+    """
+
+    # Get the organization
+
+    organization = get_object_or_404(Organization, pk=pk)
+
+    # Make sure the requesting user has permission to scan for the organization
+
+    if not request.user.is_superuser:
+        if not organization.can_user_scan(request.user):
+            raise PermissionDenied("You do not have permission to initiate scans for that organization.")
+
+    # Validate the request data
+
+    serializer = rest.serializers.OrganizationQuickScanSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    # Retrieve the ScanConfig to associate with the order
+
+    scan_config_uuid = serializer.validated_data.get("scan_config_uuid", None)
+    scan_config_data = serializer.validated_data.get("scan_config", None)
+    if scan_config_uuid:
+        try:
+            existing_scan_config = rest.models.ScanConfig.objects.get_config_for_user(
+                user=request.user,
+                config_uuid=scan_config_uuid,
+            )
+            scan_config = existing_scan_config.duplicate()
+        except rest.models.ScanConfig.DoesNotExist:
+            raise NotFound("No scanning configuration found for ID %s." % scan_config_uuid)
+    elif scan_config_data:
+        scan_config_serializer = rest.serializers.ScanConfigChildrenSerializer(data=scan_config_data)
+        scan_config_serializer.is_valid(raise_exception=True)
+        scan_config = scan_config_serializer.save()
+    else:
+        scan_config = organization.scan_config.duplicate()
+
+    # Create the targets for the order based on the contents of the targets data
+
+    skipped_targets = []
+    new_models = []
+    domains = []
+    networks = []
+    new_order = rest.models.Order.objects.create(
+        organization=organization,
+        user_email=request.user.email,
+        user=request.user,
+        scan_config=scan_config,
+    )
+    for target in serializer.validated_data["targets"]:
+        target = target.strip()
+        if RegexLib.domain_name_regex.match(target):
+            try:
+                org_domain = organization.domain_names.get(name=target)
+            except rest.models.DomainName.DoesNotExist:
+                org_domain = organization.domain_names.create(name=target, added_by="quickscan")
+                new_models.append(org_domain)
+            new_order.domain_names.create(domain_name=org_domain)
+            domains.append(target)
+        elif RegexLib.ipv4_cidr_regex.match(target):
+            cidr_wrapper = CidrRangeWrapper(target)
+            try:
+                org_network = organization.networks.get(
+                    address=cidr_wrapper.parsed_address,
+                    mask_length=cidr_wrapper.mask_length,
+                )
+            except rest.models.Network.DoesNotExist:
+                org_network = organization.networks.create(
+                    address=cidr_wrapper.parsed_address,
+                    mask_length=cidr_wrapper.mask_length,
+                    added_by="quickscan",
+                )
+                new_models.append(org_network)
+            new_order.networks.create(network=org_network)
+            networks.append(target)
+        elif RegexLib.ipv4_address_regex.match(target):
+            try:
+                org_network = organization.networks.get(address=target, mask_length=32)
+            except rest.models.Network.DoesNotExist:
+                org_network = organization.networks.create(
+                    address=target,
+                    mask_length=32,
+                    added_by="quickscan",
+                )
+                new_models.append(org_network)
+            new_order.networks.create(network=org_network)
+            networks.append("%s/32" % (target,))
+        else:
+            skipped_targets.append(target)
+
+    # Override the ScanConfig completion callbacks as necessary
+
+    if "completion_web_hook_url" in serializer.validated_data:
+        scan_config.completion_web_hook_url = serializer.validated_data["completion_web_hook_url"]
+    if "completion_email_org_users" in serializer.validated_data:
+        scan_config.completion_email_org_users = serializer.validated_data["completion_email_org_users"]
+    if "completion_email_order_user" in serializer.validated_data:
+        scan_config.completion_email_order_user = serializer.validated_data["completion_email_order_user"]
+
+    # Check to make sure that the order has at least one valid target and back out as needed
+
+    targets_count = new_order.domain_names.count() + new_order.networks.count()
+    if targets_count == 0:
+        scan_config.delete()
+        for new_model in new_models:
+            new_model.delete()
+        new_order.delete()
+        return WsQuickScanResponse(
+            was_successful=False,
+            skipped=skipped_targets,
+            description="No valid targets were provided in your request.",
+        )
+
+    # Ensure the models are saved and initiate the scan
+
+    scan_config.save()
+    new_order.place_order(update_monitored=False)
+    new_order.save()
+    send_emails_for_placed_order.delay(
+        order_uuid=unicode(new_order.uuid),
+        receipt_description=new_order.get_receipt_description(),
+    )
+    handle_placed_order.delay(order_uuid=unicode(new_order.uuid))
+
+    # Return the successful response
+
+    return WsQuickScanResponse(
+        order_uuid=str(new_order.uuid),
+        was_successful=True,
+        domains=domains,
+        networks=networks,
+        skipped=skipped_targets,
+        description="A scan was successfully started for %s targets." % (len(domains) + len(networks),)
+    )

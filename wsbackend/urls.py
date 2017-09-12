@@ -32,6 +32,7 @@ urlpatterns = [
 
     # Organization URLs
 
+    url(r'^organizations/(?P<pk>[-\w]+)/quick-scan/?$', views.quick_scan_organization, name="organization-quickscan"), #TESTED
     url(r'^organizations/(?P<pk>[-\w]+)/orders/?$', views.OrdersByOrganizationView.as_view(), name="organizationorder-list"), #TESTED
     url(r'^organizations/(?P<pk>[-\w]+)/es/domain-names/analytics/?$', views.OrganizationDomainNameReportAnalyticsAPIView.as_view(), name="organizationdomainnamereport-analytics"),
     url(r'^organizations/(?P<pk>[-\w]+)/es/domain-names/?$', views.OrganizationDomainNameReportListAPIView.as_view(), name="organizationdomainnamereport-list"),

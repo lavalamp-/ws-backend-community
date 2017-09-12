@@ -49,6 +49,7 @@ from .organizations import (
     ScanPortListView,
     set_organization_scan_config,
     upload_networks_file,
+    quick_scan_organization,
 )
 
 from .scans import (

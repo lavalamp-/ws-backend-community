@@ -330,7 +330,7 @@ class WsDjangoViewTestCase(WsDjangoTestCase):
             api_route = "%s?%s" % (self.api_route, query_string)
         else:
             api_route = self.api_route
-        return self.client.post(api_route, *args, **kwargs)
+        return self.client.post(api_route, format="json", *args, **kwargs)
 
     def put(self, query_string=None, *args, **kwargs):
         """
