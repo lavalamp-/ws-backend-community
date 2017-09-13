@@ -109,11 +109,10 @@ class BaseOrganizationListChildAPIView(WsListChildAPIView, OrganizationPermissio
     This is a base class for all views that intend to query the children of an organization.
     """
 
-    def check_object_permissions(self, request, obj):
-        if not self.request.user.is_superuser and not self.parent_object.can_user_read(self.request.user):
-            raise PermissionDenied("You do not have permission to read data from that organization.")
-        else:
-            return super(BaseOrganizationListChildAPIView, self).check_object_permissions(request, obj)
+    def check_permissions(self, request):
+        super(BaseOrganizationListChildAPIView, self).check_permissions(request)
+        if not self.parent_object.can_user_read(request.user):
+            raise NotFound()
 
     @property
     def parent_class(self):
@@ -125,11 +124,10 @@ class BaseOrganizationListCreateChildAPIView(WsListCreateChildAPIView, Organizat
     This is a base class for all views that intend to query and create children for an organization.
     """
 
-    def check_object_permissions(self, request, obj):
-        if not self.request.user.is_superuser and not self.parent_object.can_user_read(self.request.user):
-            raise PermissionDenied("You do not have permission to read data from that organization.")
-        else:
-            return super(BaseOrganizationListCreateChildAPIView, self).check_object_permissions(request, obj)
+    def list(self, request, *args, **kwargs):
+        if not self.parent_object.can_user_read(request.user) and not request.user.is_superuser:
+            raise NotFound()
+        return super(BaseOrganizationListCreateChildAPIView, self).list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         if not self.request.user.is_superuser and not self.parent_object.can_user_write(self.request.user):
@@ -851,7 +849,7 @@ def set_organization_scan_config(request, pk=None):
         organization = query.get(pk=pk)
     except rest.models.Organization.DoesNotExist:
         raise NotFound()
-    serializer = rest.serializers.SetScanPortSerializer(data=request.POST)
+    serializer = rest.serializers.SetScanPortSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     config_uuid = serializer.data["scan_config"]
     try:

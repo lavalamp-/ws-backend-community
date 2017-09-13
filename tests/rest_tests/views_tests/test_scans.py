@@ -6,7 +6,7 @@ from uuid import uuid4
 import rest.models
 from tests.rest_tests.mixin import ListTestCaseMixin, PresentableTestCaseMixin, ExporterCustomFieldsMixin, \
     ExporterTestCaseMixin, RetrieveTestCaseMixin, CustomFieldsMixin, ParameterizedRouteMixin,\
-    UpdateTestCaseMixin, CreateTestCaseMixin
+    UpdateTestCaseMixin, CreateTestCaseMixin, ListCreateChildTestCaseMixin
 from ..base import WsDjangoViewTestCase
 
 
@@ -515,6 +515,7 @@ class TestDnsRecordTypesByScanConfigView(
     ParameterizedRouteMixin,
     ExporterCustomFieldsMixin,
     ExporterTestCaseMixin,
+    ListCreateChildTestCaseMixin,
     WsDjangoViewTestCase,
 ):
     """
@@ -715,6 +716,10 @@ class TestDnsRecordTypesByScanConfigView(
         self.assert_request_succeeds(response, status_code=201)
 
     @property
+    def create_child_method(self):
+        return self.__send_create_request
+
+    @property
     def create_method(self):
         return self.__send_create_request
 
@@ -731,8 +736,16 @@ class TestDnsRecordTypesByScanConfigView(
         return self.__send_list_request
 
     @property
+    def list_child_method(self):
+        return self.__send_list_request
+
+    @property
     def list_method(self):
         return self.__send_list_request
+
+    @property
+    def parent_class(self):
+        return rest.models.ScanConfig
 
     @property
     def presentation_method(self):
@@ -750,6 +763,7 @@ class TestScanPortsByScanConfigView(
     ParameterizedRouteMixin,
     ExporterCustomFieldsMixin,
     ExporterTestCaseMixin,
+    ListCreateChildTestCaseMixin,
     WsDjangoViewTestCase,
 ):
     """
@@ -942,6 +956,10 @@ class TestScanPortsByScanConfigView(
         self.assert_request_succeeds(response, status_code=201)
 
     @property
+    def create_child_method(self):
+        return self.__send_create_request
+
+    @property
     def create_method(self):
         return self.__send_create_request
 
@@ -958,8 +976,16 @@ class TestScanPortsByScanConfigView(
         return self.__send_list_request
 
     @property
+    def list_child_method(self):
+        return self.__send_list_request
+
+    @property
     def list_method(self):
         return self.__send_list_request
+
+    @property
+    def parent_class(self):
+        return rest.models.ScanConfig
 
     @property
     def presentation_method(self):

@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.response import Response
 
-from .base import WsListAPIView, WsRetrieveAPIView, WsRetrieveUpdateAPIView
+from .base import WsListAPIView, WsRetrieveAPIView, WsRetrieveUpdateAPIView, WsListChildAPIView
 from .exception import OperationNotAllowed, OperationFailed
 import rest.models
 import rest.serializers
@@ -45,6 +45,21 @@ class OrderDetailView(OrderQuerysetMixin, WsRetrieveAPIView):
     """
 
     serializer_class = rest.serializers.OrderSerializer
+
+
+class DomainNamesByOrderView(WsListChildAPIView):
+    """
+    get:
+    Retrieve all of the domain names associated with the given order.
+    """
+
+    @property
+    def parent_class(self):
+        return rest.models.Order
+
+    @property
+    def child_attribute(self):
+        pass
 
 
 @api_view(["PUT"])
