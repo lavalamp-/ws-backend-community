@@ -47,19 +47,56 @@ class OrderDetailView(OrderQuerysetMixin, WsRetrieveAPIView):
     serializer_class = rest.serializers.OrderSerializer
 
 
-class DomainNamesByOrderView(WsListChildAPIView):
+class OrderChildrenMixin(object):
+    """
+    This is a mixin class for handling permissions checking for requests for children of an order.
+    """
+
+    _order = None
+
+    def initial(self, request, *args, **kwargs):
+        self._order = None
+        super(OrderChildrenMixin, self).initial(request, *args, **kwargs)
+
+    def check_permissions(self, request):
+        super(OrderChildrenMixin, self).check_permissions(request)
+        if not request.user.is_superuser:
+            if self.order.user != request.user:
+                raise NotFound()
+
+    @property
+    def order(self):
+        """
+        Get the order that this handler is referencing.
+        :return: the order that this handler is referencing.
+        """
+        if self._order is None:
+            self._order = get_object_or_404(rest.models.Order, pk=self.kwargs["pk"])
+        return self._order
+
+
+class DomainNamesByOrderView(OrderChildrenMixin, WsListAPIView):
     """
     get:
     Retrieve all of the domain names associated with the given order.
     """
 
-    @property
-    def parent_class(self):
-        return rest.models.Order
+    serializer_class = rest.serializers.DomainNameSerializer
 
-    @property
-    def child_attribute(self):
-        pass
+    def get_queryset(self):
+        return rest.models.DomainName.objects.filter(order_domain_names__order=self.order).all()
+
+
+class NetworksByOrderView(OrderChildrenMixin, WsListAPIView):
+    """
+    get:
+    Retrieve all of the networks associated with the given order.
+    """
+
+    serializer_class = rest.serializers.NetworkSerializer
+
+    def get_queryset(self):
+        return rest.models.Network.objects.filter(order_domain_names__order=self.order).all()
 
 
 @api_view(["PUT"])

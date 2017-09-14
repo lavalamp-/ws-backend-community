@@ -30,6 +30,8 @@ from .networks import (
 )
 
 from .orders import (
+    DomainNamesByOrderView,
+    NetworksByOrderView,
     OrderDetailView,
     OrderListView,
     place_order,

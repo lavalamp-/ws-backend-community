@@ -53,6 +53,8 @@ urlpatterns = [
 
     # Order URLs
 
+    url(r'^orders/(?P<pk>[-\w]+)/domain-names/?$', views.DomainNamesByOrderView.as_view(), name="orderdomainnames-list"),
+    url(r'^orders/(?P<pk>[-\w]+)/networks/?$', views.NetworksByOrderView.as_view(), name="ordernetworks-list"),
     url(r'^orders/(?P<pk>[-\w]+)/place/?$', views.place_order, name="order-place"),
     url(r'^orders/(?P<pk>[-\w]+)/?$', views.OrderDetailView.as_view(), name="order-detail"),
     url(r'^orders/?$', views.OrderListView.as_view(), name="order-list"),
