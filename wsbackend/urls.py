@@ -50,8 +50,14 @@ urlpatterns = [
     url(r'^organizations/(?P<pk>[-\w]+)/es/web-services/by-domain/(?P<domain>[^/]+)/?$', views.WebServiceReportByDomainListAPIView.as_view(), name="organizationwebreportbydomain-list"), #TESTED
     url(r'^organizations/(?P<pk>[-\w]+)/es/web-services/by-ip/(?P<ip>[^/]+)/?$', views.WebServiceReportByIpAddressListAPIView.as_view(), name="organizationwebreportbyip-list"), #TESTED
     url(r'^organizations/(?P<pk>[-\w]+)/es/web-services/?$', views.OrganizationWebServiceReportListAPIView.as_view(), name="organizationwebreport-list"),
+    url(r'^organizations/(?P<pk>[-\w]+)/es/ip-addresses/analytics/?$', views.OrganizationIpAddressReportAnalyticsAPIView.as_view(), name="organizationipreport-analytics"), #TESTED
+    url(r'^organizations/(?P<pk>[-\w]+)/es/ip-addresses/?$', views.OrganizationIpAddressReportListAPIView.as_view(), name="organizationipreport-list"), #TESTED
     url(r'^organizations/(?P<pk>[-\w]+)/?$', views.OrganizationDetailView.as_view(), name="organization-detail"),
     url(r'^organizations/?$', views.OrganizationListView.as_view(), name="organization-list"),
+
+    # IP Address URLs
+
+    url(r'^ip-addresses/(?P<pk>[-\w]+)/es/?$', views.IpAddressReportDetailAPIView.as_view(), name="ipaddressreport-detail"), #TESTED
 
     # Order URLs
 
