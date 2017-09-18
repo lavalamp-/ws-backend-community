@@ -20,6 +20,14 @@ class BaseWebServiceQuery(BaseNetworkServiceQuery):
 
     # Public Methods
 
+    def filter_by_web_service_host_name(self, host_name):
+        """
+        Apply a filter to this query to restrict results to the given domain name.
+        :param host_name: The domain name to filter by.
+        :return: None
+        """
+        self.must_by_term(key="web_service_host_name", value=host_name)
+
     def filter_by_web_service(self, web_service_uuid):
         """
         Apply a filter to this query to restrict results to the given web service.
