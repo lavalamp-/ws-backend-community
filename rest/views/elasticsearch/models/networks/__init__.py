@@ -11,6 +11,7 @@ from .esmixin import (
 )
 
 from .views import (
+    IpAddressReportByIpDetailAPIView,
     IpAddressReportDetailAPIView,
     OrganizationIpAddressReportAnalyticsAPIView,
     OrganizationIpAddressReportListAPIView,
