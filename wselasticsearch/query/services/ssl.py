@@ -129,3 +129,17 @@ class SslSupportReportQuery(BaseNetworkServiceScanQuery):
     def get_queried_class(cls):
         from wselasticsearch.models import SslSupportReportModel
         return SslSupportReportModel
+
+    def filter_by_domain(self, domain_name):
+        """
+        Apply filters to restrict this query to only those results that have CNAME records that would cover
+        the given domain name.
+        :param domain_name: The domain name to query against.
+        :return: None
+        """
+        if "." in domain_name:
+            wild_domain = "*%s" % domain_name[domain_name.find("."):]
+            self.or_by_term(key="cert_subject_common_name", value=wild_domain)
+            self.or_by_term(key="cert_subject_common_name", value=domain_name)
+        else:
+            self.must_by_term(key="cert_subject_common_name", value=domain_name)

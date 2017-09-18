@@ -265,6 +265,20 @@ class BaseElasticsearchQuery(object):
             wild_after=wild_after
         ), component_as=component_as)
 
+    def or_by_term(self, key=None, value=None, verify_key=True):
+        """
+        Add a query filter that adds the given key-value match to the list of conditional OR operations
+        associated with the query.
+        :param key: The key to match on.
+        :param value: The value to match on.
+        :param verify_key: Whether or not to validate that key is a field explicitly declared on the queried
+        model.
+        :return: None
+        """
+        if verify_key:
+            self._validate_queryable_field(key)
+        self.__add_component(TermComponent(key=key, value=value), component_as="or")
+
     def or_by_wildcard(self, key=None, value=None, wild_before=True, wild_after=True):
         """
         Add a query filter that includes the given wildcard value in the boolean "should" component

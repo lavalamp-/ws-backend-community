@@ -315,6 +315,7 @@ class TestWebServiceReportByDomainListAPIView(
         if domain_uuid == "POPULATE":
             query = WebServiceReportQuery()
             query.filter_by_organization(organization.uuid)
+            query.filter_by_latest_scan()
             response = query.search(organization.uuid)
             domain = response.results[0]["_source"]["web_service_host_name"]
         else:
