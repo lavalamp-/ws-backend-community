@@ -28,7 +28,15 @@ class BaseDomainNameQuery(BaseOrganizationQuery):
         """
         self.must_by_term(key="domain_added_by", value=added_by, include=include)
 
-    def filter_by_domain_name(self, domain_uuid):
+    def filter_by_domain_name(self, domain_name):
+        """
+        Add a filter to this query to restrict queried data based on a domain name.
+        :param domain_name: The domain name to filter on.
+        :return: None
+        """
+        self.must_by_term(key="domain_name", value=domain_name)
+
+    def filter_by_domain_uuid(self, domain_uuid):
         """
         Add a filter to this query to restrict queried data base on a domain name UUID.
         :param domain_uuid: The UUID of the domain name.
@@ -43,6 +51,15 @@ class BaseDomainNameQuery(BaseOrganizationQuery):
         :return: None
         """
         self.filter_by_domain_added_by(added_by="user", include=False)
+
+    def filter_by_parent_domain(self, parent_domain):
+        """
+        Add a filter to this query that restricts results to only those domains that end with
+        the given domain name.
+        :param parent_domain: The parent domain name to filter on.
+        :return: None
+        """
+        self.must_by_wildcard(key="domain_name", value=parent_domain, wild_before=True, wild_after=False)
 
     def filter_by_user_domain(self):
         """
