@@ -14,6 +14,8 @@ from .views import (
     NetworkServiceSslSupportRelatedAPIView,
     OrganizationSslSupportReportAnalyticsAPIView,
     OrganizationSslSupportReportListAPIView,
+    SslSupportReportByDomainListAPIView,
+    SslSupportReportByIpListAPIView,
     SslSupportReportDetailAPIView,
 )
 

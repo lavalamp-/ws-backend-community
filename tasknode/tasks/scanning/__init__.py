@@ -44,9 +44,11 @@ from .network import (
 )
 
 from .orders import (
+    handle_order_completion,
     handle_placed_order,
     initiate_domain_scans_for_order,
     initiate_network_scans_for_order,
+    request_web_hook_for_order_completion,
 )
 
 from .services import *

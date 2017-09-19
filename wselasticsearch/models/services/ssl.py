@@ -581,7 +581,7 @@ class SslSupportReportModel(BaseNetworkServiceScanModel):
         to_populate.cert_issuer_organization = WsFaker.get_words(1)[0]
         to_populate.cert_issuer_organizational_unit = WsFaker.get_words(1)[0]
         to_populate.cert_issuer_state = WsFaker.get_words(1)[0]
-        to_populate.cert_subject_common_name = WsFaker.get_words(1)[0]
+        to_populate.cert_subject_common_name = WsFaker.get_domain_name()
         to_populate.cert_subject_country = WsFaker.get_words(1)[0]
         to_populate.cert_subject_email = WsFaker.get_words(1)[0]
         to_populate.cert_subject_hash = WsFaker.get_words(1)[0]

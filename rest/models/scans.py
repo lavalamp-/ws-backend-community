@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 from django.db import models
 import json
+from django.db.models import Q
 
 from lib import JsonSerializableMixin, ConfigManager
 from .base import BaseWsModel
@@ -52,6 +53,27 @@ class ScanConfigManager(models.Manager):
         if include_default_scan_ports:
             self.__create_default_scan_ports_for_config(scan_config)
         return scan_config
+
+    def get_config_for_user(self, user=None, config_uuid=None, org_permission_level="org_read"):
+        """
+        Get the referenced ScanConfig for the given user (assuming that the user has permission to access
+        the referenced ScanConfig).
+        :param user: The user to retrieve the ScanConfig for.
+        :param config_uuid: The UUID of the ScanConfig to retrieve.
+        :param org_permission_level: The level of permission associated with the organization that owns the
+        ScanConfig.
+        :return: The referenced ScanConfig if the user has permission to access it, otherwise a DoesNotExist
+        exception will be raised.
+        """
+        if user.is_superuser:
+            query = self
+        else:
+            query = self.filter(
+                Q(user=user) |
+                Q(is_default=True) |
+                Q(organization__auth_groups__users=user, organization__auth_groups__name=org_permission_level)
+            )
+        return query.get(pk=config_uuid)
 
     def write_defaults_to_file(self):
         """
@@ -291,6 +313,25 @@ class ScanConfig(BaseWsModel, JsonSerializableMixin):
         default=True,
         null=False,
         help_text="Whether or not to gather information about user agent responses for a web application.",
+    )
+
+    # Completion
+
+    completion_web_hook_url = models.URLField(
+        null=True,
+        help_text="A URL to send an HTTP GET request to once an order has completed.",
+    )
+    completion_email_org_users = models.BooleanField(
+        null=False,
+        default=True,
+        help_text="Whether or not to send an email to all of the users associated with the organization that this "
+                  "ScanConfig is associated with when an order has finished.",
+    )
+    completion_email_order_user = models.BooleanField(
+        null=False,
+        default=False,
+        help_text="Whether or not to send an email to the user that created the related order once the order "
+                  "has finished.",
     )
 
     # Foreign Keys

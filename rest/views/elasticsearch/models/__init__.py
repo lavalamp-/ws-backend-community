@@ -3,6 +3,8 @@ from __future__ import absolute_import
 
 from .dns import *
 
+from .networks import *
+
 from .organizations import *
 
 from .services import *

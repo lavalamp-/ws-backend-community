@@ -61,6 +61,7 @@ class BaseElasticsearchAPIViewMixin(object):
             return rest.responses.WsPresentationResponse.from_es_api_view(self)
         else:
             self.check_ws_permissions()
+            self._validate_arguments()
             response = self._query_elasticsearch()
             response_body = self._extract_contents_from_response(response)
             return Response(response_body)
@@ -139,6 +140,14 @@ class BaseElasticsearchAPIViewMixin(object):
         self._query = self._apply_filters_to_query(self._query)
         self._query.queried_fields = self.queried_fields
         return self._query.search(index=es_index)
+
+    def _validate_arguments(self):
+        """
+        Validate that the arguments supplied to this handler are valid for query execution, and raise a
+        ValidationError if they are not.
+        :return: None
+        """
+        pass
 
     # Private Methods
 

@@ -7,7 +7,7 @@ from django.utils import timezone
 from mock import MagicMock
 
 from ..mixin import ListTestCaseMixin, ParameterizedRouteMixin, ExporterTestCaseMixin, RetrieveTestCaseMixin, \
-    PresentableTestCaseMixin, ExporterCustomFieldsMixin, CustomFieldsMixin, UpdateTestCaseMixin
+    PresentableTestCaseMixin, ExporterCustomFieldsMixin, CustomFieldsMixin, UpdateTestCaseMixin, ListChildTestCaseMixin
 from ..base import WsDjangoViewTestCase
 from tasknode.tasks import handle_placed_order, send_emails_for_placed_order
 from rest.models import Order, Receipt, ScanConfig
@@ -263,3 +263,127 @@ class TestPlaceOrderView(
         """
         response = self.__send_place_order_request_for_user()
         self.assert_request_succeeds(response, status_code=204)
+
+
+class TestDomainNamesByOrderView(
+    ListTestCaseMixin,
+    ListChildTestCaseMixin,
+    ParameterizedRouteMixin,
+    PresentableTestCaseMixin,
+    ExporterCustomFieldsMixin,
+    ExporterTestCaseMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for testing the DomainNamesByOrderView APIView.
+    """
+
+    _api_route = "/orders/%s/domain-names/"
+    _url_parameters = None
+
+    def __send_list_request(self, user="user_1", login=True, input_uuid="POPULATE", query_string=None):
+        """
+        Send an HTTP request to the configured API endpoint and return the response.
+        :param user: A string depicting the user to send the request as.
+        :param input_uuid: The UUID of the order to request.
+        :param query_string: The query string to include in the URL.
+        :param login: Whether or not to log the requesting user in.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        if input_uuid == "POPULATE":
+            order = self.get_order_for_user(user=user)
+            input_uuid = order.uuid
+        self._url_parameters = str(input_uuid)
+        return self.get(query_string=query_string)
+
+    @property
+    def custom_fields_field(self):
+        return "uuid"
+
+    @property
+    def custom_fields_method(self):
+        return self.__send_list_request
+
+    @property
+    def list_child_method(self):
+        return self.__send_list_request
+
+    @property
+    def list_method(self):
+        return self.__send_list_request
+
+    @property
+    def parent_class(self):
+        return rest.models.Order
+
+    @property
+    def presentation_method(self):
+        return self.__send_list_request
+
+    @property
+    def response_has_many(self):
+        return True
+
+
+class TestNetworksByOrderView(
+    ListTestCaseMixin,
+    ListChildTestCaseMixin,
+    ParameterizedRouteMixin,
+    PresentableTestCaseMixin,
+    ExporterCustomFieldsMixin,
+    ExporterTestCaseMixin,
+    WsDjangoViewTestCase,
+):
+    """
+    This is a test case for testing the NetworksByOrderView APIView.
+    """
+
+    _api_route = "/orders/%s/domain-names/"
+    _url_parameters = None
+
+    def __send_list_request(self, user="user_1", login=True, input_uuid="POPULATE", query_string=None):
+        """
+        Send an HTTP request to the configured API endpoint and return the response.
+        :param user: A string depicting the user to send the request as.
+        :param input_uuid: The UUID of the order to request.
+        :param query_string: The query string to include in the URL.
+        :param login: Whether or not to log the requesting user in.
+        :return: The HTTP response.
+        """
+        if login:
+            self.login(user=user)
+        if input_uuid == "POPULATE":
+            order = self.get_order_for_user(user=user)
+            input_uuid = order.uuid
+        self._url_parameters = str(input_uuid)
+        return self.get(query_string=query_string)
+
+    @property
+    def custom_fields_field(self):
+        return "uuid"
+
+    @property
+    def custom_fields_method(self):
+        return self.__send_list_request
+
+    @property
+    def list_child_method(self):
+        return self.__send_list_request
+
+    @property
+    def list_method(self):
+        return self.__send_list_request
+
+    @property
+    def parent_class(self):
+        return rest.models.Order
+
+    @property
+    def presentation_method(self):
+        return self.__send_list_request
+
+    @property
+    def response_has_many(self):
+        return True

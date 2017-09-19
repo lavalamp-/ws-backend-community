@@ -7,10 +7,69 @@ from tasknode.app import websight_app
 from tasknode.tasks.base import DatabaseTask
 from lib.sqlalchemy import get_user_name_and_email_from_order, get_admin_emails, \
     get_name_email_and_verification_token_for_user, get_user_activation_token, \
-    get_admin_contacts_for_organization
+    get_admin_contacts_for_organization, get_user_tuples_for_organization
 from lib.smtp import SmtpEmailHelper
 
 logger = get_task_logger(__name__)
+
+
+#USED
+@websight_app.task(bind=True, base=DatabaseTask)
+def email_org_users_for_order_completion(self, order_uuid=None, org_uuid=None, org_name=None):
+    """
+    Send emails to all of the users associated with the organization that owns the specified order
+    indicating that the order has been completed.
+    :param order_uuid: The UUID of the order that finished.
+    :param org_uuid: The UUID of the organization that the order is associated with.
+    :param org_name: The name of the organization that the order is associated with.
+    :return: None
+    """
+    logger.info(
+        "Now sending emails for completion of order %s to all users of the parent organization."
+        % (order_uuid,)
+    )
+    org_user_tuples = get_user_tuples_for_organization(org_uuid=org_uuid, db_session=self.db_session)
+    smtp_helper = SmtpEmailHelper.instance()
+    smtp_helper.send_emails_for_completed_order_to_users(
+        order_uuid=order_uuid,
+        org_uuid=org_uuid,
+        org_name=org_name,
+        org_contact_tuples=org_user_tuples,
+    )
+    logger.info(
+        "Emails for completed order %s sent to %s users associated with organization."
+        % (order_uuid, len(org_user_tuples))
+    )
+
+
+#USED
+@websight_app.task(bind=True, base=DatabaseTask)
+def email_order_user_for_order_completion(self, order_uuid=None, org_uuid=None, org_name=None):
+    """
+    Send an email to the user that kicked off the given order indicating that the order has been
+    completed.
+    :param order_uuid: The UUID of the order that finished.
+    :param org_uuid: The UUID of the organization that the order is associated with.
+    :param org_name: The name of the organization that the order is associated with.
+    :return: None
+    """
+    logger.info(
+        "Now sending email to order owner for order %s."
+        % (order_uuid,)
+    )
+    user = self.order.user
+    org_contact_tuples = [(user.first_name, user.email_address)]
+    smtp_helper = SmtpEmailHelper.instance()
+    smtp_helper.send_emails_for_completed_order_to_users(
+        order_uuid=order_uuid,
+        org_uuid=org_uuid,
+        org_name=org_name,
+        org_contact_tuples=org_contact_tuples,
+    )
+    logger.info(
+        "Email sent to owning user for order %s."
+        % (order_uuid,)
+    )
 
 
 @websight_app.task(bind=True, base=DatabaseTask)

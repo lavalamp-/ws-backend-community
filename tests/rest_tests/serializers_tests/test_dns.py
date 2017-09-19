@@ -24,4 +24,4 @@ class DnsRecordTypeSerializerTestCase(BaseWebSightSerializerTestCase):
 
     @property
     def serializer(self):
-        return rest.serializers.DnsRecordTypeSerializer
+        return rest.serializers.DnsRecordTypeRelatedSerializer

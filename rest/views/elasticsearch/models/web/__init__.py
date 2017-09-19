@@ -21,6 +21,8 @@ from .esmixin import (
 from .views import (
     OrganizationWebServiceReportAnalyticsAPIView,
     OrganizationWebServiceReportListAPIView,
+    WebServiceReportByDomainListAPIView,
+    WebServiceReportByIpAddressListAPIView,
     WebServiceReportDetailAPIView,
     WebServiceResourceAnalyticsAPIView,
     WebServiceResourceListAPIView,

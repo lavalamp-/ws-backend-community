@@ -134,7 +134,7 @@ class DnsRecordTypesByScanConfigView(BaseScanConfigListCreateChildAPIView):
     Create a new DnsRecordType for the referenced ScanConfig.
     """
 
-    serializer_class = rest.serializers.DnsRecordTypeSerializer
+    serializer_class = rest.serializers.DnsRecordTypeRelatedSerializer
     ordering_fields = ("record_type",)
 
     def _get_parent_mapping(self):
@@ -160,7 +160,7 @@ class ScanPortsByScanConfigView(BaseScanConfigListCreateChildAPIView):
     Create a new ScanPort for the referenced ScanConfig.
     """
 
-    serializer_class = rest.serializers.ScanPortSerializer
+    serializer_class = rest.serializers.ScanPortRelatedSerializer
     ordering_fields = ("port_number",)
 
     def _get_parent_mapping(self):

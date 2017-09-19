@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 from celery import group
 from celery.utils.log import get_task_logger
+import requests
 
 from tasknode.app import websight_app
 from tasknode.tasks.base import ScanTask
@@ -12,6 +13,7 @@ from lib.sqlalchemy import count_domains_for_order, \
 from lib import DatetimeHelper
 from .dns import scan_domain_name
 from .network import zmap_scan_order
+from ..smtp import email_order_user_for_order_completion, email_org_users_for_order_completion
 
 logger = get_task_logger(__name__)
 
@@ -38,7 +40,7 @@ def handle_placed_order(self, order_uuid=None):
         )
         if domain_count > 0:
             task_sigs.append(initiate_domain_scans_for_order.si(order_uuid=order_uuid, scan_endpoints=True))
-    if scan_config.scan_ip_addresses:
+    if scan_config.scan_network_ranges:
         network_count = count_networks_for_order(db_session=self.db_session, order_uuid=order_uuid)
         logger.info(
             "Networks count for order %s is %s."
@@ -47,6 +49,7 @@ def handle_placed_order(self, order_uuid=None):
         if network_count > 0:
             task_sigs.append(initiate_network_scans_for_order.si(order_uuid=order_uuid, requeue=False))
     if len(task_sigs) > 0:
+        task_sigs.append(handle_order_completion.si(order_uuid=order_uuid))
         canvas_sig = group(task_sigs)
         canvas_sig.apply_async()
         logger.info(
@@ -121,3 +124,87 @@ def initiate_network_scans_for_order(self, order_uuid=None, requeue=False):
         logger.info("Requeueing not enabled, therefore not queueing up another network scanning task.")
 
 
+#USED
+@websight_app.task(bind=True, base=ScanTask, max_retries=None)
+def handle_order_completion(self, order_uuid=None, retry_interval=10, completion_count=1):
+    """
+    Check to see if the order associated with the given UUID has completed and, if it has, handle the completion
+    of the order.
+    :param order_uuid: The UUID of the order to check on.
+    :param retry_interval: The time (in seconds) between checking on whether or not the referenced
+    order has completed.
+    :param completion_count: The number of outstanding tasks associated with an order that should indicate
+    that the order has finished.
+    :return: None
+    """
+    logger.info(
+        "Now checking to see if order %s has completed."
+        % (order_uuid,)
+    )
+    order_uuid_value = int(self.redis_helper.get(order_uuid))
+    if order_uuid_value == completion_count:
+        logger.info(
+            "Order %s has completed!"
+            % (order_uuid,)
+        )
+        scan_config = self.scan_config
+        task_sigs = []
+        if scan_config.completion_email_org_users:
+            org = self.order.organization
+            task_sigs.append(email_org_users_for_order_completion.si(
+                order_uuid=order_uuid,
+                org_uuid=org.uuid,
+                org_name=org.name,
+            ))
+        elif scan_config.completion_email_order_user:
+            org = self.order.organization
+            task_sigs.append(email_order_user_for_order_completion.si(
+                order_uuid=order_uuid,
+                org_uuid=org.uuid,
+                org_name=org.name,
+            ))
+        if scan_config.completion_web_hook_url:
+            task_sigs.append(request_web_hook_for_order_completion.si(order_uuid=order_uuid))
+        if len(task_sigs) > 0:
+            canvas_sig = group(task_sigs)
+            logger.info(
+                "Now kicking off %s tasks to handle the completion of order %s."
+                % (len(task_sigs), order_uuid)
+            )
+            self.finish_after(signature=canvas_sig)
+        else:
+            logger.info(
+                "No tasks to run in response to completion of order %s."
+                % (order_uuid,)
+            )
+    else:
+        logger.info(
+            "Order %s has not completed yet (%s tasks currently outstanding)."
+            % (order_uuid, order_uuid_value,)
+        )
+        raise self.retry(countdown=retry_interval)
+
+
+#USED
+@websight_app.task(bind=True, base=ScanTask)
+def request_web_hook_for_order_completion(self, order_uuid=None):
+    """
+    Submit an HTTP GET request to the web hook URL associated with the given order to indicate that the
+    order has finished.
+    :param order_uuid: The UUID of the order that finished.
+    :return: None
+    """
+    scan_config = self.scan_config
+    web_hook_url = scan_config.completion_web_hook_url
+    if "?" in web_hook_url:
+        web_hook_url = web_hook_url[:web_hook_url.find("?")]
+    request_url = "%s?%s" % (web_hook_url, order_uuid)
+    logger.info(
+        "Now requesting URL %s to indicate that order %s has finished."
+        % (request_url, order_uuid)
+    )
+    requests.get(request_url)
+    logger.info(
+        "Successfully requested URL %s."
+        % (request_url,)
+    )

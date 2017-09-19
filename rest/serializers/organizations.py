@@ -190,6 +190,32 @@ class ScanPortSerializer(WsBaseModelSerializer):
             "included",
             "created",
             "uuid",
+            "organization",
+        )
+        read_only_fields = (
+            "added_by",
+            "included",
+            "scan_config",
+            "created",
+            "uuid",
+        )
+
+
+class ScanPortRelatedSerializer(ScanPortSerializer):
+    """
+    This is a serializer class for serializing data related to ScanPort models that includes the
+    ability to modify attachment to ScanConfig objects.
+    """
+
+    class Meta:
+        model = ScanPort
+        fields = (
+            "port_number",
+            "protocol",
+            "added_by",
+            "included",
+            "created",
+            "uuid",
             "scan_config",
             "organization",
         )

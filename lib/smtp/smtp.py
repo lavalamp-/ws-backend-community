@@ -146,6 +146,38 @@ class SmtpEmailHelper(object):
         plain_message = self.create_plain_message("user_org_invite", template_data)
         self.send(user_email, subject, plain_message, html_message)
 
+    def send_emails_for_completed_order_to_users(
+            self,
+            order_uuid=None,
+            org_uuid=None,
+            org_name=None,
+            org_contact_tuples=None,
+    ):
+        """
+        Send all of the necessary emails for the completion of an order to the list of contacts.
+        :param order_uuid: The UUID of the order that finished.
+        :param org_uuid: The UUID of the organization that was scanned.
+        :param org_name: The name of the organization
+        :param org_contact_tuples: A list of tuples containing (1) the user's first name and (2) the user's email
+        address for all of the recipients of the order completion email.
+        :return: None
+        """
+        subject = "The scan for organization %s has finished (%s)" % (
+            org_name,
+            order_uuid,
+        )
+        template_data = {
+            "[ORG_NAME]": org_name,
+            "[ORG_UUID]": org_uuid,
+            "[DOMAIN_REPLACE]": config.rest_domain,
+            "[ORDER_UUID]": order_uuid,
+        }
+        for first_name, email_address in org_contact_tuples:
+            template_data["[USER_NAME]"] = first_name
+            html_message = self.create_html_message("order_completed", template_data)
+            plain_message = self.create_plain_message("order_completed", template_data)
+            self.send(email_address, subject, plain_message, html_message)
+
     def send_emails_for_placed_order(
             self,
             user_name=None,
