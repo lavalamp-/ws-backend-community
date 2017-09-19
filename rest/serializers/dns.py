@@ -65,7 +65,7 @@ class DnsRecordTypeSerializer(WsBaseModelSerializer):
 
     def validate_record_type(self, value):
         """
-        Validate that the contents of value represnt a valid DNS record type supported by
+        Validate that the contents of value represent a valid DNS record type supported by
         this Web Sight deployment.
         :param value: The value to validate.
         :return: The validated value.
@@ -78,6 +78,26 @@ class DnsRecordTypeSerializer(WsBaseModelSerializer):
                 % (value,)
             )
         return value
+
+    class Meta:
+        model = DnsRecordType
+        fields = (
+            "uuid",
+            "created",
+            "record_type",
+        )
+        read_only_fields = (
+            "uuid",
+            "created",
+            "scan_config",
+        )
+
+
+class DnsRecordTypeRelatedSerializer(DnsRecordTypeSerializer):
+    """
+    This is a serializer class for providing details about a DnsRecordType that includes the ability
+    to modify attachment to ScanConfig objects.
+    """
 
     class Meta:
         model = DnsRecordType

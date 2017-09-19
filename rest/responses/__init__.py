@@ -18,6 +18,7 @@ from .presentation import (
 )
 
 from .scans import (
+    WsQuickScanResponse,
     WsScanConfigValidityResponse,
 )
 

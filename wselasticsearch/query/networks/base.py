@@ -70,7 +70,15 @@ class BaseIpAddressQuery(BaseNetworkQuery):
 
     # Public Methods
 
-    def filter_by_ip_address(self, ip_uuid):
+    def filter_by_ip_address(self, ip_address):
+        """
+        Apply a filter to this query to restrict queried data based on an IP address.
+        :param ip_address: The IP address to filter upon.
+        :return: None
+        """
+        self.must_by_term(key="ip_address", value=ip_address)
+
+    def filter_by_ip_address_uuid(self, ip_uuid):
         """
         Add a filter to this query to restrict queried data based on an IP address UUID.
         :param ip_uuid: The UUID of the IpAddress to filter upon.

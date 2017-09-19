@@ -217,14 +217,17 @@ class WsDjangoViewTestCase(WsDjangoTestCase):
     _api_route = None
     _requires_auth = None
 
-    def assert_request_fails(self, response, fail_status=400):
+    def assert_request_fails(self, response, fail_status=None):
         """
         Assert that the given response failed and has the given status code.
         :param response: The response to check.
         :param fail_status: The status code to check against.
         :return: None
         """
-        self.assertEqual(response.status_code, fail_status)
+        if fail_status is None:
+            self.assertIn(response.status_code, range(400, 500))
+        else:
+            self.assertEqual(response.status_code, fail_status)
 
     def assert_request_not_authorized(self, response):
         """
@@ -330,7 +333,7 @@ class WsDjangoViewTestCase(WsDjangoTestCase):
             api_route = "%s?%s" % (self.api_route, query_string)
         else:
             api_route = self.api_route
-        return self.client.post(api_route, *args, **kwargs)
+        return self.client.post(api_route, format="json", *args, **kwargs)
 
     def put(self, query_string=None, *args, **kwargs):
         """

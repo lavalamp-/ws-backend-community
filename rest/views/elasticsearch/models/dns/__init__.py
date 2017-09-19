@@ -11,6 +11,8 @@ from .esmixin import (
 )
 
 from .views import (
+    DomainNameReportByDomainDetailAPIView,
+    DomainNameReportByParentDomainListAPIView,
     DomainNameReportDetailAPIView,
     OrganizationDomainNameReportAnalyticsAPIView,
     OrganizationDomainNameReportListAPIView,

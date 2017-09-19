@@ -10,8 +10,8 @@ from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.db import models
 from rest_framework import filters
-from rest_framework.exceptions import ValidationError
-import rest_framework.mixins
+from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.settings import api_settings
 from django.core.exceptions import ObjectDoesNotExist
 
 from .exception import FieldNotFound, OperationFailed
@@ -145,6 +145,7 @@ class ListMixin(BaseAPIViewMixin, generics.ListAPIView):
     _exporter_map = None
     _export_argument = None
     pagination_enabled = True
+    page_size = api_settings.PAGE_SIZE
 
     def list(self, request, *args, **kwargs):
         if self.has_presentation_argument:
@@ -189,6 +190,8 @@ class ListMixin(BaseAPIViewMixin, generics.ListAPIView):
     def paginate_queryset(self, queryset):
         if not self.pagination_enabled:
             self.paginator.page_size = 10000
+        else:
+            self.paginator.page_size = self.page_size
         return super(ListMixin, self).paginate_queryset(queryset)
 
     @property
@@ -250,6 +253,7 @@ class ListChildMixin(BaseAPIViewMixin):
     _exporter_map = None
     _export_argument = None
     pagination_enabled = True
+    page_size = api_settings.PAGE_SIZE
 
     # Instantiation
 
@@ -307,6 +311,8 @@ class ListChildMixin(BaseAPIViewMixin):
     def paginate_queryset(self, queryset):
         if not self.pagination_enabled:
             self.paginator.page_size = 10000
+        else:
+            self.paginator.page_size = self.page_size
         return super(ListChildMixin, self).paginate_queryset(queryset)
 
     # Protected Methods

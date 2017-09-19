@@ -75,7 +75,7 @@ class DnsRecordTypeQuerysetMixin(object):
     This is a mixin class that provides the queryset retrieval methods for querying DnsRecordType objects.
     """
 
-    serializer_class = rest.serializers.DnsRecordTypeSerializer
+    serializer_class = rest.serializers.DnsRecordTypeRelatedSerializer
 
     def _get_su_queryset(self):
         return rest.models.DnsRecordType.objects.all()

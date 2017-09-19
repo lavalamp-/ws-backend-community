@@ -1249,3 +1249,75 @@ class ExporterCustomFieldsMixin(CustomFieldsMixin):
             wrapper.add_argument(key=settings.EXPORT_PARAM, value=export_type)
             kwargs["query_string"] = str(wrapper)
         return super(ExporterCustomFieldsMixin, self).send_custom_fields_request(*args, **kwargs)
+
+
+class ListChildTestCaseMixin(object):
+    """
+    This is a mixin class for testing ListChild API handlers.
+    """
+
+    def test_regular_user_list_child_not_owned_fails(self):
+        """
+        Tests that submitting a request as a regular user to a list child endpoint for a parent object
+        that the user does not have permissions for fails.
+        :return: None
+        """
+        unowned = self.get_object_by_class_for_user(user="user_2", object_class=self.parent_class)
+        self.assert_request_fails(self.list_child_method(user="user_1", input_uuid=unowned.uuid))
+
+    def test_admin_user_list_child_not_owned_succeeds(self):
+        """
+        Tests that submitting a request as an administrative user to a list child endpoint for a parent object
+        that the user does not have permissions for succeeds.
+        :return: None
+        """
+        unowned = self.get_object_by_class_for_user(user="user_1", object_class=self.parent_class)
+        self.assert_request_succeeds(self.list_child_method(user="admin_1", input_uuid=unowned.uuid))
+
+    @property
+    def list_child_method(self):
+        """
+        Get the method to invoke to call the list child functionality in the API.
+        :return: The method to invoke to call the list child functionality in the API.
+        """
+        raise NotImplementedError("Subclasses must implement this!")
+
+    @property
+    def parent_class(self):
+        """
+        Get the model class of the parent object being queried.
+        :return: the model class of the parent object being queried.
+        """
+        raise NotImplementedError("Subclasses must implement this!")
+
+
+class ListCreateChildTestCaseMixin(ListChildTestCaseMixin):
+    """
+    This is a mixin class for testing ListCreateChild API handlers
+    """
+
+    def test_regular_user_create_child_not_owned_fails(self):
+        """
+        Tests that submitting a request as a regular user to a list child endpoint for a parent object
+        that the user does not have permissions for fails.
+        :return: None
+        """
+        unowned = self.get_object_by_class_for_user(user="user_2", object_class=self.parent_class)
+        self.assert_request_fails(self.create_child_method(user="user_1", input_uuid=unowned.uuid))
+
+    def test_admin_user_create_child_not_owned_succeeds(self):
+        """
+        Tests that submitting a request as an administrative user to a list child endpoint for a parent object
+        that the user does not have permissions for succeeds.
+        :return: None
+        """
+        unowned = self.get_object_by_class_for_user(user="user_1", object_class=self.parent_class)
+        self.assert_request_succeeds(self.create_child_method(user="admin_1", input_uuid=unowned.uuid), status_code=201)
+
+    @property
+    def create_child_method(self):
+        """
+        Get the method to invoke to call the create child functionality in the API.
+        :return: the method to invoke to call the create child functionality in the API.
+        """
+        raise NotImplementedError("Subclasses must implement this!")

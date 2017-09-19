@@ -14,6 +14,7 @@ from .admin import (
 )
 
 from .dns import (
+    DnsRecordTypeRelatedSerializer,
     DnsRecordTypeSerializer,
     DomainNameSerializer,
 )
@@ -31,6 +32,7 @@ from .organizations import (
     OrganizationNetworkUploadRangeSerializer,
     OrganizationDomainNameUploadRangeSerializer,
     ScanPortSerializer,
+    ScanPortRelatedSerializer,
     SetScanPortSerializer,
 )
 
@@ -39,6 +41,8 @@ from .services import (
 )
 
 from .scans import (
+    OrganizationQuickScanSerializer,
+    ScanConfigChildrenSerializer,
     ScanConfigSerializer,
 )
 

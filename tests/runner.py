@@ -15,7 +15,7 @@ from rest.models import WsUser, Organization, Order
 from wselasticsearch import bootstrap_index_model_mappings
 from wselasticsearch.query import BulkElasticsearchQuery
 from wselasticsearch.models import SslSupportReportModel, WebServiceReportModel, HttpTransactionModel, \
-    DomainNameReportModel, HttpScreenshotModel
+    DomainNameReportModel, HttpScreenshotModel, IpAddressReportModel
 import rest.models
 
 config = ConfigManager.instance()
@@ -156,6 +156,38 @@ class WebSightDiscoverRunner(DiscoverRunner):
         self.bulk_query.add_models_for_indexing(
             models=models,
             index=web_service_scan.web_service.network_service.ip_address.network.organization.uuid,
+        )
+
+    def __add_ip_address_report_to_ip_address_scan(self, ip_address_scan=None, user_string=None, is_latest_scan=False):
+        """
+        Add IP address report Elasticsearch documents to the given IP address scan.
+        :param ip_address_scan: The IP address scan to add Elasticsearch documents to.
+        :param user_string: A string depicting the user that is being populated.
+        :param is_latest_scan: Whether or not the IP address report should be marked as the latest IP address
+        report for the IP address.
+        :return: None
+        """
+        dummy_report = IpAddressReportModel.create_dummy()
+        dummy_report = IpAddressReportModel.from_database_model(ip_address_scan, to_populate=dummy_report)
+        dummy_report.is_latest_scan = is_latest_scan
+        if user_string not in self._relationships_map:
+            self._relationships_map[user_string] = {}
+        if "ip_address_report" not in self._relationships_map[user_string]:
+            self._relationships_map[user_string]["ip-address-report"] = {}
+        ip_address_uuid = str(ip_address_scan.ip_address.uuid)
+        if ip_address_uuid not in self._relationships_map[user_string]["ip-address-report"]:
+            self._relationships_map[user_string]["ip-address-report"][ip_address_uuid] = {
+                "latest_scan": None,
+                "not_latest_scan": [],
+            }
+        if is_latest_scan:
+            self._relationships_map[user_string]["ip-address-report"][ip_address_uuid]["latest_scan"] = dummy_report
+        else:
+            self._relationships_map[user_string]["ip-address-report"][ip_address_uuid]["not_latest_scan"]\
+                .append(dummy_report)
+        self.bulk_query.add_model_for_indexing(
+            model=dummy_report,
+            index=ip_address_scan.ip_address.network.organization.uuid,
         )
 
     def __add_ssl_support_report_to_network_service_scan(
@@ -406,9 +438,35 @@ class WebSightDiscoverRunner(DiscoverRunner):
                 address_type="ipv4",
                 is_monitored=False,
             )
+            self.__populate_ip_address_scans_for_ip_address(
+                ip_address=new_ip_address,
+                user_string=user_string,
+            )
             self.__populate_network_services_for_ip_address(ip_address=new_ip_address, user_string=user_string)
             ip_addresses.append(new_ip_address)
         return ip_addresses
+
+    def __populate_ip_address_scans_for_ip_address(self, ip_address=None, user_string=None, count=2):
+        """
+        Populate the IP address scans for the given IP address.
+        :param ip_address: The IP address to populate scans for.
+        :param user_string: A string depicting the user to add the scans for.
+        :param count: The number of IP address scans to add.
+        :return: The newly-populated IP address scans.
+        """
+        new_scans = []
+        for i in range(count):
+            start_time = timezone.now() - WsFaker.get_timedelta()
+            new_scan = ip_address.ip_address_scans.create(
+                started_at=start_time,
+            )
+            self.__add_ip_address_report_to_ip_address_scan(
+                ip_address_scan=new_scan,
+                is_latest_scan=i == count - 1,
+                user_string=user_string,
+            )
+            new_scans.append(new_scan)
+        return new_scans
 
     def __populate_networks_for_organization(self, organization=None, user_string=None, count=2):
         """

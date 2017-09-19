@@ -30,23 +30,26 @@ class OrderManager(models.Manager):
         to_return = super(OrderManager, self).create(*args, **kwargs)
         organization = kwargs.get("organization", None)
         user = kwargs.get("user", None)
-        if organization:
-            to_return.scan_config = organization.scan_config.duplicate()
-            to_return.scan_config.user = user
-            to_return.scan_config.save()
-        else:
-            to_return.scan_config = ScanConfig.objects.create(
-                order=to_return,
-                organization=organization,
-                user=user,
-            )
+        scan_config = kwargs.get("scan_config", None)
+        if scan_config is None:
+            if organization:
+                to_return.scan_config = organization.scan_config.duplicate()
+                to_return.scan_config.user = user
+                to_return.scan_config.save()
+            else:
+                to_return.scan_config = ScanConfig.objects.create(
+                    order=to_return,
+                    organization=organization,
+                    user=user,
+                )
         return to_return
 
-    def create_from_user_and_organization(self, user=None, organization=None):
+    def create_from_user_and_organization(self, user=None, organization=None, scan_config=None):
         """
         Create and return a new order object based on the contents of the given organization and user.
         :param user: The user to populate data from.
         :param organization: The organization to populate data from.
+        :param scan_config: The ScanConfig to associate with the newly-created order.
         :return: The newly-created order.
         """
         to_return = self.create(
@@ -56,6 +59,7 @@ class OrderManager(models.Manager):
             scoped_endpoints_size=organization.monitored_networks_size,
             user=user,
             organization=organization,
+            scan_config=scan_config,
         )
         for network in organization.monitored_networks:
             to_return.networks.create(network=network)
@@ -78,9 +82,9 @@ class Order(BaseWsModel):
     started_at = models.DateTimeField(null=True)
     completed_at = models.DateTimeField(null=True)
     user_email = models.EmailField(null=False)
-    scoped_domains_count = models.IntegerField(null=False)
-    scoped_endpoints_count = models.IntegerField(null=False)
-    scoped_endpoints_size = models.IntegerField(null=False)
+    scoped_domains_count = models.IntegerField(null=False, default=0)
+    scoped_endpoints_count = models.IntegerField(null=False, default=0)
+    scoped_endpoints_size = models.IntegerField(null=False, default=0)
     has_been_placed = models.BooleanField(default=False)
 
     # Foreign Keys
@@ -135,9 +139,10 @@ class Order(BaseWsModel):
         to_return.append(separator)
         return "\n".join([x.rjust(separator_len) for x in to_return])
 
-    def place_order(self):
+    def place_order(self, update_monitored=True):
         """
         Place this order.
+        :param update_monitored: Whether or not to update monitored endpoints as having been scanned again.
         :return: True if the order was placed successfully, False otherwise.
         """
         from .payments import Receipt
@@ -148,7 +153,8 @@ class Order(BaseWsModel):
             description="Charge for order %s" % (self.uuid,)
         )
         self.receipt = receipt
-        self.organization.update_monitored_times_scanned()
+        if update_monitored:
+            self.organization.update_monitored_times_scanned()
         self.has_been_placed = True
         return True
 
