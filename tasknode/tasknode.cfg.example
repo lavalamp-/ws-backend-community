@@ -23,6 +23,7 @@ celery_retry_delay = 10
 celery_es_update_delay = 1
 celery_worker_pool = prefork
 celery_port = 5672
+celery_priority_queue_name = priority
 
 [Crawling]
 
@@ -135,6 +136,16 @@ log_task_level = INFO
 log_max_bytes = 10485760
 log_max_files = 10
 log_error_file = error.log
+
+[PubSub]
+
+pubsub_enabled = False
+
+# Valid values: gcp
+pubsub_connector_type = gcp
+
+pubsub_receive_topic = websight_in
+pubsub_publish_topic = websight_out
 
 [Redis]
 

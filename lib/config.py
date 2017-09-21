@@ -5,6 +5,7 @@ import os
 import ConfigParser
 from datetime import timedelta
 
+from .validation import ValidationHelper
 from .singleton import Singleton
 from .wsdatetime import DatetimeHelper
 
@@ -228,6 +229,14 @@ class ConfigManager(object):
         :return: The prefetch multiplier to provide Celery workers.
         """
         return self.__get_int("Celery", "celeryd_prefetch_multiplier")
+
+    @property
+    def celery_priority_queue_name(self):
+        """
+        Get the name of the queue that priority tasks should be placed in.
+        :return: the name of the queue that priority tasks should be placed in.
+        """
+        return self.__get_string("Celery", "celery_priority_queue_name")
 
     @property
     def celery_redirect_stdouts(self):
@@ -969,6 +978,40 @@ class ConfigManager(object):
         from .conversion import ConversionHelper
         level_string = self.__get_string("Logging", "log_task_level")
         return ConversionHelper.string_to_log_level(level_string)
+
+    @property
+    def pubsub_connector_type(self):
+        """
+        Get the type of connector that should be used.
+        :return: the type of connector that should be used.
+        """
+        to_return = self.__get_string("PubSub", "pubsub_connector_type")
+        ValidationHelper.validate_in(to_return, ["gcp"])
+        return to_return
+
+    @property
+    def pubsub_enabled(self):
+        """
+        Get whether or not Web Sight should receive messages from and publish messages to a pubsub.
+        :return: whether or not Web Sight should receive messages from and publish messages to a pubsub.
+        """
+        return self.__get_bool("PubSub", "pubsub_enabled")
+
+    @property
+    def pubsub_publish_topic(self):
+        """
+        Get the pubsub topic that Web Sight should publish messages to.
+        :return: the pubsub topic that Web Sight should publish messages to.
+        """
+        return self.__get_string("PubSub", "pubsub_publish_topic")
+
+    @property
+    def pubsub_receive_topic(self):
+        """
+        Get the pubsub topic that Web Sight should listen to for messages.
+        :return: the pubsub topic that Web Sight should listen to for messages.
+        """
+        return self.__get_string("PubSub", "pubsub_receive_topic")
 
     @property
     def redis_host(self):

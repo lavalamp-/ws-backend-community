@@ -7,6 +7,8 @@ from .debugging import (
 
 from .rest import *
 
+from .pubsub import *
+
 from .scanning import *
 
 from .smtp import (
