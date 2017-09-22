@@ -5,7 +5,6 @@ import os
 import ConfigParser
 from datetime import timedelta
 
-from .validation import ValidationHelper
 from .singleton import Singleton
 from .wsdatetime import DatetimeHelper
 
@@ -780,6 +779,14 @@ class ConfigManager(object):
         return self.__get_string("GCP", "gcp_creds_file_path")
 
     @property
+    def gcp_project_name(self):
+        """
+        Get the name of the Google Cloud Platform that Web Sight is deployed into (if using GCP).
+        :return: the name of the Google Cloud Platform that Web Sight is deployed into (if using GCP).
+        """
+        return self.__get_string("GCP", "gcp_project_name")
+
+    @property
     def gen_default_encoding(self):
         """
         Get the default string encoding used by Web Sight.
@@ -986,6 +993,7 @@ class ConfigManager(object):
         :return: the type of connector that should be used.
         """
         to_return = self.__get_string("PubSub", "pubsub_connector_type")
+        from .validation import ValidationHelper
         ValidationHelper.validate_in(to_return, ["gcp"])
         return to_return
 
@@ -1012,6 +1020,16 @@ class ConfigManager(object):
         :return: the pubsub topic that Web Sight should listen to for messages.
         """
         return self.__get_string("PubSub", "pubsub_receive_topic")
+
+    @property
+    def pubsub_retrieve_interval(self):
+        """
+        Get the interval that reading messages from the PubSub should wait during a
+        message retrieval task.
+        :return: the interval that reading messages from the PubSub should wait during a
+        message retrieval task.
+        """
+        return self.__get_int("PubSub", "pubsub_retrieve_interval")
 
     @property
     def redis_host(self):

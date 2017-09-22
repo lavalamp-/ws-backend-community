@@ -103,6 +103,7 @@ fingerprint_socket_timeout = 2
 [GCP]
 
 gcp_creds_file_path =
+gcp_project_name = websight
 
 [General]
 
@@ -146,6 +147,7 @@ pubsub_connector_type = gcp
 
 pubsub_receive_topic = websight_in
 pubsub_publish_topic = websight_out
+pubsub_retrieve_interval = 5
 
 [Redis]
 

@@ -96,11 +96,11 @@ def task_prerun_handler(signal, sender, task_id, task, *args, **kwargs):
             task._db_session = None
 
 
-@websight_app.on_after_configure.connect
-def setup_periodic_tasks(sender, **kwargs):
-    """
-    Handle setting up all of the periodic tasks for the scheduler.
-    :param sender:
-    :param kwargs:
-    :return:
-    """
+# @websight_app.on_after_configure.connect
+# def setup_periodic_tasks(sender, **kwargs):
+#     """
+#     Handle setting up all of the periodic tasks for the scheduler.
+#     :param sender:
+#     :param kwargs:
+#     :return:
+#     """
