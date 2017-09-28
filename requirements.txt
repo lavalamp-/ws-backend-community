@@ -8,7 +8,7 @@ berserker-resolver==2.0.1
 billiard==3.3.0.23
 boto3==1.4.4
 botocore==1.5.44
-celery==3.1.25
+celery==4.1.0
 certifi==2017.4.17
 cffi==1.10.0
 constantly==15.1.0
@@ -77,3 +77,4 @@ zope.interface==4.4.0
 kombu==3.0.37
 google-cloud-pubsub==0.28.3
 google-cloud-storage==1.4.0
+grpcio==1.4.0

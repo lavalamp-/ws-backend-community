@@ -6,6 +6,7 @@ from celery.signals import celeryd_after_setup, worker_process_init, worker_read
 from celery.utils.log import get_task_logger
 import requests
 
+from .periodic import get_periodic_tasks
 from lib import ConfigManager, DatetimeHelper
 
 config = ConfigManager.instance()
@@ -35,9 +36,12 @@ websight_app.conf.update(
     CELERY_TRACK_STARTED=config.celery_track_started,
     CELERYD_MAX_TASKS_PER_CHILD=config.celery_max_tasks_per_child,
     CELERYD_PREFETCH_MULTIPLIER=config.celeryd_prefetch_multiplier,
-    # CELERYD_POOL=config.celery_worker_pool,
     CELERYD_HIJACK_ROOT_LOGGER=False,
+    CELERYBEAT_SCHEDULE=get_periodic_tasks(),
 )
+
+
+# websight_app.conf.beat_schedule = get_periodic_tasks()
 
 
 @celeryd_after_setup.connect
@@ -94,13 +98,3 @@ def task_prerun_handler(signal, sender, task_id, task, *args, **kwargs):
                 % (task.name, task.id)
             )
             task._db_session = None
-
-
-# @websight_app.on_after_configure.connect
-# def setup_periodic_tasks(sender, **kwargs):
-#     """
-#     Handle setting up all of the periodic tasks for the scheduler.
-#     :param sender:
-#     :param kwargs:
-#     :return:
-#     """

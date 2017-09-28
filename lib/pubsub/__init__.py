@@ -5,3 +5,7 @@ from .connector import (
     get_pubsub_connector,
     GooglePubSubConnector,
 )
+
+from .manager import (
+    PubSubManager,
+)

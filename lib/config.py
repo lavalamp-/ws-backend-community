@@ -1006,6 +1006,14 @@ class ConfigManager(object):
         return self.__get_bool("PubSub", "pubsub_enabled")
 
     @property
+    def pubsub_poll_interval(self):
+        """
+        Get the amount of time in seconds between checks for the PubSub message queue.
+        :return: the amount of time in seconds between checks for the PubSub message queue.
+        """
+        return self.__get_float("PubSub", "pubsub_poll_interval")
+
+    @property
     def pubsub_publish_topic(self):
         """
         Get the pubsub topic that Web Sight should publish messages to.

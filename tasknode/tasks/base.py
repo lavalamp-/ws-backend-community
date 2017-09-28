@@ -400,7 +400,10 @@ class WebSightBaseTask(Task, TempFileMixin):
         Get the tags associated with self.request.
         :return: The tags associated with self.request.
         """
-        return self.request.headers.get("tags", [])
+        if self.request.headers is not None:
+            return self.request.headers.get("tags", [])
+        else:
+            return []
 
     @property
     def start_time(self):

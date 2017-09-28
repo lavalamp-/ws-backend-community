@@ -148,6 +148,7 @@ pubsub_connector_type = gcp
 pubsub_receive_topic = websight_in
 pubsub_publish_topic = websight_out
 pubsub_retrieve_interval = 5
+pubsub_poll_interval = 30.0
 
 [Redis]
 
