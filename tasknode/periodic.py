@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+from datetime import timedelta
+
 from lib import ConfigManager
 
 config = ConfigManager.instance()
@@ -17,7 +19,7 @@ def get_periodic_tasks():
     if config.pubsub_enabled:
         to_return["process-pubsub-queue"] = {
             "task": "tasknode.tasks.pubsub.processing.process_pubsub_queue",
-            "schedule": config.pubsub_poll_interval,
+            "schedule": timedelta(seconds=config.pubsub_poll_interval),
             "options": {
                 "queue": config.celery_priority_queue_name,
             }

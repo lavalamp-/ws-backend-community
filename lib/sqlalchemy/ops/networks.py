@@ -287,6 +287,7 @@ def get_network_by_range_for_organization(db_session=None, address=None, mask_le
     return db_session.query(Network)\
         .filter(Network.address == address)\
         .filter(Network.mask_length == mask_length)\
+        .filter(Network.organization_id == org_uuid)\
         .one()
 
 
@@ -315,6 +316,7 @@ def get_or_create_network_for_organization(
         org_uuid=None,
         address=None,
         mask_length=None,
+        nest_transaction=False,
 ):
     """
     Get or create a network for the given organization that matches the given address and CIDR
@@ -325,10 +327,12 @@ def get_or_create_network_for_organization(
     :param org_uuid: The UUID of the organization to associate the network with.
     :param address: The IP address to associate with the network.
     :param mask_length: The CIDR mask length for the network.
+    :param nest_transaction: Whether or not to nest the SQLAlchemy transaction.
     :return: A network representing the data passed to this method associated with the given
     organization.
     """
-    db_session.begin_nested()
+    if nest_transaction:
+        db_session.begin_nested()
     org_uuid = ConversionHelper.string_to_unicode(org_uuid)
     name = ConversionHelper.string_to_unicode(name)
     added_by = ConversionHelper.string_to_unicode(added_by)

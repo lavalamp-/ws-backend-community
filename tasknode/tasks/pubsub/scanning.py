@@ -74,6 +74,7 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
         user_id=admin_user.uuid,
     )
     self.db_session.add(new_order)
+    print("ORDER IS %s (%s) " % (new_order, new_order.uuid))
 
     # Duplicate the ScanConfig and associate it with the order
 
@@ -97,6 +98,7 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
                 name=target,
                 added_by="quick_scan",
                 org_uuid=org_uuid,
+                nest_transaction=True,
             )
             self.db_session.add(domain_name)
             time_since_scan = get_time_since_scanned(domain_name)
@@ -108,7 +110,6 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
                     order_id=new_order.uuid,
                     domain_name_id=domain_name.uuid,
                 )
-                self.db_session.add(new_order_domain)
                 domains.append(new_order_domain)
         elif RegexLib.ipv4_cidr_regex.match(target):
             address, mask_length = target.split("/")
@@ -119,6 +120,7 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
                 org_uuid=org_uuid,
                 address=address,
                 mask_length=mask_length,
+                nest_transaction=True,
             )
             self.db_session.add(network)
             time_since_scan = get_time_since_scanned(network)
@@ -130,7 +132,6 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
                     order_id=new_order.uuid,
                     network_id=network.uuid,
                 )
-                self.db_session.add(new_order_network)
                 networks.append(new_order_network)
         elif RegexLib.ipv4_address_regex.match(target):
             network = get_or_create_network_for_organization(
@@ -139,6 +140,7 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
                 org_uuid=org_uuid,
                 address=target,
                 mask_length=32,
+                nest_transaction=True,
             )
             self.db_session.add(network)
             time_since_scan = get_time_since_scanned(network)
@@ -150,7 +152,6 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
                     order_id=new_order.uuid,
                     network_id=network.uuid,
                 )
-                self.db_session.add(new_order_network)
                 networks.append(new_order_network)
         else:
             skipped_targets.append(target)
@@ -165,6 +166,12 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
 
     # Update all of the last scan times for the targets
 
+    self.db_session.commit()
+    self.db_session.execute("end;")
+    for domain in domains:
+        self.db_session.add(domain)
+    for network in networks:
+        self.db_session.add(network)
     self.db_session.commit()
     update_last_scanning_times_for_order(
         order_uuid=new_order.uuid,
@@ -185,6 +192,5 @@ def handle_scanning_order_from_pubsub(self, org_uuid=None, targets=None):
 
     # Kick off the order
 
-    # handle_placed_order.delay(order_uuid=unicode(new_order.uuid))
-    self.db_session.execute("end;")
+    handle_placed_order.delay(order_uuid=unicode(new_order.uuid))
 

@@ -243,7 +243,13 @@ def get_name_from_domain(db_session=None, domain_uuid=None):
 
 
 #TESTME
-def get_or_create_domain_name_for_organization(db_session=None, name=None, added_by="user", org_uuid=None):
+def get_or_create_domain_name_for_organization(
+        db_session=None,
+        name=None,
+        added_by="user",
+        org_uuid=None,
+        nest_transaction=False,
+):
     """
     Get a domain name representing the given input data as owned by the given organization. If a matching
     domain name does not exist, then one is created.
@@ -251,9 +257,11 @@ def get_or_create_domain_name_for_organization(db_session=None, name=None, added
     :param name: The name to associate with the domain name.
     :param added_by: How the domain was added to the database.
     :param org_uuid: The UUID of the organization to get the domain from.
+    :param nest_transaction: Whether or not to nest the SQLAlchemy transaction.
     :return: A DomainName owned by the given organization representing the given data.
     """
-    db_session.begin_nested()
+    if nest_transaction:
+        db_session.begin_nested()
     org_uuid = ConversionHelper.string_to_unicode(org_uuid)
     name = ConversionHelper.string_to_unicode(name)
     added_by = ConversionHelper.string_to_unicode(added_by)
