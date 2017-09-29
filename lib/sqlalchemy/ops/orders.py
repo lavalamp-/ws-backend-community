@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from sqlalchemy.sql.functions import count
 
 from lib import ConversionHelper
-from lib.sqlalchemy import Order, WsUser, OrderDomainName, OrderNetwork, Organization, DomainName
+from lib.sqlalchemy import Order, WsUser, OrderDomainName, OrderNetwork, Organization, DomainName, Network
 
 
 def count_domains_for_order(order_uuid=None, db_session=None):
@@ -96,3 +96,29 @@ def get_user_name_and_email_from_order(order_uuid=None, db_session=None):
         .filter(Order.uuid == order_uuid)\
         .one()
     return tuple(result)
+
+
+def update_last_scanning_times_for_order(order_uuid=None, db_session=None, scan_time=None):
+    """
+    Update all of the last_scanned_time for all of the entities associated with the
+    given order to the given time.
+    :param order_uuid: The UUID of the order to query for.
+    :param db_session: A SQLAlchemy session to use to query a database.
+    :param scan_time: The datetime to update the last scanned time to.
+    :return: None
+    """
+    order_uuid = ConversionHelper.string_to_unicode(order_uuid)
+    networks = db_session.query(Network)\
+        .join(OrderNetwork, OrderNetwork.network_id == Network.uuid)\
+        .join(Order, OrderNetwork.order_id == Order.uuid)\
+        .filter(Order.uuid == order_uuid)\
+        .all()
+    for network in networks:
+        network.last_scan_time = scan_time
+    domains = db_session.query(DomainName)\
+        .join(OrderDomainName, OrderDomainName.domain_name_id == DomainName.uuid)\
+        .join(Order, OrderDomainName.order_id == Order.uuid)\
+        .filter(Order.uuid == order_uuid)\
+        .all()
+    for domain in domains:
+        domain.last_scan_time = scan_time

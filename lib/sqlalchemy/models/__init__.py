@@ -6,6 +6,7 @@ from .auth import (
 )
 
 from .dns import (
+    DnsRecordType,
     DomainName,
     DomainNameScan,
 )

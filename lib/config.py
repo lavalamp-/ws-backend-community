@@ -1230,6 +1230,14 @@ class ConfigManager(object):
         return self.__get_string("Tasks", "task_default_index")
 
     @property
+    def task_domain_scanning_interval(self):
+        """
+        Get the amount of time in seconds that should pass between domain scans.
+        :return: the amount of time in seconds that should pass between domain scans.
+        """
+        return self.__get_int("Tasks", "task_domain_scanning_interval")
+
+    @property
     def task_enforce_domain_name_scan_interval(self):
         """
         Get whether or not the domain name scan interval should be enforced.
@@ -1302,6 +1310,14 @@ class ConfigManager(object):
         the same web service multiple times for an organization.
         """
         return self.__get_int("Tasks", "task_minimum_web_service_scan_interval")
+
+    @property
+    def task_network_scanning_interval(self):
+        """
+        Get the amount of time in seconds that should pass between scans of a network.
+        :return: the amount of time in seconds that should pass between scans of a network.
+        """
+        return self.__get_int("Tasks", "task_network_scanning_interval")
 
     @property
     def task_network_service_monitoring_enabled(self):

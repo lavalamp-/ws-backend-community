@@ -48,7 +48,9 @@ from .networks import (
     get_ip_address_scanning_status,
     get_last_completed_ip_address_scan,
     get_last_completed_network_service_scan,
+    get_network_by_range_for_organization,
     get_network_service_scanning_status,
+    get_or_create_network_for_organization,
     get_org_uuid_from_network_service_scan,
     update_ip_address,
     update_ip_address_scan,
@@ -65,6 +67,7 @@ from .orders import (
     get_monitored_network_ranges_for_order,
     get_org_uuid_from_order,
     get_user_name_and_email_from_order,
+    update_last_scanning_times_for_order,
 )
 
 from .organizations import (

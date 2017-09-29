@@ -98,6 +98,7 @@ class GooglePubSubConnector(BasePubSubConnector):
         reader = self.subscriber.subscribe(subscription.name, callback=callback)
         time.sleep(config.pubsub_retrieve_interval)
         reader.close()
+        to_return = [json.loads(x) for x in to_return]
         return to_return
 
     def __get_subscription(self, topic=None):

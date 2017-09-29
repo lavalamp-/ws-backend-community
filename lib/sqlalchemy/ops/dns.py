@@ -253,6 +253,7 @@ def get_or_create_domain_name_for_organization(db_session=None, name=None, added
     :param org_uuid: The UUID of the organization to get the domain from.
     :return: A DomainName owned by the given organization representing the given data.
     """
+    db_session.begin_nested()
     org_uuid = ConversionHelper.string_to_unicode(org_uuid)
     name = ConversionHelper.string_to_unicode(name)
     added_by = ConversionHelper.string_to_unicode(added_by)

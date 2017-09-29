@@ -198,3 +198,5 @@ task_minimum_ip_address_scan_interval = 1800
 task_enforce_ip_address_scan_interval = False
 task_minimum_web_service_scan_interval = 10800
 task_enforce_web_service_scan_interval = False
+task_network_scanning_interval = 7200
+task_domain_scanning_interval = 7200
