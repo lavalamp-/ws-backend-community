@@ -122,26 +122,33 @@ def count_included_networks_for_organization(org_uuid=None, db_session=None):
     return to_return[0]
 
 
-def create_network_for_organization(name=None, address=None, mask_length=None, org_uuid=None):
+def create_network_for_organization(
+        name=None,
+        address=None,
+        mask_length=None,
+        org_uuid=None,
+        added_by="ws",
+):
     """
     Create and return a new Network object that's been associated with the given organization.
     :param name: The name to associate with the network.
     :param address: The address to associate with the network.
     :param mask_length: The mask length to associate with the network.
     :param org_uuid: The UUID of the organization to add the network to.
+    :param added_by: A string depicting what was responsible for adding this network.
     :return: The newly-created Network.
     """
     if name is None:
         name = "Auto-gen Network %s" % (RandomHelper.get_random_token_of_length(10))
     cidr_wrapper = CidrRangeWrapper.from_cidr_range(address=address, mask_length=mask_length)
-    address = ConversionHelper.ipv4_to_class_c_prefix(address)
+    address = cidr_wrapper.parsed_address
     return Network.new(
         name=name,
         address=address,
         mask_length=mask_length,
         organization_id=org_uuid,
         scanning_enabled=True,
-        added_by="ws",
+        added_by=added_by,
         endpoint_count=pow(2, 32 - mask_length),
         cidr_range=cidr_wrapper.parsed_cidr_range,
         times_scanned=0,
@@ -265,6 +272,25 @@ def get_last_completed_network_service_scan(db_session=None, service_uuid=None):
         .first()
 
 
+def get_network_by_range_for_organization(db_session=None, address=None, mask_length=None, org_uuid=None):
+    """
+    Get a network associated with the given IP address and mask length from the given organization.
+    :param db_session: A SQLAlchemy session to use to query a database.
+    :param address: The IP address for the network.
+    :param mask_length: The mask length for the network.
+    :param org_uuid: The UUID of the organization for the network.
+    :return: The network associated with the given organization matching the given address
+    and mask length.
+    """
+    cidr_wrapper = CidrRangeWrapper.from_cidr_range(address=address, mask_length=mask_length)
+    address = cidr_wrapper.parsed_address
+    return db_session.query(Network)\
+        .filter(Network.address == address)\
+        .filter(Network.mask_length == mask_length)\
+        .filter(Network.organization_id == org_uuid)\
+        .one()
+
+
 def get_network_service_scanning_status(db_session=None, service_uuid=None, with_for_update=False):
     """
     Get whether or not the given network service is currently being scanned.
@@ -281,6 +307,56 @@ def get_network_service_scanning_status(db_session=None, service_uuid=None, with
         query = query.with_for_update()
     result = query.one()
     return result[0]
+
+
+def get_or_create_network_for_organization(
+        db_session=None,
+        name=None,
+        added_by="user",
+        org_uuid=None,
+        address=None,
+        mask_length=None,
+        nest_transaction=False,
+):
+    """
+    Get or create a network for the given organization that matches the given address and CIDR
+    range.
+    :param db_session: A SQLAlchemy session to use to query the database.
+    :param name: The name to associate with the network.
+    :param added_by: A string depicting how the network was added.
+    :param org_uuid: The UUID of the organization to associate the network with.
+    :param address: The IP address to associate with the network.
+    :param mask_length: The CIDR mask length for the network.
+    :param nest_transaction: Whether or not to nest the SQLAlchemy transaction.
+    :return: A network representing the data passed to this method associated with the given
+    organization.
+    """
+    if nest_transaction:
+        db_session.begin_nested()
+    org_uuid = ConversionHelper.string_to_unicode(org_uuid)
+    name = ConversionHelper.string_to_unicode(name)
+    added_by = ConversionHelper.string_to_unicode(added_by)
+    new_network = create_network_for_organization(
+        name=name,
+        address=address,
+        mask_length=mask_length,
+        org_uuid=org_uuid,
+        added_by=added_by,
+    )
+    try:
+        db_session.add(new_network)
+        db_session.commit()
+        return new_network
+    except sqlalchemy.exc.IntegrityError as e:
+        if not is_unique_constraint_exception(e):
+            raise e
+        db_session.rollback()
+        return get_network_by_range_for_organization(
+            db_session=db_session,
+            address=address,
+            mask_length=mask_length,
+            org_uuid=org_uuid,
+        )
 
 
 def get_org_uuid_from_network_service_scan(db_session=None, scan_uuid=None):

@@ -4,7 +4,10 @@ from __future__ import absolute_import
 from celery import group, chain
 from celery.utils.log import get_task_logger
 
+from lib import PubSubManager
 from wselasticsearch.models import DnsRecordModel, SubdomainEnumerationModel
+from wselasticsearch.models import DomainNameReportModel
+from wselasticsearch.query import DomainNameReportQuery
 from wselasticsearch.query import SubdomainEnumerationQuery
 from wselasticsearch.ops import get_ip_addresses_from_domain_name_scan, get_all_subdomains_from_domain_scan_enumeration
 from wselasticsearch.ops import update_domain_name_scan_latest_state, update_not_domain_name_scan_latest_state
@@ -282,12 +285,51 @@ def scan_domain_name(self, org_uuid=None, domain_uuid=None, order_uuid=None):
         scanning_status=False,
     )
     task_sigs.append(scanning_status_signature)
+    if config.pubsub_enabled:
+        task_sigs.append(publish_report_for_domain_name_scan.si(**task_kwargs))
     logger.info(
         "Now kicking off all necessary tasks to scan domain name %s."
         % (domain_uuid,)
     )
     canvas_sig = chain(task_sigs, link_error=scanning_status_signature)
     self.finish_after(signature=canvas_sig)
+
+
+#USED
+@websight_app.task(bind=True, base=DomainNameTask)
+def publish_report_for_domain_name_scan(
+        self,
+        org_uuid=None,
+        domain_uuid=None,
+        domain_scan_uuid=None,
+        order_uuid=None,
+):
+    """
+    Publish the domain name scan report generated for the given domain name scan to the
+    configured PubSub.
+    :param org_uuid: The UUID of the organization that owns the domain name.
+    :param domain_uuid: The UUID of the domain name that was scanned.
+    :param domain_scan_uuid: The UUID of the domain name scan.
+    :param order_uuid: The UUID of the order that this scan was a part of.
+    :return: None
+    """
+    logger.info(
+        "Now publishing domain name scan report for scan %s (order %s)."
+        % (domain_scan_uuid, order_uuid)
+    )
+    query = DomainNameReportQuery()
+    query.filter_by_domain_name_scan(domain_scan_uuid)
+    response = query.search(org_uuid)
+    scan_doc = DomainNameReportModel.from_response_result(response.results[0])
+    pubsub_manager = PubSubManager.instance()
+    pubsub_manager.publish_elasticsearch_document(
+        scan_doc,
+        topic=config.pubsub_publish_topic,
+    )
+    logger.info(
+        "Successfully published domain name scan document for scan %s, order %s."
+        % (domain_scan_uuid, order_uuid)
+    )
 
 
 #USED

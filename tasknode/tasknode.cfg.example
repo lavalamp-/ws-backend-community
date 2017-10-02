@@ -23,6 +23,7 @@ celery_retry_delay = 10
 celery_es_update_delay = 1
 celery_worker_pool = prefork
 celery_port = 5672
+celery_priority_queue_name = priority
 
 [Crawling]
 
@@ -102,6 +103,7 @@ fingerprint_socket_timeout = 2
 [GCP]
 
 gcp_creds_file_path =
+gcp_project_name = websight
 
 [General]
 
@@ -135,6 +137,19 @@ log_task_level = INFO
 log_max_bytes = 10485760
 log_max_files = 10
 log_error_file = error.log
+
+[PubSub]
+
+pubsub_enabled = False
+
+# Valid values: gcp
+pubsub_connector_type = gcp
+
+pubsub_receive_topic = websight_in
+pubsub_publish_topic = websight_out
+pubsub_retrieve_interval = 5
+pubsub_poll_interval = 30.0
+pubsub_gcp_project_name =
 
 [Redis]
 
@@ -184,3 +199,5 @@ task_minimum_ip_address_scan_interval = 1800
 task_enforce_ip_address_scan_interval = False
 task_minimum_web_service_scan_interval = 10800
 task_enforce_web_service_scan_interval = False
+task_network_scanning_interval = 7200
+task_domain_scanning_interval = 7200

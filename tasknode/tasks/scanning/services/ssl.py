@@ -8,7 +8,10 @@ import socket
 
 from nassl._nassl import OpenSSLError
 
+from lib import PubSubManager
+from wselasticsearch.models import SslSupportReportModel
 from wselasticsearch.query import BulkElasticsearchQuery
+from wselasticsearch.query import SslSupportReportQuery
 from ....app import websight_app
 from ...base import ServiceTask, NetworkServiceTask
 from lib import ConfigManager, FilesystemHelper, ValidationHelper, get_storage_helper
@@ -154,12 +157,52 @@ def inspect_tcp_service_for_ssl_support(
     task_sigs.append(group(collection_sigs))
     task_sigs.append(create_ssl_support_report_for_network_service_scan.si(**task_kwargs))
     task_sigs.append(apply_flags_to_ssl_support_scan.si(**task_kwargs))
+    if config.pubsub_enabled:
+        task_sigs.append(publish_report_for_ssl_support_scan.si(**task_kwargs))
     canvas_sig = chain(task_sigs)
     logger.info(
         "Now kicking off %s tasks to inspect SSL support for network service %s."
         % (len(collection_sigs) + 1, network_service_uuid)
     )
     self.finish_after(signature=canvas_sig)
+
+
+#USED
+@websight_app.task(bind=True, base=NetworkServiceTask)
+def publish_report_for_ssl_support_scan(
+        self,
+        org_uuid=None,
+        network_service_uuid=None,
+        network_service_scan_uuid=None,
+        order_uuid=None,
+):
+    """
+    Publish the SSL support report generated for the given network service scan to the configured
+    PubSub.
+    :param org_uuid: The UUID of the organization that the SSL support scan is related to.
+    :param network_service_uuid: The UUID of the network service that was scanned.
+    :param network_service_scan_uuid: The UUID of the network service scan that this report
+    was associated with.
+    :param order_uuid: The UUID of the order that the scan was conducted under.
+    :return: None
+    """
+    logger.info(
+        "Now publishing SSL support report for scan %s (order %s)."
+        % (network_service_scan_uuid, order_uuid)
+    )
+    query = SslSupportReportQuery()
+    query.filter_by_network_service_scan(network_service_scan_uuid)
+    response = query.search(org_uuid)
+    scan_doc = SslSupportReportModel.from_response_result(response.results[0])
+    pubsub_manager = PubSubManager.instance()
+    pubsub_manager.publish_elasticsearch_document(
+        scan_doc,
+        topic=config.pubsub_publish_topic,
+    )
+    logger.info(
+        "Successfully published SSL support scan document for scan %s, order %s."
+        % (network_service_scan_uuid, order_uuid)
+    )
 
 
 #USED

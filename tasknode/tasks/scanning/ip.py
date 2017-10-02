@@ -6,6 +6,8 @@ from celery import group
 from celery.utils.log import get_task_logger
 
 from lib.inspection import IpAddressScanInspector
+from wselasticsearch.models import IpAddressReportModel
+from wselasticsearch.query import IpAddressReportQuery
 from ..base import IpAddressTask
 from ...app import websight_app
 from lib.sqlalchemy import get_or_create_network_service_from_org_ip, check_ip_address_scanning_status, \
@@ -18,7 +20,7 @@ from wselasticsearch.models import IpReverseHostnameModel, IpPortScanModel, \
 from wselasticsearch.query import BulkElasticsearchQuery
 from wselasticsearch.ops import get_open_ports_from_ip_address_scan, update_ip_address_scan_latest_state, \
     update_not_ip_address_scan_latest_state
-from lib import DatetimeHelper, enumerate_domains_for_ip_address, ConfigManager
+from lib import DatetimeHelper, enumerate_domains_for_ip_address, ConfigManager, PubSubManager
 from .services import scan_network_service
 from wselasticsearch.flags import DataFlagger
 
@@ -98,12 +100,51 @@ def scan_ip_address(
         scanning_status=False,
     )
     task_sigs.append(scanning_status_signature)
+    if config.pubsub_enabled:
+        task_sigs.append(publish_report_for_ip_address_scan.si(**task_kwargs))
     logger.info(
         "Now kicking off all necessary tasks to scan IP address %s."
         % (ip_address_uuid,)
     )
     canvas_sig = chain(task_sigs, link_error=scanning_status_signature)
     self.finish_after(signature=canvas_sig)
+
+
+#USED
+@websight_app.task(bind=True, base=IpAddressTask)
+def publish_report_for_ip_address_scan(
+        self,
+        org_uuid=None,
+        ip_address_uuid=None,
+        ip_address_scan_uuid=None,
+        order_uuid=None,
+):
+    """
+    Publish the IP address scan report generated for the given IP address scan to the
+    configured PubSub.
+    :param org_uuid: The UUID of the organization that the IP address scan is related to.
+    :param ip_address_uuid: The UUID of the IP address that was scanned.
+    :param ip_address_scan_uuid: The UUID of the IP address scan.
+    :param order_uuid: The UUID of the order that the IP address scan was a part of.
+    :return: None
+    """
+    logger.info(
+        "Now publishing IP address scan report for scan %s (order %s)."
+        % (ip_address_scan_uuid, order_uuid)
+    )
+    query = IpAddressReportQuery()
+    query.filter_by_ip_address_scan(ip_address_scan_uuid)
+    response = query.search(org_uuid)
+    scan_doc = IpAddressReportModel.from_response_result(response.results[0])
+    pubsub_manager = PubSubManager.instance()
+    pubsub_manager.publish_elasticsearch_document(
+        scan_doc,
+        topic=config.pubsub_publish_topic,
+    )
+    logger.info(
+        "Successfully published IP address scan document for scan %s, order %s."
+        % (ip_address_scan_uuid, order_uuid)
+    )
 
 
 #USED

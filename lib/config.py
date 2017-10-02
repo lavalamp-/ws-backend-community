@@ -230,6 +230,14 @@ class ConfigManager(object):
         return self.__get_int("Celery", "celeryd_prefetch_multiplier")
 
     @property
+    def celery_priority_queue_name(self):
+        """
+        Get the name of the queue that priority tasks should be placed in.
+        :return: the name of the queue that priority tasks should be placed in.
+        """
+        return self.__get_string("Celery", "celery_priority_queue_name")
+
+    @property
     def celery_redirect_stdouts(self):
         """
         Get whether or not Celery should redirect stdout and stderr to the log files.
@@ -771,6 +779,14 @@ class ConfigManager(object):
         return self.__get_string("GCP", "gcp_creds_file_path")
 
     @property
+    def gcp_project_name(self):
+        """
+        Get the name of the Google Cloud Platform that Web Sight is deployed into (if using GCP).
+        :return: the name of the Google Cloud Platform that Web Sight is deployed into (if using GCP).
+        """
+        return self.__get_string("GCP", "gcp_project_name")
+
+    @property
     def gen_default_encoding(self):
         """
         Get the default string encoding used by Web Sight.
@@ -971,6 +987,70 @@ class ConfigManager(object):
         return ConversionHelper.string_to_log_level(level_string)
 
     @property
+    def pubsub_connector_type(self):
+        """
+        Get the type of connector that should be used.
+        :return: the type of connector that should be used.
+        """
+        to_return = self.__get_string("PubSub", "pubsub_connector_type")
+        from .validation import ValidationHelper
+        ValidationHelper.validate_in(to_return, ["gcp"])
+        return to_return
+
+    @property
+    def pubsub_enabled(self):
+        """
+        Get whether or not Web Sight should receive messages from and publish messages to a pubsub.
+        :return: whether or not Web Sight should receive messages from and publish messages to a pubsub.
+        """
+        return self.__get_bool("PubSub", "pubsub_enabled")
+
+    @property
+    def pubsub_gcp_project_name(self):
+        """
+        Get the project name where the GCP project PubSub is hosted. Note that if this value is empty, it
+        will default to gcp_project_name.
+        :return: the project name where the GCP project PubSub is hosted. Note that if this value is
+        empty, it will default to gcp_project_name.
+        """
+        to_return = self.__get_string("PubSub", "pubsub_gcp_project_name")
+        return to_return if to_return else self.gcp_project_name
+
+    @property
+    def pubsub_poll_interval(self):
+        """
+        Get the amount of time in seconds between checks for the PubSub message queue.
+        :return: the amount of time in seconds between checks for the PubSub message queue.
+        """
+        return self.__get_float("PubSub", "pubsub_poll_interval")
+
+    @property
+    def pubsub_publish_topic(self):
+        """
+        Get the pubsub topic that Web Sight should publish messages to.
+        :return: the pubsub topic that Web Sight should publish messages to.
+        """
+        return self.__get_string("PubSub", "pubsub_publish_topic")
+
+    @property
+    def pubsub_receive_topic(self):
+        """
+        Get the pubsub topic that Web Sight should listen to for messages.
+        :return: the pubsub topic that Web Sight should listen to for messages.
+        """
+        return self.__get_string("PubSub", "pubsub_receive_topic")
+
+    @property
+    def pubsub_retrieve_interval(self):
+        """
+        Get the interval that reading messages from the PubSub should wait during a
+        message retrieval task.
+        :return: the interval that reading messages from the PubSub should wait during a
+        message retrieval task.
+        """
+        return self.__get_int("PubSub", "pubsub_retrieve_interval")
+
+    @property
     def redis_host(self):
         """
         Get the hostname of the machine that is running the Redis server.
@@ -1161,6 +1241,14 @@ class ConfigManager(object):
         return self.__get_string("Tasks", "task_default_index")
 
     @property
+    def task_domain_scanning_interval(self):
+        """
+        Get the amount of time in seconds that should pass between domain scans.
+        :return: the amount of time in seconds that should pass between domain scans.
+        """
+        return self.__get_int("Tasks", "task_domain_scanning_interval")
+
+    @property
     def task_enforce_domain_name_scan_interval(self):
         """
         Get whether or not the domain name scan interval should be enforced.
@@ -1233,6 +1321,14 @@ class ConfigManager(object):
         the same web service multiple times for an organization.
         """
         return self.__get_int("Tasks", "task_minimum_web_service_scan_interval")
+
+    @property
+    def task_network_scanning_interval(self):
+        """
+        Get the amount of time in seconds that should pass between scans of a network.
+        :return: the amount of time in seconds that should pass between scans of a network.
+        """
+        return self.__get_int("Tasks", "task_network_scanning_interval")
 
     @property
     def task_network_service_monitoring_enabled(self):

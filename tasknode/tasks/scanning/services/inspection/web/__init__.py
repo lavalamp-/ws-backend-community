@@ -12,6 +12,7 @@ from .base import (
     apply_flags_to_web_service_scan,
     inspect_http_service,
     inspect_https_service,
+    publish_report_for_web_service_scan,
     retrieve_landing_resource_for_web_service,
     scan_web_service,
     update_web_service_scan_completed,

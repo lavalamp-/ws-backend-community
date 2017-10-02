@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from datetime import datetime, timedelta
+from dateutil.tz import tzoffset
 
 
 class DatetimeHelper(object):
@@ -47,7 +48,7 @@ class DatetimeHelper(object):
         Get the current datetime.
         :return: The current datetime.
         """
-        return datetime.utcnow()
+        return datetime.utcnow().replace(tzinfo=tzoffset(None, 0))
 
     # Class Methods
 

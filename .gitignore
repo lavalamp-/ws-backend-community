@@ -23,3 +23,5 @@ tests/report/
 venv/
 rest/migrations/
 wsbackend/settings.py
+celerybeat-schedule
+ghostdriver.log

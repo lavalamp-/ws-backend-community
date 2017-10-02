@@ -29,7 +29,6 @@ enum34==1.1.6
 Faker==0.7.11
 futures==3.1.1
 Geohash==1.0
-google-cloud-storage==1.2.0
 idna==2.5
 incremental==16.10.1
 ipaddress==1.0.18
@@ -76,3 +75,6 @@ w3lib==1.17.0
 XlsxWriter==0.9.6
 zope.interface==4.4.0
 kombu==3.0.37
+google-cloud-pubsub==0.28.3
+google-cloud-storage==1.4.0
+grpcio==1.4.0

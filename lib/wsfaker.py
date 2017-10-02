@@ -741,6 +741,30 @@ class WsFaker(object):
             })
 
     @staticmethod
+    def get_pubsub_scan_message(org_uuid=None, targets_count=5):
+        """
+        Get a dictionary representing a scan message.
+        :param org_uuid: The UUID of the organization.
+        :param targets_count: The number of targets to include in the scan
+        message.
+        :return: None
+        """
+        to_return = {
+            "message_type": "scan",
+            "org_uuid": str(uuid4()) if org_uuid is None else org_uuid,
+            "targets": [],
+        }
+        for i in range(targets_count):
+            flip = random.sample([0,1,2], 1)[0]
+            if flip == 0:
+                to_return["targets"].append(WsFaker.get_ipv4_address())
+            elif flip == 1:
+                to_return["targets"].append("%s/24" % WsFaker.get_ipv4_address())
+            else:
+                to_return["targets"].append(WsFaker.get_domain_name())
+        return to_return
+
+    @staticmethod
     def get_random_int(minimum=1, maximum=999999):
         """
         Get a random integer in the given range.
