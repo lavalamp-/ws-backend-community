@@ -88,17 +88,25 @@ class GooglePubSubConnector(BasePubSubConnector):
 
     def receive_all_messages(self, topic=config.pubsub_receive_topic):
         subscription = self.__get_subscription(topic=topic)
-        to_return = []
+        messages = []
 
-        def callback(message):
-            logger.debug("Got message from Google PubSub: %s" % message)
-            to_return.append(message.data)
-            message.ack()
+        def callback(received_message):
+            logger.debug("Got message from Google PubSub: %s" % received_message)
+            messages.append(received_message.data)
+            received_message.ack()
 
         reader = self.subscriber.subscribe(subscription.name, callback=callback)
         time.sleep(config.pubsub_retrieve_interval)
         reader.close()
-        to_return = [json.loads(x) for x in to_return]
+        to_return = []
+        for message in messages:
+            try:
+                to_return.append(json.loads(message))
+            except ValueError as e:
+                logger.error(
+                    "Error message thrown when attempting to decode JSON: %s."
+                    % (e.message,)
+                )
         return to_return
 
     def __get_subscription(self, topic=None):
