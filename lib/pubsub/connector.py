@@ -82,7 +82,7 @@ class GooglePubSubConnector(BasePubSubConnector):
         return [x.name for x in to_return]
 
     def publish_message(self, topic=config.pubsub_publish_topic, message=None):
-        topic_path = self.publisher.topic_path(config.gcp_project_name, topic)
+        topic_path = self.publisher.topic_path(config.pubsub_gcp_project_name, topic)
         to_publish = json.dumps(message)
         self.publisher.publish(topic_path, to_publish)
 
@@ -111,10 +111,10 @@ class GooglePubSubConnector(BasePubSubConnector):
         if topic in self._subscriptions:
             return self._subscriptions[topic]
         subscribe_path = self.subscriber.subscription_path(
-            config.gcp_project_name,
+            config.pubsub_gcp_project_name,
             topic,
         )
-        topic_path = self.publisher.topic_path(config.gcp_project_name, topic)
+        topic_path = self.publisher.topic_path(config.pubsub_gcp_project_name, topic)
         subscriptions = self.subscriber.list_subscriptions(topic_path)
         for subscription in subscriptions:
             if subscription.name == subscribe_path:
@@ -164,7 +164,7 @@ class GooglePubSubConnector(BasePubSubConnector):
         """
         if self._in_topic_path is None:
             self._in_topic_path = self.publisher.topic_path(
-                config.gcp_project_name,
+                config.pubsub_gcp_project_name,
                 config.pubsub_receive_topic,
             )
         return self._in_topic_path
@@ -177,7 +177,7 @@ class GooglePubSubConnector(BasePubSubConnector):
         """
         if self._out_topic_path is None:
             self._out_topic_path = self.publisher.topic_path(
-                config.gcp_project_name,
+                config.pubsub_gcp_project_name,
                 config.pubsub_publish_topic,
             )
         return self._out_topic_path
@@ -189,7 +189,7 @@ class GooglePubSubConnector(BasePubSubConnector):
         :return: the project path to use to communicate with Google PubSub.
         """
         if self._project_path is None:
-            self._project_path = self.publisher.project_path(config.gcp_project_name)
+            self._project_path = self.publisher.project_path(config.pubsub_gcp_project_name)
         return self._project_path
 
     @property

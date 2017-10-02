@@ -1006,6 +1006,17 @@ class ConfigManager(object):
         return self.__get_bool("PubSub", "pubsub_enabled")
 
     @property
+    def pubsub_gcp_project_name(self):
+        """
+        Get the project name where the GCP project PubSub is hosted. Note that if this value is empty, it
+        will default to gcp_project_name.
+        :return: the project name where the GCP project PubSub is hosted. Note that if this value is
+        empty, it will default to gcp_project_name.
+        """
+        to_return = self.__get_string("PubSub", "pubsub_gcp_project_name")
+        return to_return if to_return else self.gcp_project_name
+
+    @property
     def pubsub_poll_interval(self):
         """
         Get the amount of time in seconds between checks for the PubSub message queue.

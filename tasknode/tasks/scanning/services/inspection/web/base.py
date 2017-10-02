@@ -6,8 +6,11 @@ import time
 from celery import chain, group
 from celery.utils.log import get_task_logger
 
+from lib import PubSubManager
 from lib.sqlalchemy import get_or_create_web_service_from_network_service, create_new_web_service_scan, \
     update_web_service_scan_completed as update_web_service_scan_completed_op, DefaultFlag
+from wselasticsearch.models import WebServiceReportModel
+from wselasticsearch.query import WebServiceReportQuery
 from ......app import websight_app
 from .....base import ServiceTask, WebServiceTask, DatabaseTask, NetworkServiceTask
 from .virtualhost import discover_virtual_hosts_for_web_service
@@ -237,12 +240,45 @@ def scan_web_service(
         order_uuid=order_uuid,
     )
     task_sigs.append(scanning_status_sig)
+    if config.pubsub_enabled:
+        task_sigs.append(publish_report_for_web_service_scan.si(**task_kwargs))
     logger.info(
         "Now kicking off all necessary tasks to scan web service %s."
         % (web_service_uuid,)
     )
     canvas_sig = chain(task_sigs)
     self.finish_after(signature=canvas_sig)
+
+
+#USED
+@websight_app.task(bind=True, base=WebServiceTask)
+def publish_report_for_web_service_scan(self, org_uuid=None, web_service_uuid=None, web_service_scan_uuid=None, order_uuid=None):
+    """
+    Publish the web service scan report generated from the given web service scan to the
+    configured PubSub.
+    :param org_uuid: The UUID of the organization that owns the scanned web service.
+    :param web_service_uuid: The UUID of the web service that was scanned.
+    :param web_service_scan_uuid: The UUID of the web service scan to publish the results of.
+    :param order_uuid: The UUID of the order that the scan was conducted under.
+    :return: None
+    """
+    logger.info(
+        "Now publishing web service scan report for scan %s (order %s)."
+        % (web_service_scan_uuid, order_uuid)
+    )
+    query = WebServiceReportQuery()
+    query.filter_by_web_service_scan(web_service_scan_uuid)
+    response = query.search(org_uuid)
+    scan_doc = WebServiceReportModel.from_response_result(response.results[0])
+    pubsub_manager = PubSubManager.instance()
+    pubsub_manager.publish_elasticsearch_document(
+        scan_doc,
+        topic=config.pubsub_publish_topic,
+    )
+    logger.info(
+        "Successfully published web service scan document for scan %s, order %s."
+        % (web_service_scan_uuid, order_uuid)
+    )
 
 
 #USED

@@ -40,6 +40,23 @@ class PubSubManager(object):
         self.__handle_processed_messages()
         self.__emit_responses()
 
+    def publish_elasticsearch_document(self, es_doc, topic=config.pubsub_publish_topic):
+        """
+        Send a message to the given topic containing the contents of the given Elasticsearch
+        document.
+        :param es_doc: The Elasticsearch document to send.
+        :param topic: The topic to publish the document to.
+        :return: None
+        """
+        self.__emit(
+            topic=topic,
+            message_type="data",
+            message_content={
+                "data_type": es_doc.get_doc_type(),
+                "data": es_doc.to_es_dict(),
+            }
+        )
+
     def send_scan_error_message(self, error_message):
         """
         Send an error message to the default outbound topic describing an error that was encountered

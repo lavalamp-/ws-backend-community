@@ -24,6 +24,7 @@ from .ssl import (
     enumerate_cipher_suites_for_ssl_service,
     enumerate_vulnerabilities_for_ssl_service,
     inspect_tcp_service_for_ssl_support,
+    publish_report_for_ssl_support_scan,
     redo_ssl_support_inspection_for_network_service_scan,
     redo_ssl_support_inspection_for_organization,
     test_ssl_service_for_ssl_vulnerability,
