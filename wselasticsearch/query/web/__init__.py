@@ -6,9 +6,7 @@ from .fingerprint import (
 )
 
 from .report import (
-    WebServiceHeadersReportQuery,
     WebServiceReportQuery,
-    WebServiceTechnologiesReportQuery,
 )
 
 from .resource import (

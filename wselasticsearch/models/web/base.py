@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from ..base import BaseScanElasticsearchModel
 from ..services.base import BaseNetworkServiceModel
-from .mixin import WebRequestMixin, ResourceInfoMixin, UrlMixin
-from ..mixin import ServiceMixin
 from ..types import *
 
 
@@ -15,9 +12,16 @@ class BaseWebServiceModel(BaseNetworkServiceModel):
 
     # Class Members
 
-    web_service_uuid = KeywordElasticsearchType()
-    web_service_host_name = KeywordElasticsearchType()
-    web_service_uses_ssl = BooleanElasticsearchType()
+    web_service_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the web service that the data in this model is related to.",
+    )
+    web_service_host_name = KeywordElasticsearchType(
+        help_text="The virtual host name of the web service that the data in this model is "
+                  "related to.",
+    )
+    web_service_uses_ssl = BooleanElasticsearchType(
+        help_text="Whether or not the referenced web service uses SSL.",
+    )
 
     # Instantiation
 
@@ -81,8 +85,14 @@ class BaseWebServiceScanModel(BaseWebServiceModel):
 
     # Class Members
 
-    web_service_scan_uuid = KeywordElasticsearchType()
-    is_latest_scan = BooleanElasticsearchType()
+    web_service_scan_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the web service scan that the data in this model was "
+                  "collected during.",
+    )
+    is_latest_scan = BooleanElasticsearchType(
+        help_text="Whether or not the data in this model reflects the most recently collected data of "
+                  "this format for the entity in question.",
+    )
 
     # Instantiation
 
@@ -132,166 +142,3 @@ class BaseWebServiceScanModel(BaseWebServiceModel):
 
     def __repr__(self):
         return "<%s - %s>" % (self.__class__.__name__, self.web_service_scan_uuid)
-
-
-class BaseWebServiceUrlModel(BaseWebServiceModel, UrlMixin):
-    """
-    This is a base Elasticsearch model for representing data that is tied to a URL for a web service.
-    """
-
-    # Class Members
-
-    # Instantiation
-
-    def __init__(self, url=None, **kwargs):
-        super(BaseWebServiceUrlModel, self).__init__(**kwargs)
-        self.url = url
-
-    # Static Methods
-
-    # Class Methods
-
-    @classmethod
-    def _populate_dummy(cls, to_populate):
-        from lib import WsFaker
-        to_populate.url = WsFaker.get_url()
-        return to_populate
-
-    # Public Methods
-
-    # Protected Methods
-
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison
-
-    def __repr__(self):
-        return "<%s - %s (%s)>" % (self.__class__.__name__, self.web_service_uuid, self.url)
-
-
-class BaseWebModel(BaseScanElasticsearchModel, ServiceMixin):
-    """
-    This is a base class for all Elasticsearch models that are created while investigating
-    web services.
-    """
-
-    # Class Members
-
-    # Instantiation
-
-    def __init__(self, service_uuid=None, **kwargs):
-        super(BaseWebModel, self).__init__(**kwargs)
-        self.service_uuid = service_uuid
-
-    # Static Methods
-
-    # Class Methods
-
-    # Public Methods
-
-    # Protected Methods
-
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison
-
-
-class BaseWebUrlModel(BaseWebModel, UrlMixin):
-    """
-    This is a base class for all Elasticsearch models that are created while investigating web
-    services and are related to a specific URL.
-    """
-
-    # Class Members
-
-    # Instantiation
-
-    def __init__(
-            self,
-            url=None,
-            **kwargs
-    ):
-        super(BaseWebUrlModel, self).__init__(**kwargs)
-        self.url = url
-
-    # Static Methods
-
-    # Class Methods
-
-    # Public Methods
-
-    # Protected Methods
-
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison
-
-
-class BaseWebResourceModel(BaseWebModel, WebRequestMixin, ResourceInfoMixin):
-    """
-    This is a base class for all Elasticsearch models that represent resources collected while
-    investigating web services.
-    """
-
-    # Class Members
-
-    content = TextElasticsearchType()
-
-    # Instantiation
-
-    def __init__(
-            self,
-            content_type=None,
-            content_length=None,
-            content_hash=None,
-            content_secondary_hash=None,
-            content=None,
-            url=None,
-            request_headers=None,
-            request_method=None,
-            query_arguments=None,
-            body_arguments=None,
-            response_status=None,
-            **kwargs
-    ):
-        super(BaseWebResourceModel, self).__init__(**kwargs)
-        self.content_type = content_type
-        self.content_length = content_length
-        self.content_hash = content_hash
-        self.content_secondary_hash = content_secondary_hash
-        self.content = content
-        self.url = url
-        self.request_headers = self._tuples_to_key_value_dicts(request_headers)
-        self.request_method = request_method
-        self.query_arguments = self._tuples_to_key_value_dicts(query_arguments)
-        self.body_arguments = self._tuples_to_key_value_dicts(body_arguments)
-        self.response_status = response_status
-
-    # Static Methods
-
-    # Class Methods
-
-    # Public Methods
-
-    # Protected Methods
-
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison
-
-    def __repr__(self):
-        return "<%s - %s %s %s %s>" % (
-            self.__class__.__name__,
-            self.url,
-            self.content_length,
-            self.content_type,
-            self.content_hash,
-        )

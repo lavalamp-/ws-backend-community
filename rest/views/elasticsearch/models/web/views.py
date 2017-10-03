@@ -6,8 +6,7 @@ from rest_framework import serializers
 from lib import RegexLib
 from ..base import BaseElasticsearchSingleMappedAPIView, BaseElasticsearchAnalyticsAPIView, \
     BaseElasticsearchManyMappedAPIView
-from .esmixin import LatestWebTechnologiesReportEsMixin, LatestHttpTransactionEsMixin, \
-    LatestHttpScreenshotEsMixin, LatestWebServiceReportEsMixin, LatestWebResourceEsMixin
+from .esmixin import LatestHttpScreenshotEsMixin, LatestWebServiceReportEsMixin, LatestWebResourceEsMixin
 from .dbmixin import WebServiceDbMixin
 from ..organizations import OrganizationDbMixin
 

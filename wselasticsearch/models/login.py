@@ -12,11 +12,16 @@ class LoginAttemptModel(BaseElasticsearchModel, IpAddressMixin):
     """
 
     # Class Members
-    attempt_date = DateElasticsearchType()
-    user_agent = TextElasticsearchType()
 
+    attempt_date = DateElasticsearchType(
+        help_text="The time at which the login attempt failed."
+    )
+    user_agent = TextElasticsearchType(
+        help_text="The user agent of the browser that the login attempt failed from.",
+    )
 
     # Instantiation
+
     def __init__(
             self,
             ip_address=None,
@@ -28,8 +33,8 @@ class LoginAttemptModel(BaseElasticsearchModel, IpAddressMixin):
         self.user_agent = user_agent
         self.attempt_date = attempt_date
 
-
     # Static Methods
+
     @classmethod
     def create_dummy(cls):
         from lib import WsFaker

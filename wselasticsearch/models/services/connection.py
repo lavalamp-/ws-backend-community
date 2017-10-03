@@ -13,9 +13,15 @@ class NetworkServiceLivenessModel(BaseNetworkServiceScanModel):
 
     # Class Members
 
-    is_alive = BooleanElasticsearchType()
-    checked_at = DateElasticsearchType()
-    liveness_cause = KeywordElasticsearchType()
+    is_alive = BooleanElasticsearchType(
+        help_text="Whether or not the referenced network service was alive when checked.",
+    )
+    checked_at = DateElasticsearchType(
+        help_text="The time at which the referenced network service was checked for liveness.",
+    )
+    liveness_cause = KeywordElasticsearchType(
+        help_text="A string depicting how the liveness state in this model was determined.",
+    )
 
     # Instantiation
 

@@ -15,7 +15,6 @@ from .ssl import (
     SslCertificateModel,
     SslSupportModel,
     SslVulnerabilityModel,
-    SslVulnerabilitiesModel,
 )
 
 from .virtualhost import (

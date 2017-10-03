@@ -12,30 +12,12 @@ class DomainNameMixin(object):
     domain_names = KeywordElasticsearchType()
 
 
-class ServiceMixin(object):
-    """
-    This is a mixin class that is used to add a service_uuid property to models.
-    """
-
-    service_uuid = KeywordElasticsearchType()
-
-
 class IpAddressMixin(object):
     """
     This is a mixin class that is used to add an ip_address property to models.
     """
 
     ip_address = KeywordElasticsearchType()
-
-
-class ServiceEndpointMixin(ServiceMixin, IpAddressMixin):
-    """
-    This is a mixin class that is used to add a service_uuid as well as an IP address, port, and protocol
-    to a model.
-    """
-
-    port = IntElasticsearchType()
-    protocol = TextElasticsearchType()
 
 
 class S3Mixin(object):

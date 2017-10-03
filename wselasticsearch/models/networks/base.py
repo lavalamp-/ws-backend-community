@@ -12,12 +12,29 @@ class BaseNetworkModel(BaseOrganizationModel):
 
     # Class Members
 
-    network_uuid = KeywordElasticsearchType()
-    network_address = TextElasticsearchType()
-    network_name = KeywordElasticsearchType()
-    network_mask_length = IntElasticsearchType()
-    network_cidr_range = KeywordElasticsearchType()
-    network_added_by = KeywordElasticsearchType()
+    network_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the network range that the data in this model is related to.",
+    )
+    network_address = TextElasticsearchType(
+        help_text="The base network address for the network range that the data in this model is "
+                  "related to.",
+    )
+    network_name = KeywordElasticsearchType(
+        help_text="The name that was given to the network range that the data in this model is related "
+                  "to.",
+    )
+    network_mask_length = IntElasticsearchType(
+        help_text="The length of the CIDR mask for the network range that the data in this model is "
+                  "related to.",
+    )
+    network_cidr_range = KeywordElasticsearchType(
+        help_text="The full network CIDR range for the network range that the data in this model "
+                  "is related to.",
+    )
+    network_added_by = KeywordElasticsearchType(
+        help_text="A string depicting the way that the referenced network range was added to the "
+                  "Web Sight back-end data store.",
+    )
 
     # Instantiation
 
@@ -98,9 +115,16 @@ class BaseIpAddressModel(BaseNetworkModel):
 
     # Class Members
 
-    ip_address_uuid = KeywordElasticsearchType()
-    ip_address = KeywordElasticsearchType()
-    ip_address_type = KeywordElasticsearchType()
+    ip_address_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the IP address that the data in this model is related to.",
+    )
+    ip_address = KeywordElasticsearchType(
+        help_text="The IP address that the data in this model is related to.",
+    )
+    ip_address_type = KeywordElasticsearchType(
+        help_text="A string depicting the type of IP address that this model is related to "
+                  "(IPv4 or IPv6).",
+    )
 
     # Instantiation
 
@@ -163,8 +187,13 @@ class BaseIpAddressScanModel(BaseIpAddressModel):
 
     # Class Members
 
-    ip_address_scan_uuid = KeywordElasticsearchType()
-    is_latest_scan = BooleanElasticsearchType()
+    ip_address_scan_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the IP address scan that the data in this model was collected during.",
+    )
+    is_latest_scan = BooleanElasticsearchType(
+        help_text="Whether or not the data in this model reflects the most recently collected data of "
+                  "this format for the entity in question.",
+    )
 
     # Instantiation
 

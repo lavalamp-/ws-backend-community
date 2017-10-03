@@ -13,9 +13,17 @@ class IpDomainHistoryModel(BaseIpAddressScanModel):
 
     # Class Members
 
-    domain_names = KeywordElasticsearchType()
-    history_collection_method = KeywordElasticsearchType()
-    history_distance = IntElasticsearchType()
+    domain_names = KeywordElasticsearchType(
+        help_text="The domain names that the referenced IP address has been related to "
+                  "historically.",
+    )
+    history_collection_method = KeywordElasticsearchType(
+        help_text="A string depicting the method through which the IP address's domain history "
+                  "was obtained.",
+    )
+    history_distance = IntElasticsearchType(
+        help_text="How far back into the past domain history was collected for this IP address.",
+    )
 
     # Instantiation
 

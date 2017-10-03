@@ -13,8 +13,12 @@ class VirtualHostModel(BaseNetworkServiceScanModel):
 
     # Class Members
 
-    hostname = KeywordElasticsearchType()
-    discovery_method = KeywordElasticsearchType()
+    hostname = KeywordElasticsearchType(
+        help_text="The host name for the virtual host that was discovered.",
+    )
+    discovery_method = KeywordElasticsearchType(
+        help_text="A string depicting how the referenced virtual host was discovered.",
+    )
 
     # Instantiation
 

@@ -12,15 +12,33 @@ class ZmapScanResultModel(BaseOrganizationNetworkScanModel):
 
     # Class Members
 
-    start_time = DateElasticsearchType()
-    end_time = DateElasticsearchType()
-    cmd_line = KeywordElasticsearchType()
-    discovered_endpoints = KeywordElasticsearchType()
-    live_service_count = IntElasticsearchType()
-    port = IntElasticsearchType()
-    protocol = KeywordElasticsearchType()
-    scanned_networks = KeywordElasticsearchType()
-    scanned_networks_count = IntElasticsearchType()
+    start_time = DateElasticsearchType(
+        help_text="The time at which the Zmap scan was started.",
+    )
+    end_time = DateElasticsearchType(
+        help_text="The time at which the Zmap scan finished.",
+    )
+    cmd_line = KeywordElasticsearchType(
+        help_text="The command that was invoked to start the Zmap scan.",
+    )
+    discovered_endpoints = KeywordElasticsearchType(
+        help_text="The IP addresses that responded during the Zmap scan.",
+    )
+    live_service_count = IntElasticsearchType(
+        help_text="The total number of IP addresses that responded during the Zmap scan.",
+    )
+    port = IntElasticsearchType(
+        help_text="The port that was scanned for.",
+    )
+    protocol = KeywordElasticsearchType(
+        help_text="The protocol that was used for the Zmap scan.",
+    )
+    scanned_networks = KeywordElasticsearchType(
+        help_text="The network ranges that were scanned during the Zmap scan.",
+    )
+    scanned_networks_count = IntElasticsearchType(
+        help_text="The number of network ranges that were scanned during the Zmap scan.",
+    )
 
     # Instantiation
 

@@ -13,10 +13,19 @@ class DnsRecordModel(BaseDomainNameScanModel):
 
     # Class Members
 
-    record_type = KeywordElasticsearchType()
-    record_content = KeywordElasticsearchType()
-    contains_ip_address = BooleanElasticsearchType()
-    ip_address_uuid = KeywordElasticsearchType()
+    record_type = KeywordElasticsearchType(
+        help_text="The DNS record type that was queried.",
+    )
+    record_content = KeywordElasticsearchType(
+        help_text="The contents of the queried DNS record.",
+    )
+    contains_ip_address = BooleanElasticsearchType(
+        help_text="Whether or not the contents of this record contain an IP address.",
+    )
+    ip_address_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the IP address that the record_content point to, if such an "
+                  "IP address exists within Web Sight.",
+    )
 
     # Instantiation
 

@@ -15,7 +15,9 @@ class BaseElasticsearchModel(object):
 
     # Class Members
 
-    created = DateElasticsearchType()
+    created = DateElasticsearchType(
+        help_text="The time at which this Elasticsearch document was created.",
+    )
 
     # Instantiation
 
@@ -178,6 +180,18 @@ class BaseElasticsearchModel(object):
         for k, v in cls.__dict__.iteritems():
             if isinstance(v, BaseElasticsearchType):
                 to_return.append(k)
+        return to_return
+
+    @classmethod
+    def get_schema(cls):
+        """
+        Get a dictionary representing the schema of this Elasticsearch document model.
+        :return: A dictionary representing the schema of this Elasticsearch document model.
+        """
+        to_return = {}
+        for attr_name in cls.get_all_mapping_fields():
+            field = getattr(cls, attr_name)
+            to_return[attr_name] = field.description
         return to_return
 
     @classmethod
@@ -362,7 +376,10 @@ class BaseMappedElasticsearchModel(BaseElasticsearchModel):
 
     # Class Members
 
-    flags = FlagElasticsearchType()
+    flags = FlagElasticsearchType(
+        help_text="Objects containing descriptions, names, and weights for various flags that are "
+                  "placed on data collected by Web Sight.",
+    )
 
     # Instantiation
 
@@ -535,81 +552,3 @@ class BaseMappedElasticsearchModel(BaseElasticsearchModel):
             self.mapped_model_class,
             self.mapped_model_parent,
         )
-
-
-class BaseScanElasticsearchModel(BaseElasticsearchModel):
-    """
-    A base class for all object models that shall be stored in Elasticsearch that are populated during
-    a scan.
-    """
-
-    # Class Members
-
-    org_uuid = KeywordElasticsearchType()
-    scan_uuid = KeywordElasticsearchType()
-
-    # Instantiation
-
-    def __init__(self, org_uuid=None, scan_uuid=None):
-        self.org_uuid = org_uuid
-        self.scan_uuid = scan_uuid
-
-    # Static Methods
-
-    # Class Methods
-
-    # Public Methods
-
-    # Protected Methods
-
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison
-
-
-class BaseScanTrackingElasticsearchModel(BaseScanElasticsearchModel):
-    """
-    A base class for all object models that contain data about the results of a given type of scan.
-    """
-
-    # Class Members
-
-    start_time = DateElasticsearchType()
-    end_time = DateElasticsearchType()
-    scan_type = KeywordElasticsearchType()
-
-    # Instantiation
-
-    def __init__(
-            self,
-            start_time=None,
-            end_time=None,
-            **kwargs
-    ):
-        super(BaseScanTrackingElasticsearchModel, self).__init__(**kwargs)
-        self.start_time = start_time
-        self.end_time = end_time
-        self.scan_type = self._get_scan_type()
-
-    # Static Methods
-
-    # Class Methods
-
-    # Public Methods
-
-    # Protected Methods
-
-    def _get_scan_type(self):
-        """
-        Get a string representing the scan type that this scan model is related to.
-        :return: A string representing the scan type that this scan model is related to.
-        """
-        raise NotImplementedError("Subclasses must implement this!")
-
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison

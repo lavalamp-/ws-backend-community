@@ -13,13 +13,28 @@ class IpGeolocationModel(BaseIpAddressScanModel):
 
     # Class Members
 
-    geolocation = GeopointElasticsearchType()
-    country_code = KeywordElasticsearchType()
-    region = KeywordElasticsearchType()
-    geo_source = KeywordElasticsearchType()
-    postal_code = KeywordElasticsearchType()
-    latitude = DoubleElasticsearchType()
-    longitude = DoubleElasticsearchType()
+    geolocation = GeopointElasticsearchType(
+        help_text="The geolocation where the referenced IP address was located.",
+    )
+    country_code = KeywordElasticsearchType(
+        help_text="The country code for where the referenced IP address was located.",
+    )
+    region = KeywordElasticsearchType(
+        help_text="The region code for where the referenced IP address was located.",
+    )
+    geo_source = KeywordElasticsearchType(
+        help_text="A string depicting where the relevant geolocation data was retrieved "
+                  "from.",
+    )
+    postal_code = KeywordElasticsearchType(
+        help_text="The postal code for where the referenced IP address was located.",
+    )
+    latitude = DoubleElasticsearchType(
+        help_text="The latitude for where the referenced IP address was located.",
+    )
+    longitude = DoubleElasticsearchType(
+        help_text="The longitude for where the referenced IP address was located.",
+    )
 
     # Instantiation
 

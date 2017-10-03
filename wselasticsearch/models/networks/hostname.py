@@ -13,7 +13,9 @@ class IpReverseHostnameModel(BaseIpAddressScanModel):
 
     # Class Members
 
-    hostnames = KeywordElasticsearchType()
+    hostnames = KeywordElasticsearchType(
+        help_text="The domain names that the referenced IP address reverse resolves to.",
+    )
 
     # Instantiation
 

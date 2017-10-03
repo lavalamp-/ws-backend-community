@@ -12,7 +12,9 @@ class BaseOrganizationModel(BaseMappedElasticsearchModel):
 
     # Class Members
 
-    org_uuid = KeywordElasticsearchType()
+    org_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the organization that the data in this model is related to.",
+    )
 
     # Instantiation
 
@@ -70,7 +72,9 @@ class BaseOrganizationNetworkScanModel(BaseOrganizationModel):
 
     # Class Members
 
-    org_network_scan_uuid = KeywordElasticsearchType()
+    org_network_scan_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the network scan that the data in this model is related to.",
+    )
 
     # Instantiation
 

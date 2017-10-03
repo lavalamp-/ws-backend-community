@@ -13,10 +13,18 @@ class IpPortScanModel(BaseIpAddressScanModel):
 
     # Class Members
 
-    port_results = PortStatusElasticsearchType()
-    port_scan_method = KeywordElasticsearchType()
-    scan_start_time = DateElasticsearchType()
-    scan_end_time = DateElasticsearchType()
+    port_results = PortStatusElasticsearchType(
+        help_text="The per-port results of the port scans for the referenced IP address.",
+    )
+    port_scan_method = KeywordElasticsearchType(
+        help_text="A string depicting the method via which the referenced port scan was performed.",
+    )
+    scan_start_time = DateElasticsearchType(
+        help_text="The time at which the referenced port scan was started.",
+    )
+    scan_end_time = DateElasticsearchType(
+        help_text="The time at which the referenced port scan ended.",
+    )
 
     # Instantiation
 

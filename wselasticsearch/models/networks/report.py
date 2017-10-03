@@ -13,18 +13,44 @@ class IpAddressReportModel(BaseIpAddressScanModel):
 
     # Class Members
 
-    open_tcp_ports = IntElasticsearchType()
-    open_udp_ports = IntElasticsearchType()
-    historic_domain_names = KeywordElasticsearchType()
-    reverse_domain_names = KeywordElasticsearchType()
-    geolocation_geohash = GeopointElasticsearchType()
-    geolocation_latitude = DoubleElasticsearchType()
-    geolocation_longitude = DoubleElasticsearchType()
-    geolocation_region = KeywordElasticsearchType()
-    geolocation_country_code = KeywordElasticsearchType()
-    geolocation_postal_code = KeywordElasticsearchType()
-    arin_whois_networks = WhoisNetworkElasticsearchType()
-    unknown_domain_names = KeywordElasticsearchType()
+    open_tcp_ports = IntElasticsearchType(
+        help_text="The TCP ports that were found to be open on the IP address.",
+    )
+    open_udp_ports = IntElasticsearchType(
+        help_text="The UDP ports that were found to be open on the IP address.",
+    )
+    historic_domain_names = KeywordElasticsearchType(
+        help_text="The domain names that the referenced IP address has been related to "
+                  "historically.",
+    )
+    reverse_domain_names = KeywordElasticsearchType(
+        help_text="The domain names that the referenced IP address reverse resolves to.",
+    )
+    geolocation_geohash = GeopointElasticsearchType(
+        help_text="A geohash of where the referenced IP address was located.",
+    )
+    geolocation_latitude = DoubleElasticsearchType(
+        help_text="The latitude for where the referenced IP address was located.",
+    )
+    geolocation_longitude = DoubleElasticsearchType(
+        help_text="The longitude for where the referenced IP address was located.",
+    )
+    geolocation_region = KeywordElasticsearchType(
+        help_text="The region code for where the referenced IP address was located.",
+    )
+    geolocation_country_code = KeywordElasticsearchType(
+        help_text="The country code for where the referenced IP address was located.",
+    )
+    geolocation_postal_code = KeywordElasticsearchType(
+        help_text="The postal code for where the referenced IP address was located.",
+    )
+    arin_whois_networks = WhoisNetworkElasticsearchType(
+        help_text="Data from the WHOIS lookup of the network where the referenced IP address "
+                  "resides.",
+    )
+    unknown_domain_names = KeywordElasticsearchType(
+        help_text="Unknown domain names associated with this IP address.",  # wat
+    )
 
     # Instantiation
 

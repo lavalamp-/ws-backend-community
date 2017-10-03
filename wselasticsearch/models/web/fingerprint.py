@@ -13,14 +13,31 @@ class UserAgentFingerprintModel(BaseWebServiceScanModel):
 
     # Class Members
 
-    user_agent_type = KeywordElasticsearchType()
-    user_agent_name = KeywordElasticsearchType()
-    user_agent_string = KeywordElasticsearchType()
-    response_has_content = BooleanElasticsearchType()
-    response_mime_type = KeywordElasticsearchType()
-    response_primary_hash = KeywordElasticsearchType()
-    response_secondary_hash = KeywordElasticsearchType()
-    response_status_code = IntElasticsearchType()
+    user_agent_type = KeywordElasticsearchType(
+        help_text="A string depicting the type of user agent that this fingerprint checked for.",
+    )
+    user_agent_name = KeywordElasticsearchType(
+        help_text="The name of the user agent that this fingerprint checked for.",
+    )
+    user_agent_string = KeywordElasticsearchType(
+        help_text="The contents of the user agent that were used during this fingerprint check.",
+    )
+    response_has_content = BooleanElasticsearchType(
+        help_text="Whether or not the HTTP response for the fingerprinting request returned any content.",
+    )
+    response_mime_type = KeywordElasticsearchType(
+        help_text="The MIME type returned by the HTTP response for the fingerprinting request.",
+    )
+    response_primary_hash = KeywordElasticsearchType(
+        help_text="A cryptographic hash of the response content returned for the fingerprinting request.",
+    )
+    response_secondary_hash = KeywordElasticsearchType(
+        help_text="A secondary hash representing the content returned by the HTTP "
+                  "fingerprinting response (contents of secondary hash depend on MIME type).",
+    )
+    response_status_code = IntElasticsearchType(
+        help_text="The HTTP status code returned in response to the fingerprinting HTTP request.",
+    )
 
     # Instantiation
 

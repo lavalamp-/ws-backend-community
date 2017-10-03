@@ -12,7 +12,9 @@ class BaseUserModel(BaseMappedElasticsearchModel):
 
     # Class Members
 
-    user_uuid = KeywordElasticsearchType()
+    user_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the user that the contents of this model are in reference to.",
+    )
 
     # Instantiation
 

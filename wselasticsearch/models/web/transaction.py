@@ -13,7 +13,9 @@ class HttpTransactionModel(BaseWebServiceScanModel, WebRequestMixin, ResourceInf
 
     # Class Members
 
-    response_headers = KeywordKeyValueElasticsearchType()
+    response_headers = KeywordKeyValueElasticsearchType(
+        help_text="The HTTP response headers associated with this transaction.",
+    )
 
     # Instantiation
 

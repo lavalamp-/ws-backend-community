@@ -14,7 +14,6 @@ from .ssl import (
     SslCertificateQuery,
     SslSupportQuery,
     SslSupportReportQuery,
-    SslVulnerabilitiesQuery,
     SslVulnerabilityQuery,
 )
 

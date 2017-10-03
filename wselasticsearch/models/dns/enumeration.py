@@ -12,9 +12,16 @@ class SubdomainEnumerationModel(BaseDomainNameScanModel):
 
     # Class Members
 
-    enumeration_method = KeywordElasticsearchType()
-    parent_domain = KeywordElasticsearchType()
-    child_domains = KeywordElasticsearchType()
+    enumeration_method = KeywordElasticsearchType(
+        help_text="A string depicting how the domains within this model were discovered.",
+    )
+    parent_domain = KeywordElasticsearchType(
+        help_text="The parent domain name that subdomain enumeration was run for.",
+    )
+    child_domains = KeywordElasticsearchType(
+        help_text="The child domain names that were discovered through the referenced subdomain "
+                  "enumeration process.",
+    )
 
     # Instantiation
 

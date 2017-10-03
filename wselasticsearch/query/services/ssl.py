@@ -62,35 +62,6 @@ class SslVulnerabilityQuery(BaseNetworkServiceScanQuery):
     # Representation and Comparison
 
 
-class SslVulnerabilitiesQuery(BaseNetworkServiceScanQuery):
-    """
-    This is an Elasticsearch model class for querying SslVulnerabilitiesModel objects.
-    """
-
-    # Class Members
-
-    # Instantiation
-
-    # Static Methods
-
-    # Class Methods
-
-    @classmethod
-    def get_queried_class(cls):
-        from wselasticsearch.models import SslVulnerabilitiesModel
-        return SslVulnerabilitiesModel
-
-    # Public Methods
-
-    # Protected Methods
-
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison
-
-
 class SslCertificateQuery(BaseNetworkServiceScanQuery):
     """
     This is an Elasticsearch model class for querying SslCertificateModel objects.

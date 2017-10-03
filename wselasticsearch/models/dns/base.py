@@ -13,9 +13,15 @@ class BaseDomainNameModel(BaseOrganizationModel):
 
     # Class Members
 
-    domain_uuid = KeywordElasticsearchType()
-    domain_name = KeywordElasticsearchType()
-    domain_added_by = KeywordElasticsearchType()
+    domain_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the domain name that the data in this model is related to.",
+    )
+    domain_name = KeywordElasticsearchType(
+        help_text="The domain name that the data in this model is related to."
+    )
+    domain_added_by = KeywordElasticsearchType(
+        help_text="A string depicting how the referenced domain name was added to Web Sight.",
+    )
 
     # Instantiation
 
@@ -79,8 +85,13 @@ class BaseDomainNameScanModel(BaseDomainNameModel):
 
     # Class Members
 
-    domain_scan_uuid = KeywordElasticsearchType()
-    is_latest_scan = BooleanElasticsearchType()
+    domain_scan_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the domain name scan that the data in this model is related to.",
+    )
+    is_latest_scan = BooleanElasticsearchType(
+        help_text="Whether or not the data in this model reflects the most recently collected data of "
+                  "this format for the entity in question.",
+    )
 
     # Instantiation
 

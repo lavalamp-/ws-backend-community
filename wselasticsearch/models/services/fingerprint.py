@@ -12,10 +12,19 @@ class ServiceFingerprintModel(BaseNetworkServiceScanModel):
 
     # Class Members
 
-    fingerprint_name = KeywordElasticsearchType()
-    fingerprint_result = BooleanElasticsearchType()
-    ssl_supported = BooleanElasticsearchType()
-    ssl_version = KeywordElasticsearchType()
+    fingerprint_name = KeywordElasticsearchType(
+        help_text="A name for the service type that was identified on the referenced network "
+                  "service.",
+    )
+    fingerprint_result = BooleanElasticsearchType(
+        help_text="Whether or not the fingerprint succeeded for the network service.",
+    )
+    ssl_supported = BooleanElasticsearchType(
+        help_text="Whether or not the referenced network service supports SSL.",
+    )
+    ssl_version = KeywordElasticsearchType(
+        help_text="The SSL version for the referenced network service fingerprinting process.",
+    )
 
     # Instantiation
 
@@ -65,13 +74,29 @@ class VirtualHostFingerprintModel(BaseNetworkServiceScanModel):
 
     # Class Members
 
-    response_code = IntElasticsearchType()
-    response_has_content = BooleanElasticsearchType()
-    response_mime_type = KeywordElasticsearchType()
-    response_primary_hash = KeywordElasticsearchType()
-    response_secondary_hash = KeywordElasticsearchType()
-    over_ssl = BooleanElasticsearchType()
-    hostname = KeywordElasticsearchType()
+    response_code = IntElasticsearchType(
+        help_text="The HTTP status code for the HTTP fingerprinting response."
+    )
+    response_has_content = BooleanElasticsearchType(
+        help_text="Whether or not content was returned in HTTP fingerprinting response.",
+    )
+    response_mime_type = KeywordElasticsearchType(
+        help_text="The MIME type that was returned in the HTTP fingerprinting response.",
+    )
+    response_primary_hash = KeywordElasticsearchType(
+        help_text="A cryptographic hash of the contents that were returned by the HTTP "
+                  "fingerprinting response.",
+    )
+    response_secondary_hash = KeywordElasticsearchType(
+        help_text="A secondary hash representing the content returned by the HTTP "
+                  "fingerprinting response (contents of secondary hash depend on MIME type).",
+    )
+    over_ssl = BooleanElasticsearchType(
+        help_text="Whether or not the HTTP fingerprinting request was submitted over SSL.",
+    )
+    hostname = KeywordElasticsearchType(
+        help_text="The virtual host name that was submitted in the fingerprinting request.",
+    )
 
     # Instantiation
 

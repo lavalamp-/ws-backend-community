@@ -11,9 +11,7 @@ from .resource import (
 )
 
 from .report import (
-    WebServiceHeadersReportModel,
     WebServiceReportModel,
-    WebServiceTechnologiesReportModel,
 )
 
 from .screenshot import (

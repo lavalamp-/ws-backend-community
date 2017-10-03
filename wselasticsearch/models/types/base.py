@@ -11,12 +11,13 @@ class BaseElasticsearchType(object):
 
     # Instantiation
 
-    def __init__(self, index=None, diffable=False, diff_key=None):
+    def __init__(self, index=None, diffable=False, diff_key=None, help_text=None):
         from lib import ValidationHelper
         if index is not None:
             ValidationHelper.validate_bool(index)
         self._diffable = diffable
         self._diff_key = diff_key
+        self._help_text = help_text
         self.index = index
 
     # Static Methods
@@ -55,6 +56,17 @@ class BaseElasticsearchType(object):
     # Properties
 
     @property
+    def description(self):
+        """
+        Get a dictionary describing this data type.
+        :return: a dictionary describing this data type.
+        """
+        return {
+            "type": self.type,
+            "description": self.help_text,
+        }
+
+    @property
     def diffable(self):
         """
         Get whether or not the value represented by this type is considered to be diffable for the
@@ -73,6 +85,14 @@ class BaseElasticsearchType(object):
         retrieve the last instance of a model.
         """
         return self._diff_key
+
+    @property
+    def help_text(self):
+        """
+        Get a description of the data stored in this type reference.
+        :return: a description of the data stored in this type reference.
+        """
+        return self._help_text
 
     @property
     def type(self):
@@ -105,6 +125,12 @@ class BaseComplexElasticsearchType(BaseElasticsearchType):
     # Private Methods
 
     # Properties
+
+    @property
+    def description(self):
+        to_return = self.to_dict()
+        to_return["help_text"] = self.help_text
+        return to_return
 
     @property
     def type(self):

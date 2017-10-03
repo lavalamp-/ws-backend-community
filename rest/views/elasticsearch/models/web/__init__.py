@@ -10,12 +10,8 @@ from .esmixin import (
     HttpTransactionEsMixin,
     LatestHttpScreenshotEsMixin,
     LatestHttpTransactionEsMixin,
-    LatestWebHeadersReportEsMixin,
     LatestWebResourceEsMixin,
-    LatestWebTechnologiesReportEsMixin,
-    WebHeadersReportEsMixin,
     WebResourceEsMixin,
-    WebTechnologiesReportEsMixin,
 )
 
 from .views import (

@@ -13,7 +13,9 @@ class HttpScreenshotModel(BaseWebServiceScanModel, S3Mixin):
 
     # Class Members
 
-    url = KeywordElasticsearchType()
+    url = KeywordElasticsearchType(
+        help_text="The URL that this screenshot was taken of.",
+    )
 
     # Instantiation
 

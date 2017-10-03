@@ -13,11 +13,21 @@ class DomainNameReportModel(BaseDomainNameScanModel):
 
     # Class Members
 
-    domain_name = KeywordElasticsearchType()
-    resolutions = DomainResolutionElasticsearchType()
-    has_resolutions = BooleanElasticsearchType()
-    subdomains = SubdomainElasticsearchType()
-    related_ips = DomainIpAddressElasticsearchType()
+    domain_name = KeywordElasticsearchType(
+        help_text="The domain name that this report is reflective of.",
+    )
+    resolutions = DomainResolutionElasticsearchType(
+        help_text="The DNS resolutions that were discovered for the referenced domain name.",
+    )
+    has_resolutions = BooleanElasticsearchType(
+        help_text="Whether or not the referenced domain had any successful resolutions.",
+    )
+    subdomains = SubdomainElasticsearchType(
+        help_text="The subdomains that were discovered for the referenced parent domain.",
+    )
+    related_ips = DomainIpAddressElasticsearchType(
+        help_text="IP addresses that were found related to this domain name.",
+    )
 
     # Instantiation
 

@@ -12,22 +12,63 @@ class IpWhoisModel(BaseIpAddressScanModel):
 
     # Class Members
 
-    whois_org_name = KeywordElasticsearchType()
-    whois_org_handle = KeywordElasticsearchType()
-    whois_org_postal_code = KeywordElasticsearchType()
-    whois_org_country_code = KeywordElasticsearchType()
-    whois_org_street_address = KeywordElasticsearchType()
-    whois_org_city = KeywordElasticsearchType()
-    whois_org_state = KeywordElasticsearchType()
-    whois_org_registration_date = DateElasticsearchType()
-    whois_org_update_date = DateElasticsearchType()
-    whois_network_handle = KeywordElasticsearchType()
-    whois_network_name = KeywordElasticsearchType()
-    whois_network_range = CidrRangeElasticsearchType()
-    whois_network_registration_date = DateElasticsearchType()
-    whois_network_update_date = DateElasticsearchType()
-    whois_network_version = IntElasticsearchType()
-    whois_data_source = KeywordElasticsearchType()
+    whois_org_name = KeywordElasticsearchType(
+        help_text="The name of the organization who owns the WHOIS record for the IP address.",
+    )
+    whois_org_handle = KeywordElasticsearchType(
+        help_text="The handle of the organization who owns the WHOIS record for the IP address.",
+    )
+    whois_org_postal_code = KeywordElasticsearchType(
+        help_text="The postal code of the organization who owns the WHOIS record for the "
+                  "IP address.",
+    )
+    whois_org_country_code = KeywordElasticsearchType(
+        help_text="The country code of the organization who owns the WHOIS record for the IP "
+                  "address.",
+    )
+    whois_org_street_address = KeywordElasticsearchType(
+        help_text="The street address of the organization who owns the WHOIS record for "
+                  "the IP address.",
+    )
+    whois_org_city = KeywordElasticsearchType(
+        help_text="The city of the organization who owns the WHOIS record for the IP address.",
+    )
+    whois_org_state = KeywordElasticsearchType(
+        help_text="The state of the organization who owns the WHOIS record for the IP address.",
+    )
+    whois_org_registration_date = DateElasticsearchType(
+        help_text="The date when the organization who owns the WHOIS record for the IP address "
+                  "registered their WHOIS allocation.",
+    )
+    whois_org_update_date = DateElasticsearchType(
+        help_text="The last time that the organization that owns the referenced WHOIS record updated "
+                  "their information.",
+    )
+    whois_network_handle = KeywordElasticsearchType(
+        help_text="A string reflecting the handle of the network that the IP address is contained "
+                  "within in its WHOIS record.",
+    )
+    whois_network_name = KeywordElasticsearchType(
+        help_text="A string reflecting the name of the network that the IP address is contained "
+                  "within in its WHOIS record.",
+    )
+    whois_network_range = CidrRangeElasticsearchType(
+        help_text="The CIDR range of the network that the IP address is contained within in "
+                  "its WHOIS record.",
+    )
+    whois_network_registration_date = DateElasticsearchType(
+        help_text="The date at which the network this IP address's WHOIS record was registered.",
+    )
+    whois_network_update_date = DateElasticsearchType(
+        help_text="The last time when the network that this IP address's WHOIS record was updated.",
+    )
+    whois_network_version = IntElasticsearchType(
+        help_text="A string depicting the version of the network data that the IP address's WHOIS record "
+                  "reflects.",
+    )
+    whois_data_source = KeywordElasticsearchType(
+        help_text="A string depicting the source of the WHOIS data that this record was populated via.",
+    )
 
     # Instantiation
 

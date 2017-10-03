@@ -12,7 +12,7 @@ from ..base import BaseInspector
 from lib import ElasticsearchableMixin, BaseWsException, FilesystemHelper, RegexLib, DatetimeHelper, \
     ConfigManager, get_storage_helper
 from lib.sqlalchemy import get_org_uuid_from_network_service_scan
-from wselasticsearch.query import SslCertificateQuery, SslVulnerabilitiesQuery, SslSupportQuery, SslVulnerabilityQuery
+from wselasticsearch.query import SslCertificateQuery, SslSupportQuery, SslVulnerabilityQuery
 
 logger = logging.getLogger(__name__)
 config = ConfigManager.instance()

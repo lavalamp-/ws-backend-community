@@ -15,60 +15,181 @@ class WebServiceReportModel(BaseWebServiceScanModel, SslSupportRelatedMixin):
 
     # Class Members
 
-    uses_wordpress = BooleanElasticsearchType()
-    uses_iis = BooleanElasticsearchType()
-    uses_apache = BooleanElasticsearchType()
-    uses_nginx = BooleanElasticsearchType()
-    total_header_count = IntElasticsearchType()
-    unique_header_count = IntElasticsearchType()
-    server_headers = KeywordElasticsearchType()
-    transactions_count = IntElasticsearchType()
-    ok_count = IntElasticsearchType()
-    has_ok = BooleanElasticsearchType()
-    redirect_count = IntElasticsearchType()
-    has_redirect = BooleanElasticsearchType()
-    client_error_count = IntElasticsearchType()
-    has_client_error = BooleanElasticsearchType()
-    server_error_count = IntElasticsearchType()
-    has_server_error = BooleanElasticsearchType()
-    total_resource_size = IntElasticsearchType()
-    uses_tomcat_management_portal = BooleanElasticsearchType()
-    has_screenshots = BooleanElasticsearchType()
-    screenshots_count = IntElasticsearchType()
-    main_screenshot_s3_bucket = KeywordElasticsearchType()
-    main_screenshot_s3_key = KeywordElasticsearchType()
-    response_count = IntElasticsearchType()
-    redirect_301_count = IntElasticsearchType()
-    redirect_302_count = IntElasticsearchType()
-    all_responses_redirects = BooleanElasticsearchType()
-    all_responses_server_errors = BooleanElasticsearchType()
-    all_responses_client_errors = BooleanElasticsearchType()
-    response_statuses = CountDataPointElasticsearchType()
-    hostname_resolves = BooleanElasticsearchType()
-    resolved_ip_matches_hostname = BooleanElasticsearchType()
-    response_content_types = CountDataPointElasticsearchType()
-    www_authenticate_headers = KeywordElasticsearchType()
-    has_www_authenticate_headers = BooleanElasticsearchType()
-    has_basic_auth = BooleanElasticsearchType()
-    has_digest_auth = BooleanElasticsearchType()
-    has_ntlm_auth = BooleanElasticsearchType()
-    basic_auth_realms = KeywordElasticsearchType()
-    has_server_headers = BooleanElasticsearchType()
-    has_multiple_server_headers = BooleanElasticsearchType()
-    all_responses_not_found = BooleanElasticsearchType()
-    resolved_ip_address = KeywordElasticsearchType()
-    scan_completed_at = DateElasticsearchType()
-    hostname_is_ip_address = BooleanElasticsearchType()
-    open_ports = KeywordIntKeyValueElasticsearchType(key_name="protocol", value_name="port")
-    landing_header_redirect_location = KeywordElasticsearchType()
-    landing_meta_refresh_location = KeywordElasticsearchType()
-    landing_response_status = IntElasticsearchType()
-    landing_title = KeywordElasticsearchType()
-    local_login_form_count = IntElasticsearchType()
-    local_login_form_https_count = IntElasticsearchType()
-    remote_login_form_count = IntElasticsearchType()
-    remote_login_form_https_count = IntElasticsearchType()
-    user_agent_fingerprints = UserAgentFingerprintElasticsearchType()
+    uses_wordpress = BooleanElasticsearchType(
+        help_text="Whether or not the web service uses Wordpress.",
+    )
+    uses_iis = BooleanElasticsearchType(
+        help_text="Whether or not the web service uses IIS.",
+    )
+    uses_apache = BooleanElasticsearchType(
+        help_text="Whether or not the web service uses Apache HTTP server.",
+    )
+    uses_nginx = BooleanElasticsearchType(
+        help_text="Whether or not the web service uses Nginx.",
+    )
+    total_header_count = IntElasticsearchType(
+        help_text="The total number of headers that were returned by the web service.",
+    )
+    unique_header_count = IntElasticsearchType(
+        help_text="The total number of unique headers that were returned by the web "
+                  "service.",
+    )
+    server_headers = KeywordElasticsearchType(
+        help_text="The Server HTTP response headers returned by the web service.",
+    )
+    transactions_count = IntElasticsearchType(
+        help_text="The total number of HTTP transactions performed against the web service.",
+    )
+    ok_count = IntElasticsearchType(
+        help_text="The total number of HTTP 200 OK responses that were observed during testing "
+                  "of the web service.",
+    )
+    has_ok = BooleanElasticsearchType(
+        help_text="Whether or not a single HTTP 200 OK response was returned by the web service.",
+    )
+    redirect_count = IntElasticsearchType(
+        help_text="The total number of HTTP redirects that were returned by the web service during testing.",
+    )
+    has_redirect = BooleanElasticsearchType(
+        help_text="Whether or not a single HTTP redirect response was returned by the web service.",
+    )
+    client_error_count = IntElasticsearchType(
+        help_text="The total number of HTTP client error responses that were returned by the web service "
+                  "during testing.",
+    )
+    has_client_error = BooleanElasticsearchType(
+        help_text="Whether or not a single HTTP client error response was returned by the web service.",
+    )
+    server_error_count = IntElasticsearchType(
+        help_text="The total number of HTTP server error responses that were returned by the web service "
+                  "during testing.",
+    )
+    has_server_error = BooleanElasticsearchType(
+        help_text="Whether or not a single HTTP server error response was returned by the web service.",
+    )
+    total_resource_size = IntElasticsearchType(
+        help_text="The cumulative size (in bytes) of all resources returned by the web service.",
+    )
+    uses_tomcat_management_portal = BooleanElasticsearchType(
+        help_text="Whether or not the web service uses Tomcat Management Portal.",
+    )
+    has_screenshots = BooleanElasticsearchType(
+        help_text="Whether or not screenshots were taken for the web service.",
+    )
+    screenshots_count = IntElasticsearchType(
+        help_text="The total number of screenshots taken for the web service.",
+    )
+    main_screenshot_s3_bucket = KeywordElasticsearchType(
+        help_text="The storage bucket where the main screenshot for the web service is stored.",
+    )
+    main_screenshot_s3_key = KeywordElasticsearchType(
+        help_text="The storage key where the main screenshot for the web service is stored.",
+    )
+    response_count = IntElasticsearchType(
+        help_text="The total number of responses that were returned by the web service during "
+                  "testing.",
+    )
+    redirect_301_count = IntElasticsearchType(
+        help_text="The total number of HTTP 301 redirects that were returned by the server.",
+    )
+    redirect_302_count = IntElasticsearchType(
+        help_text="The total number of HTTP 302 redirects that were returned by the server.",
+    )
+    all_responses_redirects = BooleanElasticsearchType(
+        help_text="Whether or not all responses returned by the server were redirects.",
+    )
+    all_responses_server_errors = BooleanElasticsearchType(
+        help_text="Whether or not all responses returned by the server were server errors.",
+    )
+    all_responses_client_errors = BooleanElasticsearchType(
+        help_text="Whether or not all responses returned by the server were client errors.",
+    )
+    response_statuses = CountDataPointElasticsearchType(
+        help_text="All of the unique HTTP status codes that were returned by the web service.",
+    )
+    hostname_resolves = BooleanElasticsearchType(
+        help_text="Whether or not the hostname associated with the web service resolves.",
+    )
+    resolved_ip_matches_hostname = BooleanElasticsearchType(
+        help_text="Whether or not he IP address that the web service's hostname resolves to is the "
+                  "IP address associated with this web service.",
+    )
+    response_content_types = CountDataPointElasticsearchType(
+        help_text="The unique MIME types that were returned by all the requests to the web service.",
+    )
+    www_authenticate_headers = KeywordElasticsearchType(
+        help_text="All of the HTTP authentication headers that were returned by the web service.",
+    )
+    has_www_authenticate_headers = BooleanElasticsearchType(
+        help_text="Whether or not the web service returned at least one HTTP authentication header.",
+    )
+    has_basic_auth = BooleanElasticsearchType(
+        help_text="Whether or not the web service uses HTTP basic authentication.",
+    )
+    has_digest_auth = BooleanElasticsearchType(
+        help_text="Whether or not the web service uses HTTP diget authentication.",
+    )
+    has_ntlm_auth = BooleanElasticsearchType(
+        help_text="Whether or not the web service uses HTTP NTLM authentication.",
+    )
+    basic_auth_realms = KeywordElasticsearchType(
+        help_text="The realms that the HTTP basic auth used by the web service authenticate against.",
+    )
+    has_server_headers = BooleanElasticsearchType(
+        help_text="Whether or not the web service returned at least one server header.",
+    )
+    has_multiple_server_headers = BooleanElasticsearchType(
+        help_text="Whether or not multiple differing server headers were returned by the web service.",
+    )
+    all_responses_not_found = BooleanElasticsearchType(
+        help_text="Whether or not all responses from the web service were 404 not founds.",
+    )
+    resolved_ip_address = KeywordElasticsearchType(
+        help_text="The IP address that the web service's hostname resolves to.",
+    )
+    scan_completed_at = DateElasticsearchType(
+        help_text="The time at which the web service scan completed.",
+    )
+    hostname_is_ip_address = BooleanElasticsearchType(
+        help_text="Whether or not the hostname associated with this web service contains an IP "
+                  "address.",
+    )
+    open_ports = KeywordIntKeyValueElasticsearchType(
+        key_name="protocol",
+        value_name="port",
+        help_text="The ports that were open on the host where this web service resides.",
+    )
+    landing_header_redirect_location = KeywordElasticsearchType(
+        help_text="The HTTP response location header location for the landing page of the web service if "
+                  "such a header is returned by the landing page.",
+    )
+    landing_meta_refresh_location = KeywordElasticsearchType(
+        help_text="The <meta> redirect tag location for the landing page of the web service if the "
+                  "landing page contains such a tag."
+    )
+    landing_response_status = IntElasticsearchType(
+        help_text="The HTTP status code for the landing page of the web service.",
+    )
+    landing_title = KeywordElasticsearchType(
+        help_text="The contents of the <title> tag on the landing page for this web service.",
+    )
+    local_login_form_count = IntElasticsearchType(
+        help_text="The total number of login forms that post to this web service.",
+    )
+    local_login_form_https_count = IntElasticsearchType(
+        help_text="The total number of login forms that post to this web service over SSL/TLS.",
+    )
+    remote_login_form_count = IntElasticsearchType(
+        help_text="The total number of login forms that post to other web services from this web service.",
+    )
+    remote_login_form_https_count = IntElasticsearchType(
+        help_text="The total number of login forms that post to other web services from this web service "
+                  "over SSL/TLS.",
+    )
+    user_agent_fingerprints = UserAgentFingerprintElasticsearchType(
+        help_text="The fingerprinting results from testing for different responses from differing user "
+                  "agents against this web service.",
+    )
 
     # Instantiation
 
@@ -305,133 +426,5 @@ class WebServiceReportModel(BaseWebServiceScanModel, SslSupportRelatedMixin):
             "total_resource_size",
             "uses_tomcat_management_portal",
         ]
-
-    # Representation and Comparison
-
-
-class WebServiceTechnologiesReportModel(BaseWebServiceScanModel):
-    """
-    This is an Elasticsearch model class for containing data about the technologies used by a web service
-    as found during the course of a single web service scan.
-    """
-
-    # Class Members
-
-    uses_wordpress = BooleanElasticsearchType()
-    wordpress_version = KeywordElasticsearchType()
-    uses_iis = BooleanElasticsearchType()
-    iis_version = KeywordElasticsearchType()
-    uses_apache = BooleanElasticsearchType()
-    apache_version = KeywordElasticsearchType()
-    uses_nginx = BooleanElasticsearchType()
-
-    # Instantiation
-
-    def __init__(
-            self,
-            uses_wordpress=None,
-            wordpress_version=None,
-            uses_iis=None,
-            iis_version=None,
-            uses_apache=None,
-            apache_version=None,
-            uses_nginx=None,
-            **kwargs
-    ):
-        super(WebServiceTechnologiesReportModel, self).__init__(**kwargs)
-        self.uses_wordpress = uses_wordpress
-        self.wordpress_version = wordpress_version
-        self.uses_iis = uses_iis
-        self.iis_version = iis_version
-        self.uses_apache = uses_apache
-        self.apache_version = apache_version
-        self.uses_nginx = uses_nginx
-
-    # Static Methods
-
-    # Class Methods
-
-    @classmethod
-    def _populate_dummy(cls, to_populate):
-        from lib import WsFaker, RandomHelper
-        to_populate.uses_wordpress = RandomHelper.flip_coin()
-        to_populate.wordpress_version = WsFaker.get_version_string()
-        to_populate.uses_iss = RandomHelper.flip_coin()
-        to_populate.iis_version = WsFaker.get_version_string()
-        to_populate.uses_apache = RandomHelper.flip_coin()
-        to_populate.apache_version = WsFaker.get_version_string()
-        to_populate.uses_nginx = RandomHelper.flip_coin()
-        return to_populate
-
-    # Public Methods
-
-    def to_db_model_dict(self):
-        """
-        Get a dictionary containing the keys and values of this object that can be mapped to a WebServiceReport
-        object to update in the database.
-        :return: A dictionary containing the keys and values of this object that can be mapped to a WebServiceReport
-        object to update in the database.
-        """
-        return {
-            "uses_wordpress": self.uses_wordpress,
-            "uses_apache": self.uses_apache,
-            "uses_iis": self.uses_iis,
-            "uses_nginx": self.uses_nginx,
-        }
-
-    # Protected Methods
-
-    # Private Methods
-
-    # Properties
-
-    # Representation and Comparison
-
-
-class WebServiceHeadersReportModel(BaseWebServiceScanModel):
-    """
-    This is an Elasticsearch model class for containing data about the headers found in a web service during
-    the course of a single web service scan.
-    """
-
-    # Class Members
-
-    total_header_count = IntElasticsearchType()
-    unique_header_count = IntElasticsearchType()
-    server_headers = KeywordElasticsearchType()
-
-    # Instantiation
-
-    def __init__(
-            self,
-            total_header_count=None,
-            unique_header_count=None,
-            server_headers=[],
-            **kwargs
-    ):
-        super(WebServiceHeadersReportModel, self).__init__(**kwargs)
-        self.total_header_count = total_header_count
-        self.unique_header_count = unique_header_count
-        self.server_headers = server_headers
-
-    # Static Methods
-
-    # Class Methods
-
-    @classmethod
-    def _populate_dummy(cls, to_populate):
-        from lib import WsFaker
-        to_populate.total_header_count = WsFaker.get_random_int(minimum=1, maximum=500)
-        to_populate.unique_header_count = WsFaker.get_random_int(minimum=1, maximum=500)
-        to_populate.server_headers = WsFaker.get_server_header_values()
-        return to_populate
-
-    # Public Methods
-
-    # Protected Methods
-
-    # Private Methods
-
-    # Properties
 
     # Representation and Comparison

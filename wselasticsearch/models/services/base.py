@@ -12,10 +12,18 @@ class BaseNetworkServiceModel(BaseIpAddressModel):
 
     # Class Members
 
-    network_service_uuid = KeywordElasticsearchType()
-    network_service_port = IntElasticsearchType()
-    network_service_protocol = KeywordElasticsearchType()
-    network_service_discovered_by = KeywordElasticsearchType()
+    network_service_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the network service that the data in this model is related to.",
+    )
+    network_service_port = IntElasticsearchType(
+        help_text="The port of the network service that the data in this model is related to.",
+    )
+    network_service_protocol = KeywordElasticsearchType(
+        help_text="The protocol of the network service that the data in this model is related to.",
+    )
+    network_service_discovered_by = KeywordElasticsearchType(
+        help_text="A string depicting how the referenced network service was discovered by Web Sight.",
+    )
 
     # Instantiation
 
@@ -89,8 +97,14 @@ class BaseNetworkServiceScanModel(BaseNetworkServiceModel):
 
     # Class Members
 
-    network_service_scan_uuid = KeywordElasticsearchType()
-    is_latest_scan = BooleanElasticsearchType()
+    network_service_scan_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the network service scan that the data in this model was collected "
+                  "during.",
+    )
+    is_latest_scan = BooleanElasticsearchType(
+        help_text="Whether or not the data in this model reflects the most recently collected data of "
+                  "this format for the entity in question.",
+    )
 
     # Instantiation
 

@@ -14,9 +14,15 @@ class UserOrganizationSelectModel(BaseUserModel):
 
     # Class Members
 
-    org_uuid = KeywordElasticsearchType()
-    org_name = KeywordElasticsearchType()
-    selected_at = DateElasticsearchType()
+    org_uuid = KeywordElasticsearchType(
+        help_text="The UUID of the organization that this model is related to.",
+    )
+    org_name = KeywordElasticsearchType(
+        help_text="The name of the organization that this model is related to.",
+    )
+    selected_at = DateElasticsearchType(
+        help_text="The time at which this organization was selected by the referenced user.",
+    )
 
     # Instantiation
 
@@ -56,7 +62,9 @@ class UserUploadModel(BaseUserModel, S3Mixin):
 
     # Class Members
 
-    upload_type = KeywordElasticsearchType()
+    upload_type = KeywordElasticsearchType(
+        help_text="The type of upload that the contents of this model represent.",
+    )
 
     # Instantiation
 

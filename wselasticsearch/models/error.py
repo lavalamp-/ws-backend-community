@@ -16,8 +16,12 @@ class MalformedHtmlModel(BaseElasticsearchModel, S3Mixin):
 
     # Class Members
 
-    traceback = TextElasticsearchType()
-    error_message = KeywordElasticsearchType()
+    traceback = TextElasticsearchType(
+        help_text="The error traceback for the error that parsing the HTML caused.",
+    )
+    error_message = KeywordElasticsearchType(
+        help_text="The error message for the error that parsing the HTML caused.",
+    )
 
     # Instantiation
 

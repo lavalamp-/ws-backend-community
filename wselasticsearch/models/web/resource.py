@@ -13,19 +13,54 @@ class BaseWebResourceModel(BaseWebServiceScanModel):
 
     # Class Members
 
-    url_path = KeywordElasticsearchType(diff_key=True)
-    request_headers = KeywordKeyValueElasticsearchType()
-    request_method = KeywordElasticsearchType(diff_key=True)
-    response_headers = KeywordKeyValueElasticsearchType()
-    query_arguments = KeywordKeyValueElasticsearchType(diff_key=True)
-    body_arguments = KeywordKeyValueElasticsearchType(diff_key=True)
-    response_status = IntElasticsearchType(diffable=True)
-    content_type = KeywordElasticsearchType(diffable=True)
-    coalesced_content_type = KeywordElasticsearchType()
-    content_length = IntElasticsearchType()
-    content_md5_hash = KeywordElasticsearchType()
-    content_sha256_hash = KeywordElasticsearchType()
-    header_redirect_location = KeywordElasticsearchType()
+    url_path = KeywordElasticsearchType(
+        diff_key=True,
+        help_text="The URL path to where this resource was served from.",
+    )
+    request_headers = KeywordKeyValueElasticsearchType(
+        help_text="The HTTP request headers associated with the resource.",
+    )
+    request_method = KeywordElasticsearchType(
+        diff_key=True,
+        help_text="The HTTP request method that was used to retrieve this resource.",
+    )
+    response_headers = KeywordKeyValueElasticsearchType(
+        help_text="The HTTP response headers associated with the resource.",
+    )
+    query_arguments = KeywordKeyValueElasticsearchType(
+        diff_key=True,
+        help_text="The query string arguments found within the request to the referenced web "
+                  "resource.",
+    )
+    body_arguments = KeywordKeyValueElasticsearchType(
+        diff_key=True,
+        help_text="The body arguments found within the request to the referenced web resource.",
+    )
+    response_status = IntElasticsearchType(
+        diffable=True,
+        help_text="The HTTP status code returned by the request to the referenced web resource.",
+    )
+    content_type = KeywordElasticsearchType(
+        diffable=True,
+        help_text="The MIME content type associated with the resource.",
+    )
+    coalesced_content_type = KeywordElasticsearchType(
+        help_text="The MIME content type associated with the resource coalesced into a set of "
+                  "known and understood MIME types.",
+    )
+    content_length = IntElasticsearchType(
+        help_text="The length in bytes of the referenced resource.",
+    )
+    content_md5_hash = KeywordElasticsearchType(
+        help_text="The MD5 hash of the content of this resource.",
+    )
+    content_sha256_hash = KeywordElasticsearchType(
+        help_text="The SHA256 hash of the content of this resource.",
+    )
+    header_redirect_location = KeywordElasticsearchType(
+        help_text="The HTTP location header redirect location for this resource if such a "
+                  "header was returned by requesting it.",
+    )
 
     # Instantiation
 
@@ -151,16 +186,50 @@ class HtmlWebResourceModel(BaseWebResourceModel):
 
     # Class Members
 
-    title = KeywordElasticsearchType(diffable=True)
-    tag_decomposition = TextElasticsearchType(diffable=True)
-    total_tag_count = IntElasticsearchType(diffable=True)
-    html_tags = KeywordIntKeyValueElasticsearchType(key_name="tag", value_name="count")
-    internal_url_reference_count = IntElasticsearchType(diffable=True)
-    external_url_reference_count = IntElasticsearchType(diffable=True)
-    forms = HtmlFormElasticsearchType(diffable=True)
-    meta_refresh_location = KeywordElasticsearchType(diffable=True)
-    has_login_form = BooleanElasticsearchType(diffable=True)
-    has_local_login_form = BooleanElasticsearchType(diffable=True)
+    title = KeywordElasticsearchType(
+        diffable=True,
+        help_text="The title of the HTML content.",
+    )
+    tag_decomposition = TextElasticsearchType(
+        diffable=True,
+        help_text="A string depicting the sequence of HTML tags found in the response.",
+    )
+    total_tag_count = IntElasticsearchType(
+        diffable=True,
+        help_text="The total number of HTML tags found in this HTML resource.",
+    )
+    html_tags = KeywordIntKeyValueElasticsearchType(
+        key_name="tag",
+        value_name="count",
+        help_text="Per-tag counts of the HTML tags found in this resource.",
+    )
+    internal_url_reference_count = IntElasticsearchType(
+        diffable=True,
+        help_text="The total number of URLs found in this resource pointing to resources "
+                  "local to the referenced web service.",
+    )
+    external_url_reference_count = IntElasticsearchType(
+        diffable=True,
+        help_text="The total number of URLs found in this resource pointing to resources "
+                  "remote to the referenced web service.",
+    )
+    forms = HtmlFormElasticsearchType(
+        diffable=True,
+        help_text="The forms found within this HTML resource.",
+    )
+    meta_refresh_location = KeywordElasticsearchType(
+        diffable=True,
+        help_text="The redirect location for a <meta> redirect tag in this HTML resource if such a tag exists.",
+    )
+    has_login_form = BooleanElasticsearchType(
+        diffable=True,
+        help_text="Whether or not a login form is present within this HTML resource.",
+    )
+    has_local_login_form = BooleanElasticsearchType(
+        diffable=True,
+        help_text="Whether or not a login form pointing to the serving web service is present within "
+                  "this HTML resource.",
+    )
 
     # Instantiation
 
