@@ -150,6 +150,7 @@ pubsub_publish_topic = websight_out
 pubsub_retrieve_interval = 5
 pubsub_poll_interval = 30.0
 pubsub_gcp_project_name =
+pubsub_es_publish_retry_count = 3
 
 [Redis]
 

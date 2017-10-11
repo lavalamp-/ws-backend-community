@@ -1006,6 +1006,16 @@ class ConfigManager(object):
         return self.__get_bool("PubSub", "pubsub_enabled")
 
     @property
+    def pubsub_es_publish_retry_count(self):
+        """
+        Get the number of times that Web Sight should attempt to publish an Elasticsearch document to
+        the PubSub before failing.
+        :return: the number of times that Web Sight should attempt to publish an Elasticsearch document to
+        the PubSub before failing.
+        """
+        return self.__get_int("PubSub", "pubsub_es_publish_retry_count")
+
+    @property
     def pubsub_gcp_project_name(self):
         """
         Get the project name where the GCP project PubSub is hosted. Note that if this value is empty, it

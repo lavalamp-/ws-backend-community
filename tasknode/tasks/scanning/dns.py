@@ -303,6 +303,7 @@ def publish_report_for_domain_name_scan(
         domain_uuid=None,
         domain_scan_uuid=None,
         order_uuid=None,
+        max_publish_attempts=config.pubsub_es_publish_retry_count,
 ):
     """
     Publish the domain name scan report generated for the given domain name scan to the
@@ -311,6 +312,8 @@ def publish_report_for_domain_name_scan(
     :param domain_uuid: The UUID of the domain name that was scanned.
     :param domain_scan_uuid: The UUID of the domain name scan.
     :param order_uuid: The UUID of the order that this scan was a part of.
+    :param max_publish_attempts: The maximum number of times that publishing data to the PubSub should
+    be attempted before failing.
     :return: None
     """
     logger.info(
@@ -319,8 +322,19 @@ def publish_report_for_domain_name_scan(
     )
     query = DomainNameReportQuery()
     query.filter_by_domain_name_scan(domain_scan_uuid)
-    response = query.search(org_uuid)
-    scan_doc = DomainNameReportModel.from_response_result(response.results[0])
+    scan_doc = None
+    for i in range(max_publish_attempts):
+        response = query.search(org_uuid)
+        if len(response.results) > 0:
+            scan_doc = DomainNameReportModel.from_response_result(response.results[0])
+            break
+        else:
+            self.wait_for_es()
+    if scan_doc is None:
+        raise ValueError(
+            "Could not find the domain name report for domain scan %s (order %s, org %s)."
+            % (domain_scan_uuid, order_uuid, org_uuid)
+        )
     pubsub_manager = PubSubManager.instance()
     pubsub_manager.publish_elasticsearch_document(
         scan_doc,

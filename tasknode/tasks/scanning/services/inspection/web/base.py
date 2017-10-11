@@ -252,7 +252,14 @@ def scan_web_service(
 
 #USED
 @websight_app.task(bind=True, base=WebServiceTask)
-def publish_report_for_web_service_scan(self, org_uuid=None, web_service_uuid=None, web_service_scan_uuid=None, order_uuid=None):
+def publish_report_for_web_service_scan(
+        self,
+        org_uuid=None,
+        web_service_uuid=None,
+        web_service_scan_uuid=None,
+        order_uuid=None,
+        max_publish_attempts=config.pubsub_es_publish_retry_count,
+):
     """
     Publish the web service scan report generated from the given web service scan to the
     configured PubSub.
@@ -260,6 +267,8 @@ def publish_report_for_web_service_scan(self, org_uuid=None, web_service_uuid=No
     :param web_service_uuid: The UUID of the web service that was scanned.
     :param web_service_scan_uuid: The UUID of the web service scan to publish the results of.
     :param order_uuid: The UUID of the order that the scan was conducted under.
+    :param max_publish_attempts: The maximum number of times that publishing data to the PubSub should
+    be attempted before failing.
     :return: None
     """
     logger.info(
@@ -268,8 +277,19 @@ def publish_report_for_web_service_scan(self, org_uuid=None, web_service_uuid=No
     )
     query = WebServiceReportQuery()
     query.filter_by_web_service_scan(web_service_scan_uuid)
-    response = query.search(org_uuid)
-    scan_doc = WebServiceReportModel.from_response_result(response.results[0])
+    scan_doc = None
+    for i in range(max_publish_attempts):
+        response = query.search(org_uuid)
+        if len(response.results) > 0:
+            scan_doc = WebServiceReportModel.from_response_result(response.results[0])
+            break
+        else:
+            self.wait_for_es()
+    if scan_doc is None:
+        raise ValueError(
+            "Could not find the web service report for web service scan %s (order %s, org %s)."
+            % (web_service_scan_uuid, order_uuid, org_uuid)
+        )
     pubsub_manager = PubSubManager.instance()
     pubsub_manager.publish_elasticsearch_document(
         scan_doc,

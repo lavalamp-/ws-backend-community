@@ -129,6 +129,12 @@ class WebSightPoolManager(PoolManager):
         self.pool_classes_by_scheme["https"] = WebSightHTTPSConnectionPool
         self.connection_pool_kw["request_hostname"] = hostname
 
+    def _merge_pool_kwargs(self, *args, **kwargs):
+        to_return = super(WebSightPoolManager, self)._merge_pool_kwargs(*args, **kwargs)
+        if "request_hostname" in to_return:
+            to_return.pop("request_hostname")
+        return to_return
+
     @property
     def hostname(self):
         """
@@ -257,6 +263,7 @@ class WebServiceInspector(BaseInspector):
                 adapter_class = AnonymousAdapter
             else:
                 adapter_class = self.adapter_class
+            print("Adapter class is: %s (%s)" % (adapter_class, self.adapter_class))
             self.session.mount(self.url, adapter_class())
         if request_hostname is not None:
             headers["Host"] = request_hostname

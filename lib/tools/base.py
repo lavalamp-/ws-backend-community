@@ -111,6 +111,7 @@ class BaseToolRunner(object):
         if not is_ready:
             raise ToolNotReadyError(message=" ".join(errors))
         else:
+            self._prepare_pre_run()
             self._start_time = datetime.now()
             self.__run()
             self._end_time = datetime.now()
@@ -142,6 +143,13 @@ class BaseToolRunner(object):
         """
         raise NotImplementedError("Subclasses must implement this!")
 
+    def _prepare_pre_run(self):
+        """
+        Perform any housekeeping necessary before the external tool is invoked.
+        :return: None
+        """
+        pass
+
     # Private Methods
 
     def __does_tool_exist(self):
@@ -171,12 +179,9 @@ class BaseToolRunner(object):
         :return: The process return code.
         """
         popen_list = self.__get_popen_list()
-        print("POPEN LIST IS %s" % (popen_list,))
         process = subprocess.Popen(
             popen_list,
             shell=False,
-            # stdout=subprocess.PIPE,
-            # stderr=subprocess.PIPE,
         )
         out, err = process.communicate()
         logger.debug(

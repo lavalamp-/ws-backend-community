@@ -175,6 +175,7 @@ def publish_report_for_ssl_support_scan(
         network_service_uuid=None,
         network_service_scan_uuid=None,
         order_uuid=None,
+        max_publish_attempts=config.pubsub_es_publish_retry_count,
 ):
     """
     Publish the SSL support report generated for the given network service scan to the configured
@@ -184,6 +185,8 @@ def publish_report_for_ssl_support_scan(
     :param network_service_scan_uuid: The UUID of the network service scan that this report
     was associated with.
     :param order_uuid: The UUID of the order that the scan was conducted under.
+    :param max_publish_attempts: The maximum number of times that publishing data to the PubSub should
+    be attempted before failing.
     :return: None
     """
     logger.info(
@@ -192,8 +195,19 @@ def publish_report_for_ssl_support_scan(
     )
     query = SslSupportReportQuery()
     query.filter_by_network_service_scan(network_service_scan_uuid)
-    response = query.search(org_uuid)
-    scan_doc = SslSupportReportModel.from_response_result(response.results[0])
+    scan_doc = None
+    for i in range(max_publish_attempts):
+        response = query.search(org_uuid)
+        if len(response.results) > 0:
+            scan_doc = SslSupportReportModel.from_response_result(response.results[0])
+            break
+        else:
+            self.wait_for_es()
+    if scan_doc is None:
+        raise ValueError(
+            "Could not find the SSL support report for network service scan %s (order %s, org %s)."
+            % (network_service_scan_uuid, order_uuid, org_uuid)
+        )
     pubsub_manager = PubSubManager.instance()
     pubsub_manager.publish_elasticsearch_document(
         scan_doc,

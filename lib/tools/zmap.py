@@ -176,6 +176,9 @@ class ZmapRunner(BaseNetworkScannerRunner, ElasticsearchableMixin):
             errors.append("No whitelist file specified.")
         return not bool(errors), errors
 
+    def _prepare_pre_run(self):
+        FilesystemHelper.touch(self.output_file)
+
     def _set_to_scan_tcp(self):
         self.probe_module = "tcp_synscan"
 

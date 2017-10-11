@@ -118,6 +118,7 @@ def publish_report_for_ip_address_scan(
         ip_address_uuid=None,
         ip_address_scan_uuid=None,
         order_uuid=None,
+        max_publish_attempts=config.pubsub_es_publish_retry_count,
 ):
     """
     Publish the IP address scan report generated for the given IP address scan to the
@@ -126,6 +127,8 @@ def publish_report_for_ip_address_scan(
     :param ip_address_uuid: The UUID of the IP address that was scanned.
     :param ip_address_scan_uuid: The UUID of the IP address scan.
     :param order_uuid: The UUID of the order that the IP address scan was a part of.
+    :param max_publish_attempts: The maximum number of times that publishing data to the PubSub should
+    be attempted before failing.
     :return: None
     """
     logger.info(
@@ -134,8 +137,19 @@ def publish_report_for_ip_address_scan(
     )
     query = IpAddressReportQuery()
     query.filter_by_ip_address_scan(ip_address_scan_uuid)
-    response = query.search(org_uuid)
-    scan_doc = IpAddressReportModel.from_response_result(response.results[0])
+    scan_doc = None
+    for i in range(max_publish_attempts):
+        response = query.search(org_uuid)
+        if len(response.results) > 0:
+            scan_doc = IpAddressReportModel.from_response_result(response.results[0])
+            break
+        else:
+            self.wait_for_es()
+    if scan_doc is None:
+        raise ValueError(
+            "Could not find the IP address report for IP address scan %s (order %s, org %s)."
+            % (ip_address_scan_uuid, order_uuid, org_uuid)
+        )
     pubsub_manager = PubSubManager.instance()
     pubsub_manager.publish_elasticsearch_document(
         scan_doc,
