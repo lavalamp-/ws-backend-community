@@ -20,7 +20,7 @@ Django==1.11
 django-cors-headers==2.0.2
 django-filter==1.0.2
 django-rest-swagger==2.1.2
-djangorestframework==3.6.2
+djangorestframework==3.9.1
 dnspython==1.15.0
 docutils==0.13.1
 editdistance==0.3.1
