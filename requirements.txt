@@ -66,7 +66,7 @@ six==1.10.0
 SQLAlchemy==1.1.9
 SSLyze==1.1.0
 stripe==1.53.0
-Twisted==16.6.0
+Twisted==22.2.0
 typing==3.6.1
 uritemplate==3.0.0
 urllib3==1.21
